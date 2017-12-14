@@ -38,7 +38,7 @@ public abstract class BluetoothCommunication {
         BT_CONNECTION_LOST, BT_NO_DEVICE_FOUND, BT_UNEXPECTED_ERROR, BT_SCALE_MESSAGE
     };
     public enum BT_MACHINE_STATE {BT_INIT_STATE, BT_CMD_STATE, BT_CLEANUP_STATE}
-    public enum BT_DEVICE_ID {CUSTOM_OPENSCALE, MI_SCALE_V1, MI_SCALE_V2, SANITAS_SBF70, MEDISANA_BS444, DIGOO_DGS038H, EXCELVANT_CF369BLE, YUNMAI_MINI, YUNMAI_SE, MGB}
+    public enum BT_DEVICE_ID {CUSTOM_OPENSCALE, MI_SCALE_V1, MI_SCALE_V2, SANITAS_SBF70, MEDISANA_BS444, DIGOO_DGS038H, EXCELVANT_CF369BLE, YUNMAI_MINI, YUNMAI_SE, MGB, EXINGTECH_Y1}
 
     protected Context context;
 
@@ -97,6 +97,8 @@ public abstract class BluetoothCommunication {
                 return new BluetoothYunmaiSE(context);
             case MGB:
                 return new BluetoothMGB(context);
+            case EXINGTECH_Y1:
+                return new BluetoothExingtechY1(context);
         }
 
         return null;
@@ -240,7 +242,7 @@ public abstract class BluetoothCommunication {
      * @param gattCharacteristic the Bluetooth Gatt characteristic
      * @param status the status code
      */
-    protected void onBluetoothDataRead(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic, int status){};
+    protected void onBluetoothDataRead(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic, int status) {};
 
     /**
      * Method is triggered if a Bluetooth data from a device is notified or indicated.
@@ -248,7 +250,7 @@ public abstract class BluetoothCommunication {
      * @param bluetoothGatt the Bluetooth Gatt
      * @param gattCharacteristic the Bluetooth characteristic
      */
-    protected void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic){};
+    protected void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {};
 
     /**
      * Set the Bluetooth machine state to a specific state.
@@ -369,7 +371,7 @@ public abstract class BluetoothCommunication {
         }
 
         final StringBuilder stringBuilder = new StringBuilder(data.length);
-        for(byte byteChar : data) {
+        for (byte byteChar : data) {
             stringBuilder.append(String.format("%02X ", byteChar));
         }
 

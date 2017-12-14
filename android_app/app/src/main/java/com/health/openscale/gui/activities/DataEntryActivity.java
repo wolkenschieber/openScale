@@ -44,6 +44,7 @@ import com.health.openscale.gui.views.FatMeasurementView;
 import com.health.openscale.gui.views.HipMeasurementView;
 import com.health.openscale.gui.views.LBWMeasurementView;
 import com.health.openscale.gui.views.MeasurementView;
+import com.health.openscale.gui.views.MeasurementViewUpdateListener;
 import com.health.openscale.gui.views.MuscleMeasurementView;
 import com.health.openscale.gui.views.TimeMeasurementView;
 import com.health.openscale.gui.views.WHRMeasurementView;
@@ -92,15 +93,15 @@ public class DataEntryActivity extends Activity {
 
     private long id;
 
-	private Context context;
-	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+    private Context context;
 
-		setContentView(R.layout.activity_dataentry);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-		context = this;
+        setContentView(R.layout.activity_dataentry);
+
+        context = this;
 
         tableLayoutDataEntry = (TableLayout) findViewById(R.id.tableLayoutDataEntry);
 
@@ -145,8 +146,8 @@ public class DataEntryActivity extends Activity {
 
         txtDataNr = (TextView) findViewById(R.id.txtDataNr);
 
-		btnAdd = (Button) findViewById(R.id.btnAdd);
-		btnOk = (Button) findViewById(R.id.btnOk);
+        btnAdd = (Button) findViewById(R.id.btnAdd);
+        btnOk = (Button) findViewById(R.id.btnOk);
         btnCancel = (Button) findViewById(R.id.btnCancel);
         btnLeft = (Button) findViewById(R.id.btnLeft);
         btnRight = (Button) findViewById(R.id.btnRight);
@@ -164,7 +165,7 @@ public class DataEntryActivity extends Activity {
         expandButton.setOnClickListener(new onClickListenerToggleButton());
 
         updateOnView();
-	}
+    }
 
 
     private void updateOnView()
@@ -172,6 +173,7 @@ public class DataEntryActivity extends Activity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         for (MeasurementView measurement : dataEntryMeasurements) {
+            measurement.setOnUpdateListener(null);
             measurement.updatePreferences(prefs);
         }
 
@@ -189,7 +191,8 @@ public class DataEntryActivity extends Activity {
                 switchEditMode.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#D3D3D3")));
             }
 
-            if (prefs.getBoolean(String.valueOf(expandButton.getId()), false)) {
+            final boolean doExpand = prefs.getBoolean(String.valueOf(expandButton.getId()), false);
+            if (doExpand) {
                 expandButton.setBackgroundTintList(ColorStateList.valueOf(ChartUtils.COLOR_ORANGE));
             } else {
                 expandButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#D3D3D3")));
@@ -211,31 +214,31 @@ public class DataEntryActivity extends Activity {
             for (MeasurementView measurement : dataEntryMeasurements) {
                 measurement.updateValue(selectedScaleData);
                 measurement.updateDiff(selectedScaleData, prevScaleData);
-                measurement.setExpand(prefs.getBoolean(String.valueOf(expandButton.getId()), false));
+                measurement.setExpand(doExpand);
             }
-
-            return;
-        }
-
-
-        if (!OpenScale.getInstance(getApplicationContext()).getScaleDataList().isEmpty())
-        {
+        } else if (!OpenScale.getInstance(getApplicationContext()).getScaleDataList().isEmpty()) {
             setViewMode(MeasurementView.MeasurementViewMode.ADD);
             txtDataNr.setText(DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT).format(new Date()));
             ScaleData lastScaleData = OpenScale.getInstance(getApplicationContext()).getScaleDataList().get(0);
 
             // show as default last scale data
+            lastScaleData.setDateTime(new Date());
+            lastScaleData.setComment("");
             for (MeasurementView measurement : dataEntryMeasurements) {
-                lastScaleData.setDateTime(new Date());
-                lastScaleData.setComment("");
                 measurement.updateValue(lastScaleData);
             }
         } else {
             setViewMode(MeasurementView.MeasurementViewMode.ADD);
             // show default values
+            ScaleData newScaleData = new ScaleData();
             for (MeasurementView measurement : dataEntryMeasurements) {
-                measurement.updateValue(new ScaleData());
+                measurement.updateValue(newScaleData);
             }
+        }
+
+        onMeasurementViewUpdateListener updateListener = new onMeasurementViewUpdateListener();
+        for (MeasurementView measurement : dataEntryMeasurements) {
+            measurement.setOnUpdateListener(updateListener);
         }
     }
 
@@ -350,6 +353,30 @@ public class DataEntryActivity extends Activity {
         return false;
     }
 
+    private class onMeasurementViewUpdateListener implements MeasurementViewUpdateListener {
+        @Override
+        public void onMeasurementViewUpdate(MeasurementView view) {
+            ArrayList<MeasurementView> viewsToUpdate = new ArrayList<>();
+            if (view == weightMeasurement) {
+                viewsToUpdate.add(bmiMeasurementView);
+                viewsToUpdate.add(bmrMeasurementView);
+            } else if (view == waistMeasurement) {
+                viewsToUpdate.add(wHtRMeasurementView);
+                viewsToUpdate.add(whrMeasurementView);
+            } else if (view == hipMeasurement) {
+                viewsToUpdate.add(whrMeasurementView);
+            } else if (view == dateMeasurement) {
+                viewsToUpdate.add(bmrMeasurementView);
+            }
+
+            if (!viewsToUpdate.isEmpty()) {
+                ScaleData scaleData = createScaleDataFromMeasurement();
+                for (MeasurementView measurement : viewsToUpdate) {
+                    measurement.updateValue(scaleData);
+                }
+            }
+        }
+    }
 
     private class onClickListenerAdd implements View.OnClickListener {
         @Override

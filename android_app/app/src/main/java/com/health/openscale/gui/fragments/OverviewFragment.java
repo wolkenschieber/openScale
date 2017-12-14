@@ -74,6 +74,7 @@ import lecho.lib.hellocharts.view.PieChartView;
 public class OverviewFragment extends Fragment implements FragmentUpdateListener {
 
     private View overviewView;
+    private View userLineSeparator;
 
     private TextView txtTitleUser;
     private TextView txtTitleLastMeasurement;
@@ -109,6 +110,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         overviewView = inflater.inflate(R.layout.fragment_overview, container, false);
+        userLineSeparator = overviewView.findViewById(R.id.userLineSeparator);
 
         context = overviewView.getContext();
 
@@ -207,7 +209,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
 
     private void updateUserSelection() {
 
-        currentScaleUser =  OpenScale.getInstance(getContext()).getSelectedScaleUser();
+        currentScaleUser = OpenScale.getInstance(getContext()).getSelectedScaleUser();
 
         userSelectedData = null;
 
@@ -215,19 +217,22 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         ArrayList<ScaleUser> scaleUserList = OpenScale.getInstance(getContext()).getScaleUserList();
 
         int posUser = 0;
-        int pos = 0;
 
-        for(ScaleUser scaleUser :scaleUserList) {
+        for (ScaleUser scaleUser : scaleUserList) {
             spinUserAdapter.add(scaleUser.user_name);
 
             if (scaleUser.id == currentScaleUser.id) {
-                posUser = pos;
+                posUser = spinUserAdapter.getCount() - 1;
             }
-
-            pos++;
         }
 
         spinUser.setSelection(posUser, true);
+
+        // Hide user selector when there is only one user
+        int visibility = spinUserAdapter.getCount() < 2 ? View.GONE : View.VISIBLE;
+        txtTitleUser.setVisibility(visibility);
+        spinUser.setVisibility(visibility);
+        userLineSeparator.setVisibility(visibility);
     }
 
 
@@ -328,35 +333,35 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
                 setHasPoints(prefs.getBoolean("pointsEnable", true)).
                 setFormatter(new SimpleLineChartValueFormatter(1));
 
-        if(prefs.getBoolean("weightEnable", true)) {
+        if (prefs.getBoolean("weightEnable", true)) {
             lines.add(lineWeight);
         }
 
-        if(prefs.getBoolean("fatEnable", true)) {
+        if (prefs.getBoolean("fatEnable", true)) {
             lines.add(lineFat);
         }
 
-        if(prefs.getBoolean("waterEnable", true)) {
+        if (prefs.getBoolean("waterEnable", true)) {
             lines.add(lineWater);
         }
 
-        if(prefs.getBoolean("muscleEnable", true)) {
+        if (prefs.getBoolean("muscleEnable", true)) {
             lines.add(lineMuscle);
         }
 
-        if(prefs.getBoolean("lbwEnable", false)) {
+        if (prefs.getBoolean("lbwEnable", false)) {
             lines.add(lineLBW);
         }
 
-        if(prefs.getBoolean("waistEnable", false)) {
+        if (prefs.getBoolean("waistEnable", false)) {
             lines.add(lineWaist);
         }
 
-        if(prefs.getBoolean("hipEnable", false)) {
+        if (prefs.getBoolean("hipEnable", false)) {
             lines.add(lineHip);
         }
 
-        if(prefs.getBoolean("boneEnable", false)) {
+        if (prefs.getBoolean("boneEnable", false)) {
             lines.add(lineBone);
         }
 
@@ -427,11 +432,11 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         return startDate.get(Calendar.DAY_OF_YEAR) - endDate.get(Calendar.DAY_OF_YEAR);
     }
 
-	public void btnOnClickInsertData()
-	{
-		Intent intent = new Intent(overviewView.getContext(), DataEntryActivity.class);
+    public void btnOnClickInsertData()
+    {
+        Intent intent = new Intent(overviewView.getContext(), DataEntryActivity.class);
         startActivityForResult(intent, 1);
-	}
+    }
 
     private class PieChartLastTouchListener implements PieChartOnValueSelectListener
     {
@@ -467,7 +472,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         public void onValueSelected(int lineIndex, int pointIndex, PointValue pointValue) {
             userSelectedData = scaleDataLastDays.get(pointIndex);
 
-            updateOnView( OpenScale.getInstance(getContext()).getScaleDataList());
+            updateOnView(OpenScale.getInstance(getContext()).getScaleDataList());
         }
 
         @Override

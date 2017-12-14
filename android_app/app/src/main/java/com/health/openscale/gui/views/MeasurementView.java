@@ -77,8 +77,10 @@ public abstract class MeasurementView extends TableLayout {
 
     private Date dateTime;
     private String value;
+    private float previousValue;
     private String diffValue;
 
+    private MeasurementViewUpdateListener updateListener = null;
     private MeasurementViewMode measurementMode;
 
     public MeasurementView(Context context, String text, Drawable icon) {
@@ -197,7 +199,13 @@ public abstract class MeasurementView extends TableLayout {
         evaluatorView.setLayoutParams(new TableRow.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.99f));
         spaceAfterEvaluatorView.setLayoutParams(new TableRow.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.01f));
 
-        measurementRow.setOnClickListener(new onClickListenerEvaluation());
+        onClickListenerEvaluation onClickListener = new onClickListenerEvaluation();
+        measurementRow.setOnClickListener(onClickListener);
+        evaluatorRow.setOnClickListener(onClickListener);
+    }
+
+    public void setOnUpdateListener(MeasurementViewUpdateListener listener) {
+        updateListener = listener;
     }
 
     public abstract void updateValue(ScaleData updateData);
@@ -205,7 +213,6 @@ public abstract class MeasurementView extends TableLayout {
     public abstract void updatePreferences(SharedPreferences preferences);
     public abstract String getUnit();
     public abstract EvaluationResult evaluateSheet(EvaluationSheet evalSheet, float value);
-    public abstract float getMinValue();
     public abstract float getMaxValue();
 
     public float getValue() {
@@ -220,19 +227,13 @@ public abstract class MeasurementView extends TableLayout {
     }
 
     public void incValue() {
-        float incValue = getValue() + 0.1f;
-
-        if (incValue <= getMaxValue()) {
-            setValueOnView(dateTime, incValue);
-        }
+        float incValue = Math.min(getMaxValue(), getValue() + 0.1f);
+        setValueOnView(dateTime, incValue);
     }
 
     public void decValue() {
-        float decValue = getValue() - 0.1f;
-
-        if (decValue >= 0) {
-            setValueOnView(dateTime, decValue);
-        }
+        float decValue = Math.max(0.0f, getValue() - 0.1f);
+        setValueOnView(dateTime, decValue);
     }
 
     public String getValueAsString() {
@@ -292,19 +293,27 @@ public abstract class MeasurementView extends TableLayout {
         dateTime = objTimeDate;
         value = String.valueOf(objValue);
 
-        try{
+        try {
             Float floatValue = Float.parseFloat(value);
-            if (measurementMode == VIEW) {
+            if (measurementMode == VIEW || measurementMode == EDIT) {
                 evaluate(floatValue);
             }
             valueView.setText(String.format("%.2f ", floatValue) + getUnit());
             value = String.valueOf(Math.round(floatValue*100.0f)/100.0f);
+            // Only update diff value if setDiffOnView has been called previously
+            if (!diffValue.isEmpty()) {
+                setDiffOnView(floatValue, previousValue);
+            }
         } catch (NumberFormatException e) {
             valueView.setText(value);
+        }
+        if (updateListener != null) {
+            updateListener.onMeasurementViewUpdate(this);
         }
     }
 
     protected void setDiffOnView(float value, float prevValue) {
+        previousValue = prevValue;
         float diff = value - prevValue;
 
         String symbol;
@@ -313,7 +322,7 @@ public abstract class MeasurementView extends TableLayout {
         if (diff > 0.0) {
             symbol = SYMBOL_UP;
             symbol_color = "<font color='green'>" + SYMBOL_UP + "</font>";
-        } else if (diff < 0.0){
+        } else if (diff < 0.0) {
             symbol = SYMBOL_DOWN;
             symbol_color = "<font color='red'>" + SYMBOL_DOWN + "</font>";
         } else {
@@ -342,8 +351,8 @@ public abstract class MeasurementView extends TableLayout {
         }
     }
 
-    protected void setVisible(boolean isVisible){
-        if(isVisible) {
+    protected void setVisible(boolean isVisible) {
+        if (isVisible) {
             measurementRow.setVisibility(View.VISIBLE);
         } else {
             measurementRow.setVisibility(View.GONE);
@@ -382,11 +391,10 @@ public abstract class MeasurementView extends TableLayout {
             evalResult = new EvaluationResult();
         }
 
-        evaluatorView.setMinMaxValue(getMinValue(), getMaxValue());
         evaluatorView.setLimits(evalResult.lowLimit, evalResult.highLimit);
         evaluatorView.setValue(value);
 
-        switch(evalResult.eval_state)
+        switch (evalResult.eval_state)
         {
             case LOW:
                 indicatorView.setBackgroundColor(ChartUtils.COLOR_BLUE);
@@ -483,11 +491,7 @@ public abstract class MeasurementView extends TableLayout {
                 return;
             }
 
-            if (evaluatorRow.getVisibility() == View.VISIBLE) {
-                evaluatorRow.setVisibility(View.GONE);
-            } else {
-                evaluatorRow.setVisibility(View.VISIBLE);
-            }
+            setExpand(evaluatorRow.getVisibility() != View.VISIBLE);
         }
     }
 

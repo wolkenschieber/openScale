@@ -1,4 +1,4 @@
-/* Copyright (C) 2014  olie.xdev <olie.xdev@googlemail.com>
+/* Copyright (C) 2017 Erik Johansson <erik@ejohansson.se>
 *
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -13,13 +13,8 @@
 *    You should have received a copy of the GNU General Public License
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
+package com.health.openscale.gui.views;
 
-package com.health.openscale.gui.fragments;
-
-import com.health.openscale.core.datatypes.ScaleData;
-
-import java.util.ArrayList;
-
-public interface FragmentUpdateListener {
-    public void updateOnView(ArrayList<ScaleData> scaleDataList);
+public interface MeasurementViewUpdateListener {
+    public void onMeasurementViewUpdate(MeasurementView view);
 }
