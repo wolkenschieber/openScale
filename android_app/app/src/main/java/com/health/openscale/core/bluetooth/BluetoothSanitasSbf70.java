@@ -24,7 +24,7 @@ import android.util.Log;
 
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 
 import java.io.ByteArrayOutputStream;
@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.Date;
 
 public class BluetoothSanitasSbf70 extends BluetoothCommunication {
     public final static String TAG = "BluetoothSanitasSbf70";
@@ -111,12 +112,22 @@ public class BluetoothSanitasSbf70 extends BluetoothCommunication {
 
     @Override
     public String deviceName() {
-        return "Sanitas SBF70";
+        return "Sanitas SBF70/SilverCrest SBF75";
     }
 
     @Override
     public String defaultDeviceName() {
         return "SANITAS SBF70";
+    }
+
+    @Override
+    public boolean checkDeviceName(String btDeviceName) {
+        // SilverCrest SBF75 (also known as HealthForYou by SilverCrest)
+        if (btDeviceName.toLowerCase().startsWith(new String("SANITAS SBF70").toLowerCase()) || btDeviceName.toLowerCase().startsWith("sbf75")) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -169,22 +180,22 @@ public class BluetoothSanitasSbf70 extends BluetoothCommunication {
                     final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
                     // We can only use up to 3 characters and have to handle them uppercase
-                    int maxIdx = selectedUser.user_name.length() >= 3 ? 3 : selectedUser.user_name.length();
-                    byte[] nick = selectedUser.user_name.toUpperCase().substring(0, maxIdx).getBytes();
+                    int maxIdx = selectedUser.getUserName().length() >= 3 ? 3 : selectedUser.getUserName().length();
+                    byte[] nick = selectedUser.getUserName().toUpperCase().substring(0, maxIdx).getBytes();
 
                     byte activity = 2; // activity level: 1 - 5
-                    Log.d(TAG, "Create User:" + selectedUser.user_name);
+                    Log.d(TAG, "Create User:" + selectedUser.getUserName());
 
                     writeBytes(new byte[]{
                             (byte) 0xe7, (byte) 0x31, (byte) 0x0, (byte) 0x0, (byte) 0x0,
                             (byte) 0x0, (byte) 0x0, (byte) 0x0, (byte) 0x0,
                             (byte) (seenUsers.size() > 0 ? Collections.max(seenUsers) + 1 : 101),
                             nick[0], nick[1], nick[2],
-                            (byte) selectedUser.birthday.getYear(),
-                            (byte) selectedUser.birthday.getMonth(),
-                            (byte) selectedUser.birthday.getDate(),
-                            (byte) selectedUser.body_height,
-                            (byte) (((1 - selectedUser.gender) << 7) | activity)
+                            (byte) selectedUser.getBirthday().getYear(),
+                            (byte) selectedUser.getBirthday().getMonth(),
+                            (byte) selectedUser.getBirthday().getDate(),
+                            (byte) selectedUser.getBodyHeight(),
+                            (byte) (((1 - selectedUser.getGender()) << 7) | activity)
                     });
                 } else {
                     // Get existing user information
@@ -294,8 +305,8 @@ public class BluetoothSanitasSbf70 extends BluetoothCommunication {
             final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
             // Check if we found the currently selected user
-            if (selectedUser.user_name.toLowerCase().startsWith(name.toLowerCase()) &&
-                    selectedUser.birthday.getYear() == year) {
+            if (selectedUser.getUserName().toLowerCase().startsWith(name.toLowerCase()) &&
+                    selectedUser.getBirthday().getYear() == year) {
                 // Found user
                 currentScaleUserId = userUuid;
             }
@@ -414,7 +425,7 @@ public class BluetoothSanitasSbf70 extends BluetoothCommunication {
 
             if (current_item % 2 == 0) {
                 try {
-                    ScaleData parsedData = parseScaleData(receivedScaleData.toByteArray());
+                    ScaleMeasurement parsedData = parseScaleData(receivedScaleData.toByteArray());
                     addScaleData(parsedData);
                 } catch (ParseException e) {
                     Log.d(TAG, "Could not parse byte array: " + byteInHex(receivedScaleData.toByteArray()));
@@ -487,7 +498,7 @@ public class BluetoothSanitasSbf70 extends BluetoothCommunication {
 
             if (current_item == max_items) {
                 // received all parts
-                ScaleData parsedData = null;
+                ScaleMeasurement parsedData = null;
                 try {
                     parsedData = parseScaleData(receivedScaleData.toByteArray());
                     addScaleData(parsedData);
@@ -517,17 +528,18 @@ public class BluetoothSanitasSbf70 extends BluetoothCommunication {
         });
     }
 
-    private ScaleData parseScaleData(byte[] data) throws ParseException {
+    private ScaleMeasurement parseScaleData(byte[] data) throws ParseException {
         if (data.length != 11 + 11)
             throw new ParseException("Parse scala data: unexpected length", 0);
 
-        ScaleData receivedMeasurement = new ScaleData();
+        ScaleMeasurement receivedMeasurement = new ScaleMeasurement();
 
         // Parse timestamp
         long timestamp = ByteBuffer.wrap(data, 0, 4).getInt() * 1000L;
         SimpleDateFormat sdf = new SimpleDateFormat("MMMM d, yyyy 'at' h:mm a");
         String date = sdf.format(timestamp);
-
+        receivedMeasurement.setDateTime(new Date(timestamp));
+        
         // little endian
         float weight = ((float) (
                 ((data[4] & 0xFF) << 8) + (data[5] & 0xFF)

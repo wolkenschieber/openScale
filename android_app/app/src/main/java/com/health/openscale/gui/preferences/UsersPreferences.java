@@ -27,7 +27,7 @@ import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.gui.activities.UserSettingsActivity;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -50,21 +50,21 @@ public class UsersPreferences extends PreferenceFragment {
 
         OpenScale openScale = OpenScale.getInstance(getActivity().getApplicationContext());
 
-        ArrayList<ScaleUser> scaleUserList = openScale.getScaleUserList();
+        List<ScaleUser> scaleUserList = openScale.getScaleUserList();
 
         for (ScaleUser scaleUser : scaleUserList)
         {
             Preference prefUser = new Preference(getActivity().getBaseContext());
             prefUser.setOnPreferenceClickListener(new onClickListenerUserSelect());
 
-            if (scaleUser.id == selectedUserId) {
-                prefUser.setTitle("> " + scaleUser.user_name);
+            if (scaleUser.getId() == selectedUserId) {
+                prefUser.setTitle("> " + scaleUser.getUserName());
             } else
             {
-                prefUser.setTitle(scaleUser.user_name);
+                prefUser.setTitle(scaleUser.getUserName());
             }
 
-            prefUser.setKey(Integer.toString(scaleUser.id));
+            prefUser.setKey(Integer.toString(scaleUser.getId()));
 
             getPreferenceScreen().addPreference(prefUser);
         }

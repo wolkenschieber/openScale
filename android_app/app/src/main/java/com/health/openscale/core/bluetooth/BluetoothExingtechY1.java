@@ -23,7 +23,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 
 import java.util.Date;
@@ -59,7 +59,7 @@ public class BluetoothExingtechY1 extends BluetoothCommunication {
                 final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
                 byte gender = selectedUser.isMale() ? (byte)0x00 : (byte)0x01; // 00 - male; 01 - female
-                byte height = (byte)(selectedUser.body_height & 0xff); // cm
+                byte height = (byte)(selectedUser.getBodyHeight() & 0xff); // cm
                 byte age = (byte)(selectedUser.getAge(new Date()) & 0xff);
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -112,11 +112,11 @@ public class BluetoothExingtechY1 extends BluetoothCommunication {
         float calorie = (float)(((weightBytes[15] & 0xFF) << 8) | (weightBytes[16] & 0xFF));
         float bmi = (float)(((weightBytes[17] & 0xFF) << 8) | (weightBytes[18] & 0xFF)) / 10.0f;
 
-        ScaleData scaleBtData = new ScaleData();
+        ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
         final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
-        scaleBtData.setConvertedWeight(weight, selectedUser.scale_unit);
+        scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
         scaleBtData.setFat(fat);
         scaleBtData.setMuscle(muscle);
         scaleBtData.setWater(water);

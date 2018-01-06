@@ -24,7 +24,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 
 import java.text.ParseException;
@@ -95,7 +95,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
             case 0:
                 // set scale units
                 final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
-                byte[] setUnitCmd = new byte[]{(byte)0x06, (byte)0x04, (byte)0x00, (byte) selectedUser.scale_unit};
+                byte[] setUnitCmd = new byte[]{(byte)0x06, (byte)0x04, (byte)0x00, (byte) selectedUser.getScaleUnit()};
                 writeBytes(WEIGHT_CUSTOM_SERVICE, WEIGHT_CUSTOM_CONFIG, setUnitCmd);
                 break;
             case 1:
@@ -211,7 +211,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
                 // Is the year plausible? Check if the year is in the range of 20 years...
                 if (validateDate(date_time, 20)) {
-                    ScaleData scaleBtData = new ScaleData();
+                    ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
                     scaleBtData.setWeight(weight);
                     scaleBtData.setDateTime(date_time);

@@ -7,6 +7,12 @@ Apache License, Version 2.0
 License: https://www.apache.org/licenses/LICENSE-2.0
 Website: https://github.com/lecho/hellocharts-android
 
+Project: SimpleCSV
+Copyright 2017 Gray Watson
+ISC License
+License: https://opensource.org/licenses/ISC
+Website: https://github.com/j256/simplecsv
+
 Project: Low-Power
 Copyright 2016 Lim Phang Moh
 Creative Commons Attribution-ShareAlike 3.0
@@ -42,6 +48,7 @@ License: http://creativecommons.org/licenses/by/3.0/
 * Madebyoliver (https://www.flaticon.com/authors/madebyoliver)
 * Those Icons (https://www.flaticon.com/authors/those-icons)
 * Smashicons (https://www.flaticon.com/authors/smashicons)
+* Swifticons https://www.flaticon.com/authors/swifticons
 
 Contributors to openScale are listed on:
 https://github.com/oliexdev/openScale/graphs/contributors

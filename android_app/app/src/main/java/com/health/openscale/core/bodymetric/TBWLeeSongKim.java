@@ -15,7 +15,7 @@
 */
 package com.health.openscale.core.bodymetric;
 
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 
 public class TBWLeeSongKim extends EstimatedWaterMetric {
@@ -25,11 +25,11 @@ public class TBWLeeSongKim extends EstimatedWaterMetric {
     }
 
     @Override
-    public float getWater(ScaleUser user, ScaleData data) {
+    public float getWater(ScaleUser user, ScaleMeasurement data) {
         if (user.isMale()) {
-            return -28.3497f + (0.243057f * user.body_height) + (0.366248f * data.getWeight());
+            return -28.3497f + (0.243057f * user.getBodyHeight()) + (0.366248f * data.getWeight());
         }
 
-        return -26.6224f + (0.262513f * user.body_height) + (0.232948f * data.getWeight());
+        return -26.6224f + (0.262513f * user.getBodyHeight()) + (0.232948f * data.getWeight());
     }
 }

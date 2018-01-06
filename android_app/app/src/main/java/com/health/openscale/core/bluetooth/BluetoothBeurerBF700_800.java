@@ -24,7 +24,7 @@ import android.util.Log;
 
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 
 import java.io.ByteArrayOutputStream;
@@ -115,7 +115,7 @@ public class BluetoothBeurerBF700_800 extends BluetoothCommunication {
 
     @Override
     public String deviceName() {
-        return "Beurer BF700/800";
+        return "Beurer BF700/800 / Runtastic Libra";
     }
 
     @Override
@@ -125,7 +125,11 @@ public class BluetoothBeurerBF700_800 extends BluetoothCommunication {
 
     @Override
     public boolean checkDeviceName(String btDeviceName) {
-        if (btDeviceName.toLowerCase().startsWith(new String("BEURER BF700").toLowerCase()) || btDeviceName.toLowerCase().startsWith(new String("BEURER BF800").toLowerCase())) {
+        if (btDeviceName.toLowerCase().startsWith(new String("BEURER BF700").toLowerCase()) ||
+                btDeviceName.toLowerCase().startsWith(new String("BEURER BF800").toLowerCase())||
+                btDeviceName.toLowerCase().startsWith(new String("BF-800").toLowerCase())||
+                btDeviceName.toLowerCase().startsWith(new String("BF-700").toLowerCase())||
+                btDeviceName.toLowerCase().startsWith(new String("RT-Libra-B").toLowerCase())) {
             return true;
         }
 
@@ -182,22 +186,22 @@ public class BluetoothBeurerBF700_800 extends BluetoothCommunication {
                     final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
                     // We can only use up to 3 characters and have to handle them uppercase
-                    int maxIdx = selectedUser.user_name.length() >= 3 ? 3 : selectedUser.user_name.length();
-                    byte[] nick = selectedUser.user_name.toUpperCase().substring(0, maxIdx).getBytes();
+                    int maxIdx = selectedUser.getUserName().length() >= 3 ? 3 : selectedUser.getUserName().length();
+                    byte[] nick = selectedUser.getUserName().toUpperCase().substring(0, maxIdx).getBytes();
 
                     byte activity = 2; // activity level: 1 - 5
-                    Log.d(TAG, "Create User:" + selectedUser.user_name);
+                    Log.d(TAG, "Create User:" + selectedUser.getUserName());
 
                     writeBytes(new byte[]{
                             (byte) 0xf7, (byte) 0x31, (byte) 0x0, (byte) 0x0, (byte) 0x0,
                             (byte) 0x0, (byte) 0x0, (byte) 0x0, (byte) 0x0,
                             (byte) (seenUsers.size() > 0 ? Collections.max(seenUsers) + 1 : 101),
                             nick[0], nick[1], nick[2],
-                            (byte) selectedUser.birthday.getYear(),
-                            (byte) selectedUser.birthday.getMonth(),
-                            (byte) selectedUser.birthday.getDate(),
-                            (byte) selectedUser.body_height,
-                            (byte) (((1 - selectedUser.gender) << 7) | activity)
+                            (byte) selectedUser.getBirthday().getYear(),
+                            (byte) selectedUser.getBirthday().getMonth(),
+                            (byte) selectedUser.getBirthday().getDate(),
+                            (byte) selectedUser.getBodyHeight(),
+                            (byte) (((1 - selectedUser.getGender()) << 7) | activity)
                     });
                 } else {
                     // Get existing user information
@@ -307,8 +311,8 @@ public class BluetoothBeurerBF700_800 extends BluetoothCommunication {
             final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
             // Check if we found the currently selected user
-            if (selectedUser.user_name.toLowerCase().startsWith(name.toLowerCase()) &&
-                    selectedUser.birthday.getYear() == year) {
+            if (selectedUser.getUserName().toLowerCase().startsWith(name.toLowerCase()) &&
+                    selectedUser.getBirthday().getYear() == year) {
                 // Found user
                 currentScaleUserId = userUuid;
             }
@@ -427,7 +431,7 @@ public class BluetoothBeurerBF700_800 extends BluetoothCommunication {
 
             if (current_item % 2 == 0) {
                 try {
-                    ScaleData parsedData = parseScaleData(receivedScaleData.toByteArray());
+                    ScaleMeasurement parsedData = parseScaleData(receivedScaleData.toByteArray());
                     addScaleData(parsedData);
                 } catch (ParseException e) {
                     Log.d(TAG, "Could not parse byte array: " + byteInHex(receivedScaleData.toByteArray()));
@@ -500,7 +504,7 @@ public class BluetoothBeurerBF700_800 extends BluetoothCommunication {
 
             if (current_item == max_items) {
                 // received all parts
-                ScaleData parsedData = null;
+                ScaleMeasurement parsedData = null;
                 try {
                     parsedData = parseScaleData(receivedScaleData.toByteArray());
                     addScaleData(parsedData);
@@ -530,11 +534,11 @@ public class BluetoothBeurerBF700_800 extends BluetoothCommunication {
         });
     }
 
-    private ScaleData parseScaleData(byte[] data) throws ParseException {
+    private ScaleMeasurement parseScaleData(byte[] data) throws ParseException {
         if (data.length != 11 + 11)
             throw new ParseException("Parse scala data: unexpected length", 0);
 
-        ScaleData receivedMeasurement = new ScaleData();
+        ScaleMeasurement receivedMeasurement = new ScaleMeasurement();
 
         // Parse timestamp
         long timestamp = ByteBuffer.wrap(data, 0, 4).getInt() * 1000L;

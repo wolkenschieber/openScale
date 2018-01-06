@@ -21,7 +21,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 
 import java.util.Arrays;
@@ -62,11 +62,11 @@ public class BluetoothExcelvanCF369BLE extends BluetoothCommunication {
                 final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
                 byte sex = selectedUser.isMale() ? (byte)0x01 : (byte)0x00; // 01 - male; 00 - female
-                byte height = (byte)(selectedUser.body_height & 0xff); // cm
+                byte height = (byte)(selectedUser.getBodyHeight() & 0xff); // cm
                 byte age = (byte)(selectedUser.getAge(new Date()) & 0xff);
                 byte unit;
 
-                switch (selectedUser.scale_unit) {
+                switch (selectedUser.getScaleUnit()) {
                     case 0:
                         unit = 0x01; // kg
                         break;
@@ -126,11 +126,11 @@ public class BluetoothExcelvanCF369BLE extends BluetoothCommunication {
         float water = (float)(((weightBytes[12] & 0xFF) << 8) | (weightBytes[13] & 0xFF)) / 10.0f;
         float bmr = (float)(((weightBytes[14] & 0xFF) << 8) | (weightBytes[15] & 0xFF));
 
-        ScaleData scaleBtData = new ScaleData();
+        ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
         final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
-        scaleBtData.setConvertedWeight(weight, selectedUser.scale_unit);
+        scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
         scaleBtData.setFat(fat);
         scaleBtData.setMuscle(muscle);
         scaleBtData.setWater(water);

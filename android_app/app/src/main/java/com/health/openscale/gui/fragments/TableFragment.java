@@ -42,11 +42,10 @@ import android.widget.ListView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.gui.activities.DataEntryActivity;
 import com.health.openscale.gui.views.BMIMeasurementView;
 import com.health.openscale.gui.views.BMRMeasurementView;
@@ -65,9 +64,9 @@ import com.health.openscale.gui.views.WaistMeasurementView;
 import com.health.openscale.gui.views.WaterMeasurementView;
 import com.health.openscale.gui.views.WeightMeasurementView;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import lecho.lib.hellocharts.util.ChartUtils;
 
@@ -129,17 +128,17 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
     }
 
     @Override
-    public void updateOnView(ArrayList<ScaleData> scaleDataList)
+    public void updateOnView(List<ScaleMeasurement> scaleMeasurementList)
     {
         tableDataView.setAdapter(new ListViewAdapter(new ArrayList<HashMap<Integer, String>>())); // delete all data in the table with an empty adapter array list
 
-        if (scaleDataList.isEmpty()) {
+        if (scaleMeasurementList.isEmpty()) {
             return;
         }
 
         final int maxSize = 20;
 
-        int subpageCount = (int)Math.ceil(scaleDataList.size() / (double)maxSize);
+        int subpageCount = (int)Math.ceil(scaleMeasurementList.size() / (double)maxSize);
 
         subpageView.removeAllViews();
 
@@ -202,27 +201,27 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
 
         int displayCount = 0;
 
-        for (int i = (maxSize * selectedSubpageNr); i<scaleDataList.size(); i++) {
-            ScaleData scaleData = scaleDataList.get(i);
+        for (int i = (maxSize * selectedSubpageNr); i< scaleMeasurementList.size(); i++) {
+            ScaleMeasurement scaleMeasurement = scaleMeasurementList.get(i);
 
-            ScaleData prevScaleData;
+            ScaleMeasurement prevScaleMeasurement;
 
-            if (i >= scaleDataList.size()-1) {
-                prevScaleData = new ScaleData();
+            if (i >= scaleMeasurementList.size()-1) {
+                prevScaleMeasurement = new ScaleMeasurement();
             } else {
-                prevScaleData = scaleDataList.get(i+1);
+                prevScaleMeasurement = scaleMeasurementList.get(i+1);
             }
 
 
             HashMap<Integer,String> dataRow = new HashMap<>();
 
             int columnNr = 0;
-            dataRow.put(columnNr, Long.toString(scaleData.getId()));
+            dataRow.put(columnNr, Long.toString(scaleMeasurement.getId()));
 
             for (int j=0; j< measurementsList.size(); j++) {
                 MeasurementView measurement = measurementsList.get(j);
-                measurement.updateValue(scaleData);
-                measurement.updateDiff(scaleData, prevScaleData);
+                measurement.updateValue(scaleMeasurement);
+                measurement.updateDiff(scaleMeasurement, prevScaleMeasurement);
 
                 if (measurement.isVisible()) {
                     columnNr++;
@@ -252,7 +251,7 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
         public void onItemClick(AdapterView<?> parent, View view, int position, long click_id) {
             LinearLayout dataRow = (LinearLayout)view;
             TextView idTextView = (TextView) dataRow.getChildAt(0);
-            long id = Long.parseLong(idTextView.getText().toString());
+            int id = Integer.parseInt(idTextView.getText().toString());
 
             Intent intent = new Intent(tableView.getContext(), DataEntryActivity.class);
             intent.putExtra("id", id);
@@ -283,25 +282,14 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
                     filenameDialog.setTitle(getResources().getString(R.string.info_set_filename) + " /sdcard ...");
 
                     final EditText txtFilename = new EditText(tableView.getContext());
-                    txtFilename.setText("/openScale_data_" + OpenScale.getInstance(getContext()).getSelectedScaleUser().user_name + ".csv");
+                    txtFilename.setText("/openScale_data_" + OpenScale.getInstance(getContext()).getSelectedScaleUser().getUserName() + ".csv");
 
                     filenameDialog.setView(txtFilename);
 
                     filenameDialog.setPositiveButton(getResources().getString(R.string.label_ok), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            boolean isError = false;
-
-                            try {
-                                OpenScale.getInstance(getContext()).importData(Environment.getExternalStorageDirectory().getPath() + txtFilename.getText().toString());
-                            } catch (IOException e) {
-                                Toast.makeText(tableView.getContext(), getResources().getString(R.string.error_importing) + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                isError = true;
-                            }
-
-                            if (!isError) {
-                                Toast.makeText(tableView.getContext(), getResources().getString(R.string.info_data_imported) + " /sdcard" + txtFilename.getText().toString(), Toast.LENGTH_SHORT).show();
-                                updateOnView(OpenScale.getInstance(getContext()).getScaleDataList());
-                            }
+                            OpenScale.getInstance(getContext()).importData(Environment.getExternalStorageDirectory().getPath() + txtFilename.getText().toString());
+                            updateOnView(OpenScale.getInstance(getContext()).getScaleMeasurementList());
                         }
                     });
 
@@ -325,24 +313,13 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
             filenameDialog.setTitle(getResources().getString(R.string.info_set_filename) + " /sdcard ...");
 
             final EditText txtFilename = new EditText(tableView.getContext());
-            txtFilename.setText("/openScale_data_" + OpenScale.getInstance(getContext()).getSelectedScaleUser().user_name + ".csv");
+            txtFilename.setText("/openScale_data_" + OpenScale.getInstance(getContext()).getSelectedScaleUser().getUserName() + ".csv");
 
             filenameDialog.setView(txtFilename);
 
             filenameDialog.setPositiveButton(getResources().getString(R.string.label_ok), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    boolean isError = false;
-
-                    try {
-                        OpenScale.getInstance(getContext()).exportData(Environment.getExternalStorageDirectory().getPath() + txtFilename.getText().toString());
-                    } catch (IOException e) {
-                        Toast.makeText(tableView.getContext(), getResources().getString(R.string.error_exporting) + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        isError = true;
-                    }
-
-                    if (!isError) {
-                        Toast.makeText(tableView.getContext(), getResources().getString(R.string.info_data_exported) + " /sdcard" + txtFilename.getText().toString(), Toast.LENGTH_SHORT).show();
-                    }
+                    OpenScale.getInstance(getContext()).exportData(Environment.getExternalStorageDirectory().getPath() + txtFilename.getText().toString());
                 }
             });
 
@@ -362,7 +339,7 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
         public void onClick(View v) {
             if (selectedSubpageNr > 0) {
                 selectedSubpageNr--;
-                updateOnView(OpenScale.getInstance(getContext()).getScaleDataList());
+                updateOnView(OpenScale.getInstance(getContext()).getScaleMeasurementList());
             }
         }
     }
@@ -372,7 +349,7 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
         public void onClick(View v) {
             if (selectedSubpageNr < (subpageView.getChildCount() - 3)) {
                 selectedSubpageNr++;
-                updateOnView(OpenScale.getInstance(getContext()).getScaleDataList());
+                updateOnView(OpenScale.getInstance(getContext()).getScaleMeasurementList());
             }
         }
     }
@@ -383,7 +360,7 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
             TextView nrView = (TextView)v;
 
             selectedSubpageNr = Integer.parseInt(nrView.getText().toString())-1;
-            updateOnView(OpenScale.getInstance(getContext()).getScaleDataList());
+            updateOnView(OpenScale.getInstance(getContext()).getScaleMeasurementList());
         }
     }
 

@@ -22,7 +22,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.datatypes.ScaleData;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 
 import java.util.Calendar;
@@ -41,7 +41,7 @@ public class BluetoothMGB extends BluetoothCommunication {
 
     private Calendar  now;
     private ScaleUser user;
-    private ScaleData measurement;
+    private ScaleMeasurement measurement;
     private byte[]    packet_buf;
     private int       packet_pos;
 
@@ -117,7 +117,7 @@ public class BluetoothMGB extends BluetoothCommunication {
                 break;
 
             case 3:
-                writeCfg(0xFB, (user.isMale() ? 1 : 2), user.getAge(new Date()), user.body_height);
+                writeCfg(0xFB, (user.isMale() ? 1 : 2), user.getAge(new Date()), user.getBodyHeight());
                 break;
 
             case 4:
@@ -170,7 +170,7 @@ public class BluetoothMGB extends BluetoothCommunication {
         int hdr_3 = popInt();
 
         if (hdr_1 == 0xAC && hdr_2 == 0x02 && hdr_3 == 0xFF) {
-            measurement = new ScaleData();
+            measurement = new ScaleMeasurement();
 
             popInt(); //unknown =00
             popInt(); //unknown =02
