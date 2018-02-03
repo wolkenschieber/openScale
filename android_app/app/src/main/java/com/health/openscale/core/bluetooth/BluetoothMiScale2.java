@@ -26,6 +26,7 @@ import android.util.Log;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -95,7 +96,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
             case 0:
                 // set scale units
                 final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
-                byte[] setUnitCmd = new byte[]{(byte)0x06, (byte)0x04, (byte)0x00, (byte) selectedUser.getScaleUnit()};
+                byte[] setUnitCmd = new byte[]{(byte)0x06, (byte)0x04, (byte)0x00, (byte) selectedUser.getScaleUnit().toInt()};
                 writeBytes(WEIGHT_CUSTOM_SERVICE, WEIGHT_CUSTOM_CONFIG, setUnitCmd);
                 break;
             case 1:
@@ -211,9 +212,10 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
                 // Is the year plausible? Check if the year is in the range of 20 years...
                 if (validateDate(date_time, 20)) {
+                    final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
                     ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
-                    scaleBtData.setWeight(weight);
+                    scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
                     scaleBtData.setDateTime(date_time);
 
                     addScaleData(scaleBtData);
@@ -255,7 +257,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
             prefs.edit().putInt("uniqueNumber", uniqueNumber).commit();
         }
 
-        int userId = prefs.getInt("selectedUserId", -1);
+        int userId = OpenScale.getInstance(context).getSelectedScaleUserId();
 
         return uniqueNumber + userId;
     }

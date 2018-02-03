@@ -30,6 +30,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -69,6 +70,8 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
     private ColumnChartView chartTop;
     private Viewport defaultTopViewport;
     private TextView txtYear;
+    private Button btnLeftYear;
+    private Button btnRightYear;
     private FloatingActionButton diagramWeight;
     private FloatingActionButton diagramFat;
     private FloatingActionButton diagramWater;
@@ -80,12 +83,16 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
     private FloatingActionButton enableMonth;
     private SharedPreferences prefs;
 
+    private int textColor;
+
     private OpenScale openScale;
 
     private Calendar calYears;
     private Calendar calLastSelected;
 
-    private List<ScaleMeasurement> scaleMeasurementList;
+    private static String CAL_YEARS_KEY = "calYears";
+    private static String CAL_LAST_SELECTED_KEY = "calLastSelected";
+
     private List<ScaleMeasurement> pointIndexScaleMeasurementList;
 
     public GraphFragment() {
@@ -96,6 +103,20 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        openScale = OpenScale.getInstance(getContext());
+
+        if (savedInstanceState == null) {
+            List<ScaleMeasurement> scaleMeasurementList = openScale.getScaleMeasurementList();
+            if (!scaleMeasurementList.isEmpty()) {
+                calYears.setTime(scaleMeasurementList.get(0).getDateTime());
+                calLastSelected.setTime(scaleMeasurementList.get(0).getDateTime());
+            }
+        }
+        else {
+            calYears.setTimeInMillis(savedInstanceState.getLong(CAL_YEARS_KEY));
+            calLastSelected.setTimeInMillis(savedInstanceState.getLong(CAL_LAST_SELECTED_KEY));
+        }
+
         graphView = inflater.inflate(R.layout.fragment_graph, container, false);
 
         chartBottom = (LineChartView) graphView.findViewById(R.id.chart_bottom);
@@ -104,6 +125,9 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
         chartBottom.setOnTouchListener(new chartBottomListener());
         chartBottom.setOnValueTouchListener(new chartBottomValueTouchListener());
         chartTop.setOnValueTouchListener(new chartTopValueTouchListener());
+
+        // HACK: get default text color from hidden text view to set the correct axis colors
+        textColor = ((TextView)graphView.findViewById(R.id.colorHack)).getCurrentTextColor();
 
         txtYear = (TextView) graphView.findViewById(R.id.txtYear);
         txtYear.setText(Integer.toString(calYears.get(Calendar.YEAR)));
@@ -163,26 +187,47 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
             diagramHip.setVisibility(View.GONE);
         }
 
-        graphView.findViewById(R.id.btnLeftYear).setOnClickListener(new View.OnClickListener() {
+        btnLeftYear = graphView.findViewById(R.id.btnLeftYear);
+        btnLeftYear.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 calYears.roll(Calendar.YEAR, false);
                 txtYear.setText(Integer.toString(calYears.get(Calendar.YEAR)));
+
+                List<ScaleMeasurement> scaleMeasurementList =
+                        OpenScale.getInstance(getContext()).getScaleDataOfYear(calYears.get(Calendar.YEAR));
+                if (!scaleMeasurementList.isEmpty()) {
+                    calLastSelected.setTime(scaleMeasurementList.get(0).getDateTime());
+                }
                 updateOnView(null);
             }
         });
 
-        graphView.findViewById(R.id.btnRightYear).setOnClickListener(new View.OnClickListener() {
+        btnRightYear = graphView.findViewById(R.id.btnRightYear);
+        btnRightYear.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 calYears.roll(Calendar.YEAR, true);
                 txtYear.setText(Integer.toString(calYears.get(Calendar.YEAR)));
+
+                List<ScaleMeasurement> scaleMeasurementList =
+                        OpenScale.getInstance(getContext()).getScaleDataOfYear(calYears.get(Calendar.YEAR));
+                if (!scaleMeasurementList.isEmpty()) {
+                    calLastSelected.setTime(scaleMeasurementList.get(scaleMeasurementList.size() - 1).getDateTime());
+                }
                 updateOnView(null);
             }
         });
 
-        openScale = OpenScale.getInstance(getContext());
         openScale.registerFragment(this);
 
         return graphView;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putLong(CAL_YEARS_KEY, calYears.getTimeInMillis());
+        outState.putLong(CAL_LAST_SELECTED_KEY, calLastSelected.getTimeInMillis());
     }
 
     @Override
@@ -214,7 +259,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
         return false;
     }
 
-    private void generateLineData(int field)
+    private void generateLineData(int field, List<ScaleMeasurement> scaleMeasurementList)
     {
         SimpleDateFormat day_date = new SimpleDateFormat("D", Locale.getDefault());
 
@@ -381,13 +426,13 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
         LineChartData lineData = new LineChartData(lines);
         lineData.setAxisXBottom(new Axis(axisValues).
                 setHasLines(true).
-                setTextColor(Color.BLACK)
+                setTextColor(textColor)
         );
 
         lineData.setAxisYLeft(new Axis().
                 setHasLines(true).
                 setMaxLabelChars(5).
-                setTextColor(Color.BLACK)
+                setTextColor(textColor)
         );
 
         chartBottom.setLineChartData(lineData);
@@ -467,7 +512,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
 
         ColumnChartData columnData = new ColumnChartData(columns);
 
-        columnData.setAxisXBottom(new Axis(axisValues).setHasLines(true).setTextColor(Color.BLACK));
+        columnData.setAxisXBottom(new Axis(axisValues).setHasLines(true).setTextColor(textColor));
 
         chartTop.setColumnChartData(columnData);
         chartTop.setValueSelectionEnabled(true);
@@ -476,23 +521,49 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
     }
 
     private void generateGraphs() {
+        final int selectedYear = calYears.get(Calendar.YEAR);
+
+        int firstYear = selectedYear;
+        int lastYear = selectedYear;
+
+        List<ScaleMeasurement> scaleMeasurementList = openScale.getScaleMeasurementList();
+        if (!scaleMeasurementList.isEmpty()) {
+            Calendar cal = Calendar.getInstance();
+
+            cal.setTime(scaleMeasurementList.get(scaleMeasurementList.size() - 1).getDateTime());
+            firstYear = cal.get(Calendar.YEAR);
+
+            cal.setTime(scaleMeasurementList.get(0).getDateTime());
+            lastYear = cal.get(Calendar.YEAR);
+        }
+        btnLeftYear.setEnabled(selectedYear > firstYear);
+        btnRightYear.setEnabled(selectedYear < lastYear);
+
+        if (selectedYear == firstYear && selectedYear == lastYear) {
+            btnLeftYear.setVisibility(View.GONE);
+            btnRightYear.setVisibility(View.GONE);
+        } else {
+            btnLeftYear.setVisibility(View.VISIBLE);
+            btnRightYear.setVisibility(View.VISIBLE);
+        }
+
         // show monthly diagram
         if (prefs.getBoolean(String.valueOf(enableMonth.getId()), true)) {
             chartTop.setVisibility(View.VISIBLE);
             chartBottom.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 0.7f));
 
             generateColumnData();
-            scaleMeasurementList = openScale.getScaleDataOfMonth(calYears.get(Calendar.YEAR), calLastSelected.get(Calendar.MONTH));
+            scaleMeasurementList = openScale.getScaleDataOfMonth(selectedYear, calLastSelected.get(Calendar.MONTH));
 
-            generateLineData(Calendar.DAY_OF_MONTH);
+            generateLineData(Calendar.DAY_OF_MONTH, scaleMeasurementList);
         // show only yearly diagram and hide monthly diagram
         } else {
             chartTop.setVisibility(View.GONE);
             chartBottom.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
 
-            scaleMeasurementList = openScale.getScaleDataOfYear(calYears.get(Calendar.YEAR));
+            scaleMeasurementList = openScale.getScaleDataOfYear(selectedYear);
 
-            generateLineData(Calendar.DAY_OF_YEAR);
+            generateLineData(Calendar.DAY_OF_YEAR, scaleMeasurementList);
         }
     }
 
@@ -505,8 +576,9 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
 
             calLastSelected = cal;
 
-            scaleMeasurementList = openScale.getScaleDataOfMonth(calYears.get(Calendar.YEAR), calLastSelected.get(Calendar.MONTH));
-            generateLineData(Calendar.DAY_OF_MONTH);
+            List<ScaleMeasurement> scaleMeasurementList =
+                    openScale.getScaleDataOfMonth(calYears.get(Calendar.YEAR), calLastSelected.get(Calendar.MONTH));
+            generateLineData(Calendar.DAY_OF_MONTH, scaleMeasurementList);
         }
 
         @Override
@@ -536,7 +608,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
             int id = scaleMeasurement.getId();
 
             Intent intent = new Intent(graphView.getContext(), DataEntryActivity.class);
-            intent.putExtra("id", id);
+            intent.putExtra(DataEntryActivity.EXTRA_ID, id);
             startActivityForResult(intent, 1);
         }
 

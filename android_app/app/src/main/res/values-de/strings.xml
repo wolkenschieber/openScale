@@ -144,7 +144,6 @@
     <string name="label_category_body_metrics_estimation">Körpermetriken abschätzen</string>
     <string name="label_category_display">Anzeige</string>
     <string name="label_category_measurement_database">Messwertedatenbank</string>
-    <string name="label_category_misc">Verschiedenes</string>
     <string name="label_estimate_fat">Körperfettschätzung</string>
     <string name="label_estimate_fat_formula">Körperfettformel</string>
     <string name="label_estimate_water">Körperwasserschätzung</string>
@@ -160,4 +159,29 @@
     <string name="close_drawer">schließen</string>
     <string name="info_bluetooth_no_device_set">Kein Bluetooth Gerät ausgewählt</string>
     <string name="info_new_data_duplicated">Messung mit gleichen Datum und Uhrzeit exisitiert bereits</string>
+    <string name="label_fat_percentage">Körperfett in %</string>
+    <string name="label_water_percentage">Wasseranteil in %</string>
+    <string name="label_muscle_percentage">Muskelanteil in %</string>
+    <string name="label_feedback_message_enjoying">Gefällt Dir openScale?</string>
+    <string name="label_feedback_message_rate_app">Wie wäre es dann mit einer Bewertung bei GooglePlay oder bei GitHub?</string>
+    <string name="label_feedback_message_yes">Ja!</string>
+    <string name="label_feedback_message_no">Nicht wirklich</string>
+    <string name="label_feedback_message_positive">Ja klar</string>
+    <string name="label_feedback_message_negative">Nein danke</string>
+    <string name="label_feedback_message_issue">Würdest Du uns etwas Feedback geben?</string>
+    <string name="error_user_name_too_short">Fehler Benutzername muss mind. 3 Zeichen haben</string>
+    <string name="customactivityoncrash_error_activity_error_occurred_explanation">Ein unerwartet Fehler ist aufgetaucht.\n\n Bitte erstellen Sie ein neues issue mit eingefügten deaillierten Fehlerreport auf\nhttps://github.com/oliexdev/openScale/issues</string>
+    <string name="customactivityoncrash_error_activity_restart_app">App Neustart</string>
+    <string name="customactivityoncrash_error_activity_close_app">Schließe App</string>
+    <string name="customactivityoncrash_error_activity_error_details">Fehlerdetails</string>
+    <string name="customactivityoncrash_error_activity_error_details_title">Fehlerdetails</string>
+    <string name="customactivityoncrash_error_activity_error_details_close">Schließen</string>
+    <string name="customactivityoncrash_error_activity_error_details_copy">Kopieren in die Zwischenablage</string>
+    <string name="customactivityoncrash_error_activity_error_details_copied">in Zwischenablage kopiert</string>
+    <string name="customactivityoncrash_error_activity_error_details_clipboard_label">Fehlerinformationen</string>
+    <string name="title_general">Allgmein</string>
+    <string name="label_theme">Theme</string>
+    <string name="info_app_restart_required">Um die Änderungen zu übernehmen, ist ein App Neustart erforderlich</string>
+    <string name="label_share">Teilen</string>
+    <string name="label_bluetooth_searching_finished">Suche beendet nach Bluetooth Waagen</string>
 </resources>

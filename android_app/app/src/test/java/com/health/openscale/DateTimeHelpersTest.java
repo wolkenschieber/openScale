@@ -1,4 +1,4 @@
-/* Copyright (C) 2017 Erik Johansson <erik@ejohansson.se>
+/* Copyright (C) 2017-2018 Erik Johansson <erik@ejohansson.se>
 *
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-package com.health.openscale.junit;
+package com.health.openscale;
 
 import com.health.openscale.core.utils.DateTimeHelpers;
 
@@ -23,7 +23,6 @@ import org.junit.Test;
 import java.util.Calendar;
 
 import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertEquals;
 
 public class DateTimeHelpersTest {
     Calendar getDate(int year, int month, int day, int hour, int minute, int second, int ms) {
@@ -77,5 +76,34 @@ public class DateTimeHelpersTest {
             DateTimeHelpers.daysBetween(
                 getDate(2014, 12, 31),
                 getDate(2017, 1, 1)));
+    }
+
+    @Test
+    public void yearsBetween() throws Exception {
+        assertEquals(19,
+                DateTimeHelpers.yearsBetween(
+                        getDate(1980, 3, 26),
+                        getDate(2000, 3, 25)));
+        assertEquals(20,
+                DateTimeHelpers.yearsBetween(
+                        getDate(1980, 3, 26),
+                        getDate(2000, 3, 26)));
+        assertEquals(20,
+                DateTimeHelpers.yearsBetween(
+                        getDate(1980, 3, 26),
+                        getDate(2000, 3, 27)));
+
+        assertEquals(0,
+                DateTimeHelpers.yearsBetween(
+                        getDate(2000, 3, 1),
+                        getDate(2001, 2, 28)));
+        assertEquals(1,
+                DateTimeHelpers.yearsBetween(
+                        getDate(2000, 3, 1),
+                        getDate(2001, 3, 1)));
+        assertEquals(1,
+                DateTimeHelpers.yearsBetween(
+                        getDate(2000, 3, 1),
+                        getDate(2001, 3, 2)));
     }
 }

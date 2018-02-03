@@ -21,48 +21,62 @@ import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
+import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.evaluation.EvaluationResult;
 import com.health.openscale.core.evaluation.EvaluationSheet;
 
-public class MuscleMeasurementView extends MeasurementView {
+public class MuscleMeasurementView extends FloatMeasurementView {
+
+    private boolean percentageEnable;
 
     public MuscleMeasurementView(Context context) {
         super(context, context.getResources().getString(R.string.label_muscle), ContextCompat.getDrawable(context, R.drawable.ic_muscle));
     }
 
     @Override
-    public boolean isEditable() {
-        return true;
-    }
-
-    @Override
-    public void updateValue(ScaleMeasurement newMeasurement) {
-        setValueOnView(newMeasurement.getDateTime(), newMeasurement.getMuscle());
-    }
-
-    @Override
-    public void updateDiff(ScaleMeasurement newMeasurement, ScaleMeasurement lastMeasurement) {
-        setDiffOnView(newMeasurement.getMuscle(), lastMeasurement.getMuscle());
-    }
-
-    @Override
-    public String getUnit() {
-        return "%";
-    }
-
-    @Override
     public void updatePreferences(SharedPreferences preferences) {
         setVisible(preferences.getBoolean("muscleEnable", true));
+        percentageEnable = preferences.getBoolean("musclePercentageEnable", true);
     }
 
     @Override
-    public EvaluationResult evaluateSheet(EvaluationSheet evalSheet, float value) {
+    protected float getMeasurementValue(ScaleMeasurement measurement) {
+        if (percentageEnable) {
+            return measurement.getMuscle();
+        }
+
+        return measurement.getConvertedWeight(getScaleUser().getScaleUnit()) / 100.0f * measurement.getMuscle();
+    }
+
+    @Override
+    protected void setMeasurementValue(float value, ScaleMeasurement measurement) {
+        if (percentageEnable) {
+            measurement.setMuscle(value);
+        } else {
+            measurement.setMuscle(100.0f / measurement.getConvertedWeight(getScaleUser().getScaleUnit()) * value);
+        }
+    }
+
+    @Override
+    protected String getUnit() {
+        if (percentageEnable) {
+            return "%";
+        }
+
+        return getScaleUser().getScaleUnit().toString();
+    }
+
+    @Override
+    protected float getMaxValue() {
+        if (percentageEnable) {
+            return 80;
+        }
+
+        return 300;
+    }
+
+    @Override
+    protected EvaluationResult evaluateSheet(EvaluationSheet evalSheet, float value) {
         return evalSheet.evaluateBodyMuscle(value);
     }
-
-    @Override
-    public float getMaxValue() {
-        return 80;
-    }
-
 }

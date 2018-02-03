@@ -37,6 +37,7 @@ import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
 import com.health.openscale.core.utils.DateTimeHelpers;
 import com.health.openscale.gui.activities.DataEntryActivity;
 import com.health.openscale.gui.views.BMIMeasurementView;
@@ -179,8 +180,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
             lastScaleMeasurement = new ScaleMeasurement();
         } else if (userSelectedData != null) {
             lastScaleMeasurement = userSelectedData;
-        }
-        else {
+        } else {
             lastScaleMeasurement = scaleMeasurementList.get(0);
         }
 
@@ -197,14 +197,9 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         ScaleMeasurement[] tupleScaleData = OpenScale.getInstance(context).getTupleScaleData(lastScaleMeasurement.getId());
         ScaleMeasurement prevScaleMeasurement = tupleScaleData[0];
 
-        if (prevScaleMeasurement == null) {
-            prevScaleMeasurement = new ScaleMeasurement();
-        }
-
         for (MeasurementView measurement : overviewMeasurements) {
             measurement.updatePreferences(prefs);
-            measurement.updateValue(lastScaleMeasurement);
-            measurement.updateDiff(lastScaleMeasurement, prevScaleMeasurement);
+            measurement.loadFrom(lastScaleMeasurement, prevScaleMeasurement);
         }
     }
 
@@ -364,13 +359,13 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         LineChartData lineData = new LineChartData(lines);
         lineData.setAxisXBottom(new Axis(axisValues).
                         setHasLines(true).
-                        setTextColor(Color.BLACK)
+                        setTextColor(txtTitleLastMeasurement.getCurrentTextColor())
         );
 
         lineData.setAxisYLeft(new Axis().
                         setHasLines(true).
                         setMaxLabelChars(5).
-                        setTextColor(Color.BLACK)
+                        setTextColor(txtTitleLastMeasurement.getCurrentTextColor())
         );
 
         lineChartLast.setLineChartData(lineData);
@@ -404,12 +399,14 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
             arcValuesLast.add(new SliceValue(lastScaleMeasurement.getMuscle(), ChartUtils.COLOR_GREEN));
         }
 
+        final Converters.WeightUnit unit = currentScaleUser.getScaleUnit();
         PieChartData pieChartData = new PieChartData(arcValuesLast);
         pieChartData.setHasLabels(false);
         pieChartData.setHasCenterCircle(true);
-        pieChartData.setCenterText1(String.format("%.2f %s", lastScaleMeasurement.getConvertedWeight(currentScaleUser.getScaleUnit()), ScaleUser.UNIT_STRING[currentScaleUser.getScaleUnit()]));
+        pieChartData.setCenterText1(String.format("%.2f %s", lastScaleMeasurement.getConvertedWeight(unit), unit.toString()));
         pieChartData.setCenterText2(DateFormat.getDateInstance(DateFormat.MEDIUM).format(lastScaleMeasurement.getDateTime()));
-
+        pieChartData.setCenterText1Color(txtTitleLastMeasurement.getCurrentTextColor());
+        pieChartData.setCenterText2Color(txtTitleLastMeasurement.getCurrentTextColor());
 
         if ((getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE ||
             (getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE) {
@@ -480,13 +477,13 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
              if (parent.getChildCount() > 0) {
                  ((TextView) parent.getChildAt(0)).setTextColor(Color.GRAY);
 
-                 List<ScaleUser> scaleUserList = OpenScale.getInstance(getContext()).getScaleUserList();
+                 OpenScale openScale = OpenScale.getInstance(getContext());
 
+                 List<ScaleUser> scaleUserList = openScale.getScaleUserList();
                  ScaleUser scaleUser = scaleUserList.get(position);
 
-                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                 prefs.edit().putInt("selectedUserId", scaleUser.getId()).commit();
-                 OpenScale.getInstance(getContext()).updateScaleData();
+                 openScale.selectScaleUser(scaleUser.getId());
+                 openScale.updateScaleData();
              }
         }
 

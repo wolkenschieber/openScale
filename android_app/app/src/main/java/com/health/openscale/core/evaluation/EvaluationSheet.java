@@ -16,6 +16,7 @@
 package com.health.openscale.core.evaluation;
 
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -170,7 +171,7 @@ public class EvaluationSheet {
         float lowLimit = 0.0f;
         float highLimit = 0.0f;
 
-        if (evalUser.isMale()) {
+        if (evalUser.getGender().isMale()) {
             lowLimit = body_height_squared * 20.0f;
             highLimit = body_height_squared * 25.0f;
         } else {
@@ -179,11 +180,11 @@ public class EvaluationSheet {
         }
 
         if (weight < lowLimit) { // low
-            return new EvaluationResult(weight,  Math.round(lowLimit), Math.round(highLimit), EvaluationResult.EVAL_STATE.LOW);
+            return new EvaluationResult(weight,  Converters.fromKilogram(Math.round(lowLimit), evalUser.getScaleUnit()), Converters.fromKilogram(Math.round(highLimit), evalUser.getScaleUnit()), EvaluationResult.EVAL_STATE.LOW);
         } else if (weight >= lowLimit && weight <= highLimit) { // normal
-            return new EvaluationResult(weight, Math.round(lowLimit), Math.round(highLimit), EvaluationResult.EVAL_STATE.NORMAL);
+            return new EvaluationResult(weight, Converters.fromKilogram(Math.round(lowLimit), evalUser.getScaleUnit()), Converters.fromKilogram(Math.round(highLimit), evalUser.getScaleUnit()), EvaluationResult.EVAL_STATE.NORMAL);
         } else if (weight > highLimit) { //high
-            return new EvaluationResult(weight, Math.round(lowLimit), Math.round(highLimit), EvaluationResult.EVAL_STATE.HIGH);
+            return new EvaluationResult(weight, Converters.fromKilogram(Math.round(lowLimit), evalUser.getScaleUnit()), Converters.fromKilogram(Math.round(highLimit),  evalUser.getScaleUnit()), EvaluationResult.EVAL_STATE.HIGH);
         }
 
         return new EvaluationResult(0, -1, -1, EvaluationResult.EVAL_STATE.UNDEFINED);
@@ -193,7 +194,7 @@ public class EvaluationSheet {
     public EvaluationResult evaluateBodyFat(float fat) {
         List<sheetEntry> bodyEvaluateSheet;
 
-        if (evalUser.isMale()) {
+        if (evalUser.getGender().isMale()) {
             bodyEvaluateSheet = fatEvaluateSheet_Man;
         } else {
             bodyEvaluateSheet = fatEvaluateSheet_Woman;
@@ -205,7 +206,7 @@ public class EvaluationSheet {
     public EvaluationResult evaluateBodyWater(float water) {
         List<sheetEntry> bodyEvaluateSheet;
 
-        if (evalUser.isMale()) {
+        if (evalUser.getGender().isMale()) {
             bodyEvaluateSheet = waterEvaluateSheet_Man;
         } else {
             bodyEvaluateSheet = waterEvaluateSheet_Woman;
@@ -217,7 +218,7 @@ public class EvaluationSheet {
     public EvaluationResult evaluateBodyMuscle(float muscle) {
         List<sheetEntry> bodyEvaluateSheet;
 
-        if (evalUser.isMale()) {
+        if (evalUser.getGender().isMale()) {
             bodyEvaluateSheet = muscleEvaluateSheet_Man;
         } else {
             bodyEvaluateSheet = muscleEvaluateSheet_Woman;
@@ -229,7 +230,7 @@ public class EvaluationSheet {
     public EvaluationResult evaluateBMI(float bmi) {
         List<sheetEntry> bodyEvaluateSheet;
 
-        if (evalUser.isMale()) {
+        if (evalUser.getGender().isMale()) {
             bodyEvaluateSheet =  bmiEvaluateSheet_Man;
         } else {
             bodyEvaluateSheet = bmiEvaluateSheet_Woman;
@@ -241,7 +242,7 @@ public class EvaluationSheet {
     public EvaluationResult evaluateWaist(float waist) {
         List<sheetEntry> bodyEvaluateSheet;
 
-        if (evalUser.isMale()) {
+        if (evalUser.getGender().isMale()) {
             bodyEvaluateSheet =  waistEvaluateSheet_Man;
         } else {
             bodyEvaluateSheet = waistEvaluateSheet_Woman;
@@ -257,7 +258,7 @@ public class EvaluationSheet {
     public EvaluationResult evaluateWHR(float whr) {
         List<sheetEntry> bodyEvaluateSheet;
 
-        if (evalUser.isMale()) {
+        if (evalUser.getGender().isMale()) {
             bodyEvaluateSheet =  whrEvaluateSheet_Man;
         } else {
             bodyEvaluateSheet = whrEvaluateSheet_Woman;

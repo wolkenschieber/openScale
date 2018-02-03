@@ -27,13 +27,13 @@ import android.view.View;
 
 import com.health.openscale.R;
 
+import java.util.Locale;
+
 
 public class LinearGaugeView extends View {
 
     public static final int COLOR_BLUE = Color.parseColor("#33B5E5");
-    public static final int COLOR_VIOLET = Color.parseColor("#AA66CC");
     public static final int COLOR_GREEN = Color.parseColor("#99CC00");
-    public static final int COLOR_ORANGE = Color.parseColor("#FFBB33");
     public static final int COLOR_RED = Color.parseColor("#FF4444");
 
     private static final float barHeight = 10;
@@ -81,15 +81,15 @@ public class LinearGaugeView extends View {
 
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setColor(Color.GRAY);
-        textPaint.setTextSize(20);
+        textPaint.setTextSize(30);
 
         indicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        indicatorPaint.setColor(Color.BLACK);
-        indicatorPaint.setTextSize(20);
+        indicatorPaint.setColor(Color.GRAY);
+        indicatorPaint.setTextSize(30);
 
         infoTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         infoTextPaint.setColor(Color.GRAY);
-        infoTextPaint.setTextSize(30);
+        infoTextPaint.setTextSize(40);
         infoTextPaint.setTextAlign(Paint.Align.CENTER);
     }
 
@@ -98,16 +98,15 @@ public class LinearGaugeView extends View {
         return getWidth() / 100.0f * percent;
     }
 
-    private void drawCenteredText(Canvas canvas, String text, float centerX, float y,
-                                  Paint paint, Rect textBounds) {
-        float x = Math.max(0.0f, centerX - textBounds.width() / 2.0f);
-        x = Math.min(x, getWidth() - textBounds.width());
+    private void drawCenteredText(Canvas canvas, String text, float centerX, float y, Paint paint) {
+        final float textWidth = paint.measureText(text);
+        float x = Math.max(0.0f, centerX - textWidth / 2.0f);
+        x = Math.min(x, getWidth() - textWidth);
         canvas.drawText(text, x, y, paint);
     }
 
-    private void drawCenteredText(Canvas canvas, String text, float centerX, float y, Paint paint) {
-        paint.getTextBounds(text, 0, text.length(), bounds);
-        drawCenteredText(canvas, text, centerX, y, paint, bounds);
+    private String toText(float value) {
+        return String.format(Locale.getDefault(), "%.1f", value);
     }
 
     @Override
@@ -181,37 +180,36 @@ public class LinearGaugeView extends View {
 
         // Text
         final float textY = barTop - textOffset;
-        canvas.drawText(Float.toString(minValue), 0.0f, textY, textPaint);
+        canvas.drawText(toText(minValue), 0.0f, textY, textPaint);
         if (firstLimit > 0) {
-            drawCenteredText(canvas, Float.toString(firstLimit), firstPos, textY, textPaint);
+            drawCenteredText(canvas, toText(firstLimit), firstPos, textY, textPaint);
         }
-        drawCenteredText(canvas, Float.toString(secondLimit), secondPos, textY, textPaint);
-        drawCenteredText(canvas, Float.toString(maxValue), getWidth(), textY, textPaint);
+        drawCenteredText(canvas, toText(secondLimit), secondPos, textY, textPaint);
+        drawCenteredText(canvas, toText(maxValue), getWidth(), textY, textPaint);
 
         // Indicator
-        final float indicatorBottom = limitRect.bottom + 10.0f;
+        final float indicatorBottom = limitRect.bottom + 15.0f;
         Path path = new Path();
         path.setFillType(Path.FillType.EVEN_ODD);
-        path.moveTo(valuePos,  barTop);
+        path.moveTo(valuePos,  barBottom);
         path.lineTo(valuePos + 10.0f, indicatorBottom);
         path.lineTo(valuePos - 10.0f, indicatorBottom);
-        path.lineTo(valuePos, barTop);
         path.close();
 
         canvas.drawPath(path, indicatorPaint);
 
         // Value text
-        String valueStr = String.format("%.2f", value);
+        final String valueStr = String.format(Locale.getDefault(), "%.2f", value);
         indicatorPaint.getTextBounds(valueStr, 0, valueStr.length(), bounds);
         drawCenteredText(canvas, valueStr, valuePos,
-            indicatorBottom + bounds.height() + textOffset, indicatorPaint, bounds);
+            indicatorBottom + bounds.height() + 2, indicatorPaint);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
         int desiredWidth = 100;
-        int desiredHeight = 100;
+        int desiredHeight = 120;
 
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);

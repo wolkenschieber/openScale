@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
@@ -15,12 +16,11 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/txtTitleGoal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:autoText="false"
                 android:text="@string/label_title_goal"
-                android:textSize="25dp"
+                android:textSize="20dp"
                 android:typeface="monospace" />
 
             <View
@@ -43,9 +43,10 @@
                     <ImageView
                         android:id="@+id/imageView5"
                         android:layout_width="match_parent"
-                        android:layout_height="25dp"
+                        android:layout_height="20dp"
                         android:layout_gravity="center"
-                        android:src="@drawable/ic_target" />
+                        android:src="@drawable/ic_target"
+                        android:tint="?attr/editTextColor" />
 
                     <TextView
                         android:id="@+id/txtLabelGoalWeight"
@@ -86,9 +87,10 @@
                     <ImageView
                         android:id="@+id/imageView6"
                         android:layout_width="match_parent"
-                        android:layout_height="25dp"
+                        android:layout_height="20dp"
                         android:layout_gravity="center"
-                        android:src="@drawable/ic_difference" />
+                        android:src="@drawable/ic_difference"
+                        android:tint="?attr/editTextColor" />
 
                     <TextView
                         android:id="@+id/txtLabelGoalDiff"
@@ -129,9 +131,10 @@
                     <ImageView
                         android:id="@+id/imageView7"
                         android:layout_width="match_parent"
-                        android:layout_height="25dp"
+                        android:layout_height="20dp"
                         android:layout_gravity="center"
-                        android:src="@drawable/ic_daysleft" />
+                        android:src="@drawable/ic_daysleft"
+                        android:tint="?attr/editTextColor" />
 
                     <TextView
                         android:id="@+id/txtLabelDayLeft"
@@ -165,12 +168,10 @@
             </TableLayout>
 
             <TextView
-                android:id="@+id/txtTitleStatistics"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:autoText="false"
-                android:text="@string/label_title_statistics"
-                android:textSize="25dp"
+                android:text="@string/label_last_week"
+                android:textSize="20dp"
                 android:typeface="monospace" />
 
             <View
@@ -178,97 +179,61 @@
                 android:layout_height="1dp"
                 android:background="@android:color/darker_gray" />
 
-            <TableLayout
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_weight="90">
+
+                <TableLayout
+                    android:id="@+id/tableWeekAveragesLayoutColumnA"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="50"
+                    android:stretchColumns="1" />
+
+                <TableLayout
+                    android:id="@+id/tableWeekAveragesLayoutColumnB"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="50"
+                    android:stretchColumns="1" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_last_month"
+                android:textSize="20dp"
+                android:typeface="monospace" />
+
+            <View
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="90"
-                android:stretchColumns="1">
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
 
-                <TableRow
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_marginBottom="10dp"
-                    android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_weight="90">
 
-                    <ImageView
-                        android:id="@+id/imageView8"
-                        android:layout_width="match_parent"
-                        android:layout_height="25dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_lastweek" />
+                <TableLayout
+                    android:id="@+id/tableMonthAveragesLayoutColumnA"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="50"
+                    android:stretchColumns="1" />
 
-                    <TextView
-                        android:id="@+id/txtLabelAvgWeek"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_column="1"
-                        android:layout_marginLeft="5dp"
-                        android:layout_weight="80"
-                        android:lines="2"
-                        android:password="false"
-                        android:phoneNumber="false"
-                        android:singleLine="false"
-                        android:text="Last 7 days"
-                        android:textAlignment="center"
-                        android:textAppearance="?android:attr/textAppearanceLarge"
-                        android:textSize="15dp" />
+                <TableLayout
+                    android:id="@+id/tableMonthAveragesLayoutColumnB"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="50"
+                    android:stretchColumns="1" />
 
-                    <TextView
-                        android:id="@+id/txtAvgWeek"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_column="2"
-                        android:layout_gravity="center_vertical"
-                        android:layout_weight="20"
-                        android:gravity="right"
-                        android:text="-1"
-                        android:textAppearance="?android:attr/textAppearanceLarge"
-                        android:textSize="15dp" />
-                </TableRow>
-
-                <TableRow
-                    android:id="@+id/tableRow11"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_marginBottom="10dp"
-                    android:orientation="horizontal"
-                    android:weightSum="100">
-
-                    <ImageView
-                        android:id="@+id/imageView9"
-                        android:layout_width="match_parent"
-                        android:layout_height="25dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_lastmonth" />
-
-                    <TextView
-                        android:id="@+id/txtLabelAvgMonth"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="5dp"
-                        android:layout_weight="80"
-                        android:lines="2"
-                        android:password="false"
-                        android:phoneNumber="false"
-                        android:singleLine="false"
-                        android:text="Last 30 days"
-                        android:textAlignment="center"
-                        android:textAppearance="?android:attr/textAppearanceLarge"
-                        android:textSize="15dp" />
-
-                    <TextView
-                        android:id="@+id/txtAvgMonth"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_column="2"
-                        android:layout_gravity="center_vertical"
-                        android:layout_weight="20"
-                        android:gravity="right"
-                        android:text="-1"
-                        android:textAppearance="?android:attr/textAppearanceLarge"
-                        android:textSize="15dp" />
-                </TableRow>
-            </TableLayout>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

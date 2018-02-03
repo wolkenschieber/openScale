@@ -21,9 +21,7 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -34,6 +32,7 @@ import android.widget.Toast;
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
 
 import java.text.DateFormat;
 import java.util.Calendar;
@@ -41,6 +40,8 @@ import java.util.Date;
 import java.util.List;
 
 public class UserSettingsActivity extends Activity {
+    public static String EXTRA_ID = "id";
+    public static String EXTRA_MODE = "mode";
 
     public static final int ADD_USER_REQUEST = 0;
     public static final int EDIT_USER_REQUEST = 1;
@@ -89,6 +90,16 @@ public class UserSettingsActivity extends Activity {
         btnCancel.setOnClickListener(new onClickListenerCancel());
         btnDelete.setOnClickListener(new onClickListenerDelete());
 
+        Calendar birthdayCal = Calendar.getInstance();
+        birthdayCal.setTime(birthday);
+        birthdayCal.add(Calendar.YEAR, -20);
+        birthday = birthdayCal.getTime();
+
+        Calendar goalCal = Calendar.getInstance();
+        goalCal.setTime(goal_date);
+        goalCal.add(Calendar.MONTH, 6);
+        goal_date = goalCal.getTime();
+
         txtBirthday.setText(dateFormat.format(birthday));
         txtGoalDate.setText(dateFormat.format(goal_date));
 
@@ -117,11 +128,10 @@ public class UserSettingsActivity extends Activity {
         });
 
 
-        if (getIntent().getExtras().getInt("mode") == EDIT_USER_REQUEST)
-        {
+        if (getIntent().getExtras().getInt(EXTRA_MODE) == EDIT_USER_REQUEST) {
             editMode();
-        } else
-        {
+        }
+        else {
             btnOk.setText(getResources().getString(R.string.label_add));
             btnDelete.setVisibility(View.GONE);
         }
@@ -129,7 +139,7 @@ public class UserSettingsActivity extends Activity {
 
     private void editMode()
     {
-        int id = getIntent().getExtras().getInt("id");
+        int id = getIntent().getExtras().getInt(EXTRA_ID);
 
         OpenScale openScale = OpenScale.getInstance(getApplicationContext());
 
@@ -147,23 +157,23 @@ public class UserSettingsActivity extends Activity {
 
         switch (scaleUser.getScaleUnit())
         {
-            case 0:
+            case KG:
                 radioScaleUnit.check(R.id.btnRadioKG);
                 break;
-            case 1:
+            case LB:
                 radioScaleUnit.check(R.id.btnRadioLB);
                 break;
-            case 2:
+            case ST:
                 radioScaleUnit.check(R.id.btnRadioST);
                 break;
         }
 
         switch (scaleUser.getGender())
         {
-            case 0:
+            case MALE:
                 radioGender.check(R.id.btnRadioMale);
                 break;
-            case 1:
+            case FEMALE:
                 radioGender.check(R.id.btnRadioWoman);
                 break;
         }
@@ -173,8 +183,12 @@ public class UserSettingsActivity extends Activity {
     {
         boolean validate = true;
 
-        if (txtUserName.getText().toString().length() == 0) {
-            txtUserName.setError(getResources().getString(R.string.error_user_name_required));
+        if (txtUserName.getText().toString().length() < 3) {
+            if (txtUserName.getText().toString().length() == 0) {
+                txtUserName.setError(getResources().getString(R.string.error_user_name_required));
+            } else {
+                txtUserName.setError(getResources().getString(R.string.error_user_name_too_short));
+            }
             validate = false;
         }
 
@@ -201,6 +215,7 @@ public class UserSettingsActivity extends Activity {
         public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
             Calendar cal = Calendar.getInstance();
             cal.set(selectedYear, selectedMonth, selectedDay, 0, 0, 0);
+            cal.set(Calendar.MILLISECOND, 0);
             birthday = cal.getTime();
             txtBirthday.setText(dateFormat.format(birthday));
            }
@@ -211,6 +226,7 @@ public class UserSettingsActivity extends Activity {
         public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
             Calendar cal = Calendar.getInstance();
             cal.set(selectedYear, selectedMonth, selectedDay, 0, 0, 0);
+            cal.set(Calendar.MILLISECOND, 0);
             goal_date = cal.getTime();
             txtGoalDate.setText(dateFormat.format(goal_date));
         }
@@ -225,7 +241,7 @@ public class UserSettingsActivity extends Activity {
 
             deleteAllDialog.setPositiveButton(getResources().getString(R.string.label_yes), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    int userId = getIntent().getExtras().getInt("id");
+                    int userId = getIntent().getExtras().getInt(EXTRA_ID);
 
                     OpenScale openScale = OpenScale.getInstance(getApplicationContext());
                     openScale.clearScaleData(userId);
@@ -239,9 +255,7 @@ public class UserSettingsActivity extends Activity {
                         lastUserId = scaleUser.get(0).getId();
                     }
 
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                    prefs.edit().putInt("selectedUserId", lastUserId).commit();
-
+                    openScale.selectScaleUser(lastUserId);
                     openScale.updateScaleData();
 
                     Intent returnIntent = new Intent();
@@ -275,32 +289,30 @@ public class UserSettingsActivity extends Activity {
                     float initial_weight = Float.valueOf(txtInitialWeight.getText().toString());
                     float goal_weight = Float.valueOf(txtGoalWeight.getText().toString());
 
-                    int scale_unit = -1;
+                    Converters.WeightUnit scale_unit = Converters.WeightUnit.KG;
 
                     switch (checkedRadioButtonId) {
                         case R.id.btnRadioKG:
-                            scale_unit = 0;
+                            scale_unit = Converters.WeightUnit.KG;
                             break;
                         case R.id.btnRadioLB:
-                            scale_unit = 1;
+                            scale_unit = Converters.WeightUnit.LB;
                             break;
                         case R.id.btnRadioST:
-                            scale_unit = 2;
+                            scale_unit = Converters.WeightUnit.ST;
                             break;
                     }
 
-                    int gender = -1;
+                    Converters.Gender gender = Converters.Gender.MALE;
 
                     switch (checkedGenderId) {
                         case R.id.btnRadioMale:
-                            gender = 0;
+                            gender = Converters.Gender.MALE;
                             break;
                         case R.id.btnRadioWoman:
-                            gender = 1;
+                            gender = Converters.Gender.FEMALE;
                             break;
                     }
-
-                    int id = 0;
 
                     final ScaleUser scaleUser = new ScaleUser();
 
@@ -313,19 +325,16 @@ public class UserSettingsActivity extends Activity {
                     scaleUser.setGoalWeight(goal_weight);
                     scaleUser.setGoalDate(goal_date);
 
-                    if (getIntent().getExtras().getInt("mode") == EDIT_USER_REQUEST) {
-                        id = getIntent().getExtras().getInt("id");
+                    if (getIntent().getExtras().getInt(EXTRA_MODE) == EDIT_USER_REQUEST) {
+                        int id = getIntent().getExtras().getInt(EXTRA_ID);
                         scaleUser.setId(id);
                         openScale.updateScaleUser(scaleUser);
                     } else {
-                        openScale.addScaleUser(scaleUser);
-
-                        id = openScale.getScaleUserList().get(openScale.getScaleUserList().size() - 1).getId();
+                        int id = openScale.addScaleUser(scaleUser);
+                        scaleUser.setId(id);
                     }
 
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                    prefs.edit().putInt("selectedUserId", id).commit();
-
+                    openScale.selectScaleUser(scaleUser.getId());
                     openScale.updateScaleData();
 
                     Intent returnIntent = new Intent();

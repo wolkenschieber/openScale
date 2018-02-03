@@ -18,22 +18,27 @@ package com.health.openscale.core.datatypes;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 
+import com.health.openscale.core.utils.Converters;
 import com.j256.simplecsv.common.CsvColumn;
 
 import java.util.Date;
 
-@Entity(tableName = "scaleMeasurements", indices = {@Index(value = {"datetime"}, unique = true)})
-public class ScaleMeasurement {
-    private static float KG_LB = 2.20462f;
-    private static float KG_ST = 0.157473f;
+@Entity(tableName = "scaleMeasurements",
+        indices = {@Index(value = {"userId", "datetime"}, unique = true)},
+        foreignKeys = @ForeignKey(
+                entity = ScaleUser.class,
+                parentColumns = "id",
+                childColumns = "userId",
+                onDelete = ForeignKey.CASCADE))
+public class ScaleMeasurement implements Cloneable {
 
     @PrimaryKey(autoGenerate = true)
     private int id;
 
-    @CsvColumn
     @ColumnInfo(name = "userId")
     private int userId;
     @ColumnInfo(name = "enabled")
@@ -85,6 +90,41 @@ public class ScaleMeasurement {
         comment = new String();
     }
 
+    @Override
+    public ScaleMeasurement clone() {
+        ScaleMeasurement clone;
+        try {
+            clone = (ScaleMeasurement) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            throw new RuntimeException("failed to clone ScaleMeasurement", e);
+        }
+        clone.dateTime = (Date) dateTime.clone();
+        return clone;
+    }
+
+    public void add(final ScaleMeasurement summand) {
+        weight += summand.getWeight();
+        fat += summand.getFat();
+        water += summand.getWater();
+        muscle += summand.getMuscle();
+        lbw += summand.getLbw();
+        bone += summand.getBone();
+        waist += summand.getWaist();
+        hip += summand.getHip();
+    }
+
+    public void divide(final float divisor) {
+        weight /= divisor;
+        fat /= divisor;
+        water /= divisor;
+        muscle /= divisor;
+        lbw /= divisor;
+        bone /= divisor;
+        waist /= divisor;
+        hip /= divisor;
+    }
+
     public int getId() {
         return id;
     }
@@ -121,41 +161,16 @@ public class ScaleMeasurement {
         return weight;
     }
 
-    public float getConvertedWeight(int scale_unit) {
-        float converted_weight = 0.0f;
-
-        switch (ScaleUser.UNIT_STRING[scale_unit]) {
-            case "kg":
-                converted_weight = weight;
-                break;
-            case "lb":
-                converted_weight = weight * KG_LB;
-                break;
-            case "st":
-                converted_weight = weight * KG_ST;
-                break;
-        }
-
-        return converted_weight;
+    public float getConvertedWeight(Converters.WeightUnit unit) {
+        return Converters.fromKilogram(weight, unit);
     }
 
     public void setWeight(float weight) {
         this.weight = weight;
-
     }
 
-    public void setConvertedWeight(float weight, int scale_unit) {
-        switch (ScaleUser.UNIT_STRING[scale_unit]) {
-            case "kg":
-                this.weight = weight;
-                break;
-            case "lb":
-                this.weight = weight / KG_LB;
-                break;
-            case "st":
-                this.weight = weight / KG_ST;
-                break;
-        }
+    public void setConvertedWeight(float weight, Converters.WeightUnit unit) {
+        this.weight = Converters.toKilogram(weight, unit);
     }
 
     public float getFat() {
@@ -226,7 +241,7 @@ public class ScaleMeasurement {
         float bmr = 0.0f;
 
         // BMR formula by Mifflin, St Jeor et al: A new predictive equation for resting energy expenditure in healthy individuals
-        if (scaleUser.isMale()) {
+        if (scaleUser.getGender().isMale()) {
             bmr = 10.0f * weight + 6.25f * scaleUser.getBodyHeight() - 5.0f * scaleUser.getAge(dateTime) + 5.0f;
         } else {
             bmr = 10.0f * weight + 6.25f * scaleUser.getBodyHeight() - 5.0f * scaleUser.getAge(dateTime) - 161.0f;
@@ -250,6 +265,10 @@ public class ScaleMeasurement {
     @Override
     public String toString()
     {
-        return "ID : " + id + " USER_ID: " + userId + " DATE_TIME: " + dateTime.toString() + " WEIGHT: " + weight + " FAT: " + fat + " WATER: " + water + " MUSCLE: " + muscle + " LBW: " + lbw + " WAIST: " + waist + " HIP: " + hip + " BONE: " + bone + " COMMENT: " + comment;
+        return String.format(
+                "ID: %d, USER_ID: %d, DATE_TIME: %s, WEIGHT: %.2f, FAT: %.2f, WATER: %.2f, " +
+                "MUSCLE: %.2f, LBW: %.2f, WAIST: %.2f, HIP: %.2f, BONE: %.2f, COMMENT: %s",
+                id, userId, dateTime.toString(), weight, fat, water,
+                muscle, lbw, waist, hip, bone, comment);
     }
 }

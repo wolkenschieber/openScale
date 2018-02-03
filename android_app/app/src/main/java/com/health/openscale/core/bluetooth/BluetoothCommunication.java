@@ -23,7 +23,10 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.util.Log;
 
@@ -36,19 +39,22 @@ import java.util.UUID;
 public abstract class BluetoothCommunication {
     public enum BT_STATUS_CODE {BT_RETRIEVE_SCALE_DATA, BT_INIT_PROCESS, BT_CONNECTION_ESTABLISHED,
         BT_CONNECTION_LOST, BT_NO_DEVICE_FOUND, BT_UNEXPECTED_ERROR, BT_SCALE_MESSAGE
-    };
+    }
+
     public enum BT_MACHINE_STATE {BT_INIT_STATE, BT_CMD_STATE, BT_CLEANUP_STATE}
-    public enum BT_DEVICE_ID {CUSTOM_OPENSCALE, MI_SCALE_V1, MI_SCALE_V2, SANITAS_SBF70, MEDISANA_BS444, DIGOO_DGS038H, EXCELVANT_CF369BLE, YUNMAI_MINI, YUNMAI_SE, MGB, EXINGTECH_Y1, BEURER_BF700_800}
+    public enum BT_DEVICE_ID {CUSTOM_OPENSCALE, MI_SCALE_V1, MI_SCALE_V2,
+        SANITAS_SBF70, MEDISANA_BS444, DIGOO_DGS038H, EXCELVANT_CF369BLE,
+        YUNMAI_MINI, YUNMAI_SE, MGB, EXINGTECH_Y1, BEURER_BF700_800, HESLEY, ONEBYONE}
 
     protected Context context;
 
     private Handler callbackBtHandler;
-    private BluetoothGatt bluetoothGatt;
+    private static BluetoothGatt bluetoothGatt;
     protected BluetoothGattCallback gattCallback;
-    private BluetoothAdapter.LeScanCallback scanCallback;
     protected BluetoothAdapter btAdapter;
     private Handler searchHandler;
     private String btDeviceName;
+    public boolean isReceiverRegistered;
 
     private int cmdStepNr;
     private int initStepNr;
@@ -64,8 +70,9 @@ public abstract class BluetoothCommunication {
         this.context = context;
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         searchHandler = new Handler();
-        scanCallback = null;
         gattCallback = new GattCallback();
+        isReceiverRegistered = false;
+        bluetoothGatt = null;
     }
 
     /**
@@ -101,6 +108,10 @@ public abstract class BluetoothCommunication {
                 return new BluetoothExingtechY1(context);
             case BEURER_BF700_800:
                 return new BluetoothBeurerBF700_800(context);
+            case HESLEY:
+                return new BluetoothHesley(context);
+            case ONEBYONE:
+                return new BluetoothOneByone(context);
         }
 
         return null;
@@ -244,7 +255,7 @@ public abstract class BluetoothCommunication {
      * @param gattCharacteristic the Bluetooth Gatt characteristic
      * @param status the status code
      */
-    protected void onBluetoothDataRead(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic, int status) {};
+    protected void onBluetoothDataRead(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic, int status) {}
 
     /**
      * Method is triggered if a Bluetooth data from a device is notified or indicated.
@@ -252,7 +263,7 @@ public abstract class BluetoothCommunication {
      * @param bluetoothGatt the Bluetooth Gatt
      * @param gattCharacteristic the Bluetooth characteristic
      */
-    protected void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {};
+    protected void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {}
 
     /**
      * Set the Bluetooth machine state to a specific state.
@@ -404,44 +415,41 @@ public abstract class BluetoothCommunication {
     public void startSearching(String deviceName) {
         btDeviceName = deviceName;
 
-        if (scanCallback == null)
-        {
-            scanCallback = new BluetoothAdapter.LeScanCallback()
-            {
-                @Override
-                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    try {
-                        if (device.getName() == null) {
-                            return;
-                        }
+        IntentFilter filter = new IntentFilter();
 
-                        if (device.getName().toLowerCase().equals(btDeviceName.toLowerCase())) {
-                            Log.d("BluetoothCommunication", btDeviceName + " found trying to connect...");
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 
-                            searchHandler.removeCallbacksAndMessages(null);
-                            btAdapter.stopLeScan(scanCallback);
-                            bluetoothGatt = device.connectGatt(context, false, gattCallback);
-                        }
-                    } catch (Exception e) {
-                        setBtStatus(BT_STATUS_CODE.BT_UNEXPECTED_ERROR, e.getMessage());
-                    }
-                }
-            };
-        }
-
-
-        searchHandler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                btAdapter.stopLeScan(scanCallback);
-                setBtStatus(BT_STATUS_CODE.BT_NO_DEVICE_FOUND);
-            }
-        }, 10000);
-
-        btAdapter.startLeScan(scanCallback);
+        context.registerReceiver(mReceiver, filter);
+        isReceiverRegistered = true;
+        btAdapter.startDiscovery();
     }
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                //discovery finishes, dismis progress dialog
+                if (bluetoothGatt == null) {
+                    setBtStatus(BT_STATUS_CODE.BT_NO_DEVICE_FOUND);
+                }
+            } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                //bluetooth device found
+                BluetoothDevice device = (BluetoothDevice) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+                if (device.getName() == null) {
+                    return;
+                }
+
+                if (device.getName().toLowerCase().equals(btDeviceName.toLowerCase())) {
+                    Log.d("BluetoothCommunication", btDeviceName + " found trying to connect...");
+
+                    bluetoothGatt = device.connectGatt(context, true, gattCallback);
+                }
+            }
+        }
+    };
 
     /**
      * Stop searching for a Bluetooth device
@@ -449,12 +457,18 @@ public abstract class BluetoothCommunication {
     public void stopSearching() {
         if (bluetoothGatt != null)
         {
+            bluetoothGatt.disconnect();
             bluetoothGatt.close();
             bluetoothGatt = null;
         }
 
+        if (isReceiverRegistered == true) {
+            context.unregisterReceiver(mReceiver);
+            isReceiverRegistered = false;
+        }
+
         searchHandler.removeCallbacksAndMessages(null);
-        btAdapter.stopLeScan(scanCallback);
+        btAdapter.cancelDiscovery();
     }
 
     /**
@@ -579,6 +593,6 @@ public abstract class BluetoothCommunication {
                                             BluetoothGattCharacteristic characteristic) {
             onBluetoothDataChange(gatt, characteristic);
         }
-    };
+    }
 }
 
