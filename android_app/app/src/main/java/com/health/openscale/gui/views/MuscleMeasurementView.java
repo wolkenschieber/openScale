@@ -16,63 +16,58 @@
 package com.health.openscale.gui.views;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
-import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.evaluation.EvaluationResult;
 import com.health.openscale.core.evaluation.EvaluationSheet;
 
 public class MuscleMeasurementView extends FloatMeasurementView {
-
-    private boolean percentageEnable;
+    public static final String KEY = "muscle";
 
     public MuscleMeasurementView(Context context) {
         super(context, context.getResources().getString(R.string.label_muscle), ContextCompat.getDrawable(context, R.drawable.ic_muscle));
     }
 
     @Override
-    public void updatePreferences(SharedPreferences preferences) {
-        setVisible(preferences.getBoolean("muscleEnable", true));
-        percentageEnable = preferences.getBoolean("musclePercentageEnable", true);
+    public String getKey() {
+        return KEY;
+    }
+
+    @Override
+    protected boolean canConvertPercentageToAbsoluteWeight() {
+        return true;
     }
 
     @Override
     protected float getMeasurementValue(ScaleMeasurement measurement) {
-        if (percentageEnable) {
-            return measurement.getMuscle();
-        }
-
-        return measurement.getConvertedWeight(getScaleUser().getScaleUnit()) / 100.0f * measurement.getMuscle();
+        return measurement.getMuscle();
     }
 
     @Override
     protected void setMeasurementValue(float value, ScaleMeasurement measurement) {
-        if (percentageEnable) {
-            measurement.setMuscle(value);
-        } else {
-            measurement.setMuscle(100.0f / measurement.getConvertedWeight(getScaleUser().getScaleUnit()) * value);
-        }
+        measurement.setMuscle(value);
     }
 
     @Override
-    protected String getUnit() {
-        if (percentageEnable) {
-            return "%";
+    public String getUnit() {
+        if (shouldConvertPercentageToAbsoluteWeight()) {
+            return getScaleUser().getScaleUnit().toString();
         }
 
-        return getScaleUser().getScaleUnit().toString();
+        return "%";
     }
 
     @Override
     protected float getMaxValue() {
-        if (percentageEnable) {
-            return 80;
-        }
+        return maybeConvertPercentageToAbsolute(80);
+    }
 
-        return 300;
+    @Override
+    public int getColor() {
+        return Color.parseColor("#99CC00");
     }
 
     @Override

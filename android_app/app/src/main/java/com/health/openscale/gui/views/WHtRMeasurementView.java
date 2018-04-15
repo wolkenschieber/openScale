@@ -16,7 +16,7 @@
 package com.health.openscale.gui.views;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
@@ -25,14 +25,15 @@ import com.health.openscale.core.evaluation.EvaluationResult;
 import com.health.openscale.core.evaluation.EvaluationSheet;
 
 public class WHtRMeasurementView extends FloatMeasurementView {
+    public static final String KEY = "whtr";
 
     public WHtRMeasurementView(Context context) {
         super(context, context.getResources().getString(R.string.label_whtr), ContextCompat.getDrawable(context, R.drawable.ic_whtr));
     }
 
     @Override
-    public void updatePreferences(SharedPreferences preferences) {
-        setVisible(preferences.getBoolean("waistEnable", false));
+    public String getKey() {
+        return KEY;
     }
 
     @Override
@@ -51,13 +52,18 @@ public class WHtRMeasurementView extends FloatMeasurementView {
     }
 
     @Override
-    protected String getUnit() {
+    public String getUnit() {
         return "";
     }
 
     @Override
     protected float getMaxValue() {
         return 1;
+    }
+
+    @Override
+    public int getColor() {
+        return Color.parseColor("#9CCC65");
     }
 
     @Override

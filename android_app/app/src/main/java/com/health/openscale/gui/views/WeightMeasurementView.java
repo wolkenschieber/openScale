@@ -16,7 +16,7 @@
 package com.health.openscale.gui.views;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
@@ -26,14 +26,15 @@ import com.health.openscale.core.evaluation.EvaluationSheet;
 import com.health.openscale.core.utils.Converters;
 
 public class WeightMeasurementView extends FloatMeasurementView {
+    public static final String KEY = "weight";
 
     public WeightMeasurementView(Context context) {
         super(context, context.getResources().getString(R.string.label_weight), ContextCompat.getDrawable(context, R.drawable.ic_weight));
     }
 
     @Override
-    public void updatePreferences(SharedPreferences preferences) {
-        setVisible(preferences.getBoolean("weightEnable", true));
+    public String getKey() {
+        return KEY;
     }
 
     @Override
@@ -47,13 +48,18 @@ public class WeightMeasurementView extends FloatMeasurementView {
     }
 
     @Override
-    protected String getUnit() {
+    public String getUnit() {
         return getScaleUser().getScaleUnit().toString();
     }
 
     @Override
     protected float getMaxValue() {
         return Converters.fromKilogram(300.0f, getScaleUser().getScaleUnit());
+    }
+
+    @Override
+    public int getColor() {
+        return Color.parseColor("#AA66CC");
     }
 
     @Override

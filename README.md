@@ -18,8 +18,8 @@ Install [openScale-dev-build.apk](https://github.com/oliexdev/openScale/releases
 - Import or export your data from/into a CSV file
 - Estimates body metrics (body fat, body water and lean body mass) based on scientic publications
 - Support for multiple users
-- Partially or full support for custom made Bluetooth scale, Xiaomi Mi scale v1/v2, Sanitas SBF70, Medisana BS444, Digoo DG-S038H, Yunmai Mini, Excelvan CF369BLE, Yunmai SE, MGB, Exingtech Y1, Beurer BF700/800, Silvercrest SBF75, Runtastic Libra (see [openScale wiki](https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale) for details)
-- Partially or full translated into English, German, Japanese, French, Polish, Brazilian portuguese, Slovak, Turkish, Swedish, Spanish, Dutch, Catalan
+- Partially or full support for custom made Bluetooth scale, Xiaomi Mi scale v1/v2, Sanitas SBF70, Medisana BS444, Digoo DG-S038H, Yunmai Mini, Excelvan CF369BLE, Yunmai SE, MGB, Exingtech Y1, Beurer BF700/710/800, Silvercrest SBF75, Runtastic Libra (see [openScale wiki](https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale) for details)
+- Partially or full translated into English, German, Japanese, French, Polish, Brazilian portuguese, Slovak, Turkish, Swedish, Spanish, Dutch, Catalan, Norwegian Bokmål
 - No advertising and for free
 - All data belongs to you (no cloud service)
 
@@ -36,6 +36,8 @@ Please see in the [openScale wiki](https://github.com/oliexdev/openScale/wiki/Su
 If you found a bug, have an idea how to improve the openScale app or have a question, please create new issue or comment existing one. If you would like to contribute code, fork the repository and send a pull request.
 
 If you want to help to support your Bluetooth scale please see [here](https://github.com/oliexdev/openScale/wiki/How-to-reverse-engineer-a-Bluetooth-4.x-scale) for further information.
+
+If you want to help to translate the app in your language please see [here](https://github.com/oliexdev/openScale/wiki/Frequently-Asked-Questions-(FAQ)#why-is-my-language-xyz-is-missing-or-incomplete)
 
 # Screens
 

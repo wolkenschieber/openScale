@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">openScale</string>
+    <string name="app_name" translatable="false">openScale</string>
     <string name="title_overview">Overview</string>
     <string name="title_graph">Chart</string>
     <string name="title_table">Table</string>
     <string name="title_statistics">Statistics</string>
     <string name="title_users">Users</string>
-    <string name="title_data">Data</string>
     <string name="title_measurements">Measurements</string>
     <string name="title_about">About</string>
     <string name="title_general">General</string>
@@ -17,7 +16,6 @@
     <string name="open_drawer">open</string>
     <string name="close_drawer">close</string>
 
-    <string name="label_add">Add</string>
     <string name="label_cancel">Cancel</string>
     <string name="label_ok">OK</string>
     <string name="label_yes">Yes</string>
@@ -25,14 +23,14 @@
     <string name="label_delete">Delete</string>
     <string name="label_add_user">Add user</string>
     <string name="label_share">Share</string>
+    <string name="label_share_subject">openScale CSV data export (%s)</string>
 
-    <string name="label_id">Id</string>
     <string name="label_weight">Weight</string>
     <string name="label_bmi">Body mass index (BMI)</string>
     <string name="label_bmr">Basal metabolic rate (BMR)</string>
-    <string name="label_fat">Body fat percentage</string>
-    <string name="label_water">Water percentage</string>
-    <string name="label_muscle">Muscle percentage</string>
+    <string name="label_fat">Body fat</string>
+    <string name="label_water">Body water</string>
+    <string name="label_muscle">Muscle</string>
     <string name="label_lbw">Lean body weight</string>
     <string name="label_waist">Waist circumference</string>
     <string name="label_hip">Hip circumference</string>
@@ -42,15 +40,10 @@
     <string name="label_bone">Bone mass</string>
     <string name="label_smartUserAssign">Smart User assignment</string>
 
-    <string name="label_fat_percentage">Body fat in %</string>
-    <string name="label_water_percentage">Body water in %</string>
-    <string name="label_muscle_percentage">Muscle in %</string>
-
     <plurals name="label_days">
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
     </plurals>
-    <string name="label_measures">measures</string>
     <string name="label_last_week">Last 7 days</string>
     <string name="label_last_month">Last 30 days</string>
     <string name="label_weight_difference">Weight difference</string>
@@ -61,7 +54,7 @@
     <string name="label_time">Time</string>
     <string name="label_birthday">Birthday</string>
     <string name="label_user_name">Name</string>
-    <string name="label_body_height">Body height</string>
+    <string name="label_height">Height</string>
     <string name="label_scale_unit">Scale unit</string>
     <string name="label_gender">Gender</string>
     <string name="label_male">Male</string>
@@ -72,7 +65,6 @@
     <string name="label_title_user">user</string>
     <string name="label_title_last_measurement">last measurement</string>
     <string name="label_title_goal">goal</string>
-    <string name="label_title_statistics">statistics</string>
 
     <string name="label_import">Import</string>
     <string name="label_export">Export</string>
@@ -84,31 +76,24 @@
     <string name="error_importing">Error importing</string>
     <string name="error_user_name_required">Error: user name is required</string>
     <string name="error_user_name_too_short">Error: user name have to be at least 3 characters</string>
-    <string name="error_body_height_required">Error: body height is required</string>
+    <string name="error_height_required">Error: height is required</string>
     <string name="error_initial_weight_required">Error: initial weight is required</string>
     <string name="error_goal_weight_required">Error: goal weight is required</string>
-    <string name="error_hip_value_required">hip circumference is required</string>
 
     <string name="info_data_deleted">Database entry deleted</string>
     <string name="info_data_all_deleted">All database entries deleted</string>
     <string name="info_data_exported">Data exported to</string>
     <string name="info_data_imported">Data imported from</string>
-    <string name="info_set_filename">Set filename to</string>
     <string name="info_enter_value_cm">Enter value in cm</string>
-    <string name="info_enter_value_percent">Enter value in %</string>
-    <string name="info_enter_value_unit">Enter value in</string>
     <string name="info_enter_comment">Enter an optional comment</string>
-    <string name="info_enter_initial_weight">Enter your initial weight in your scale unit</string>
-    <string name="info_enter_goal_weight">Enter your goal weight in your scale unit</string>
+    <string name="info_enter_value_scale_unit">Enter value in scale unit</string>
     <string name="info_is_visible">is visible</string>
     <string name="info_is_not_visible">is not visible</string>
     <string name="info_is_enable">is enabled</string>
     <string name="info_is_not_enable">is disabled</string>
     <string name="info_is_not_available">is not available</string>
-    <string name="info_delete_bluetooth_data">Clear all Bluetooth data</string>
-    <string name="info_delete_bluetooth_data_success">Bluetooth data was successful cleared</string>
     <string name="info_bluetooth_try_connection">Trying to connect to</string>
-    <string name="info_bluetooth_connection_lost">Lost Bluetooth connection.</string>
+    <string name="info_bluetooth_connection_lost">Lost Bluetooth connection</string>
     <string name="info_bluetooth_no_device">No Bluetooth device found</string>
     <string name="info_bluetooth_no_device_set">No Bluetooth device selected</string>
     <string name="info_bluetooth_connection_successful">Connection successful established</string>
@@ -127,6 +112,7 @@
 
     <string name="label_bluetooth_title">Bluetooth</string>
     <string name="label_bluetooth_enable">Search for scale on startup</string>
+    <string name="label_mergeWithLastMeasurement">Merge with last measurement</string>
     <string name="label_bluetooth_searching">Searching for Bluetooth scales</string>
     <string name="label_bluetooth_searching_finished">Finished searching for Bluetooth scales</string>
     <string name="label_device_type">Device Type</string>
@@ -136,25 +122,15 @@
 
     <string name="label_delete_confirmation">Delete confirmation</string>
 
-    <string name="label_estimate_water">Estimate body water</string>
-    <string name="label_estimate_lbw">Estimate lean body weight</string>
-    <string name="label_estimate_fat">Estimate body fat</string>
-
-    <string name="label_category_display">Display</string>
-    <string name="label_category_body_metrics_estimation">Body metrics estimation</string>
     <string name="label_category_measurement_database">Measurement database</string>
 
     <string name="label_maintainer">Maintainer</string>
     <string name="label_website">Website</string>
     <string name="label_license">License</string>
 
-    <string name="label_estimate_water_formula">Body water formula</string>
-    <string name="label_estimate_lbw_formula">Body lean body weight formula</string>
-    <string name="label_estimate_fat_formula">Body fat formula</string>
     <string name="label_automatic">auto</string>
 
     <string name="label_theme">Theme</string>
-    <string name="info_app_restart_required">To apply changes an app restart is required</string>
 
     <string name="label_reminder">Reminder</string>
     <string name="label_reminder_weekdays">Weekdays</string>
@@ -162,12 +138,6 @@
     <string name="label_reminder_notify_text">Notification text</string>
     <string name="default_value_reminder_notify_text">Time to weight</string>
 
-    <string name="info_your_weight">Your weight was</string>
-    <string name="info_your_fat">Your body fat was</string>
-    <string name="info_your_water">Your water percentage was</string>
-    <string name="info_your_muscle">Your muscle percentage was</string>
-    <string name="info_your_waist">Your waist circumference was</string>
-    <string name="info_your_hip">Your hip circumference was</string>
     <string name="info_on_date">on</string>
 
     <string name="Monday">Monday</string>
@@ -185,10 +155,10 @@
     <string name="label_not_found">not found</string>
     <string name="label_ignoreOutOfRange">Ignore data that are out of range</string>
     <string name="label_initial_weight">Initial weight</string>
-    <string name="label_average_data">Calculate average per day/month</string>
     <string name="label_regression_line">Regression weight line</string>
     <string name="label_regression_line_degree">Regression polynom degree</string>
     <string name="label_goal_line">Goal line</string>
+    <string name="label_help">Help</string>
 
     <string name="label_feedback_message_enjoying">Enjoying openScale?</string>
     <string name="label_feedback_message_rate_app">How about a rating on GooglePlay or on GitHub, then?</string>
@@ -198,8 +168,8 @@
     <string name="label_feedback_message_positive">Ok, sure</string>
     <string name="label_feedback_message_negative">No, thanks</string>
 
-    <string name="error_max_scale_users">Maximum number of concurrent scale users reached.</string>
-    <string name="info_step_on_scale">Please step barefoot on the scale for reference measurements.</string>
+    <string name="error_max_scale_users">Maximum number of concurrent scale users reached</string>
+    <string name="info_step_on_scale">Please step barefoot on the scale for reference measurements</string>
     <string name="info_measuring">Measuring weight: %.2f</string>
 
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">An unexpected error occurred.\n\nPlease create a new issue including the detailed error details on\nhttps://github.com/oliexdev/openScale/issues</string>
@@ -211,5 +181,48 @@
     <string name="customactivityoncrash_error_activity_error_details_copy">Copy to clipboard</string>
     <string name="customactivityoncrash_error_activity_error_details_copied">Copied to clipboard</string>
     <string name="customactivityoncrash_error_activity_error_details_clipboard_label">Error information</string>
+    <string name="toggle_expand">Toggle expand</string>
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
 
+    <string name="label_month_view">Month view</string>
+    <string name="label_weeks_view">Week view</string>
+
+    <string name="permission_not_granted">Permission not granted</string>
+    <string name="permission_bluetooth_info">openScale requires permission to access the coarse location to search for Bluetooth devices. The permission can be revoked after the device is found.</string>
+    <string name="permission_bluetooth_info_title">Information</string>
+    <string name="label_next">Next</string>
+    <string name="label_press_hold_reorder">Press and hold to reorder</string>
+    <string name="label_set_default_order">Set default order</string>
+    <string name="label_export_overwrite">Overwrite previous export \"%s\"?</string>
+    <string name="label_include_in_overview_graph">Include in overview graph</string>
+    <string name="label_measurement_in_percent">Measurement in %</string>
+    <string name="label_estimate_measurement">Estimate measurement</string>
+    <string name="label_estimation_formula">Estimation formula</string>
+    <string name="language_default">System default</string>
+    <string name="label_language">Language</string>
+    <string name="language_brazilian_portuguese" translatable="false">Brazilian Portuguese</string>
+    <string name="language_catalan" translatable="false">Catalan (català)</string>
+    <string name="language_czech" translatable="false">Czech (čeština)</string>
+    <string name="language_dutch" translatable="false">Dutch (Nederlands)</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_french" translatable="false">French (français)</string>
+    <string name="language_german" translatable="false">German (Deutsch)</string>
+    <string name="language_japanese" translatable="false">Japanese (日本語 (にほんご))</string>
+    <string name="language_norwegian_bokmal" translatable="false">Norwegian Bokmål (Norsk)</string>
+    <string name="language_polish" translatable="false">Polish (język polski)</string>
+    <string name="language_slovak" translatable="false">Slovak (Slovenčina)</string>
+    <string name="language_spanish" translatable="false">Spanish (Español)</string>
+    <string name="language_swedish" translatable="false">Swedish (Svenska)</string>
+    <string name="language_turkish" translatable="false">Turkish (Türkçe)</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="label_contribute_translation">Contribute translation</string>
+    <string name="label_add_or_fix_translation">Add new or fix existing</string>
+    <string name="label_overview_graph">Overview graph</string>
+    <string name="label_percent">Percent</string>
+    <string name="label_estimated">Estimated</string>
+    <string name="label_estimate_measurement_summary">Based on weight, height, age, gender, etc.</string>
+    <string name="label_scale_not_supported">Is your scale not supported?</string>
+    <string name="label_click_to_help_add_support">Click here if you want to help add support for it</string>
 </resources>

@@ -41,22 +41,8 @@ public class BluetoothMedisanaBS444 extends BluetoothCommunication {
     }
 
     @Override
-    public String deviceName() {
+    public String driverName() {
         return "Medisana BS444";
-    }
-
-    @Override
-    public String defaultDeviceName() {
-        return "Medisana BS444";
-    }
-
-    @Override
-    public boolean checkDeviceName(String btDeviceName) {
-        if (btDeviceName.startsWith("013197")) {
-            return true;
-        }
-
-        return false;
     }
 
     @Override

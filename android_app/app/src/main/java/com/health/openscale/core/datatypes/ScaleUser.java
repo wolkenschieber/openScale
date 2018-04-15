@@ -52,7 +52,7 @@ public class ScaleUser {
     private Date goalDate;
 
     public ScaleUser() {
-        userName = new String();
+        userName = "";
         birthday = new Date();
         bodyHeight = -1;
         scaleUnit = Converters.WeightUnit.KG;
@@ -150,6 +150,14 @@ public class ScaleUser {
 
     public float getConvertedInitialWeight() {
         return Converters.fromKilogram(initialWeight, scaleUnit);
+    }
+
+    public static String getPreferenceKey(int userId, String key) {
+        return String.format("user.%d.%s", userId, key);
+    }
+
+    public String getPreferenceKey(String key) {
+        return getPreferenceKey(getId(), key);
     }
 
     @Override

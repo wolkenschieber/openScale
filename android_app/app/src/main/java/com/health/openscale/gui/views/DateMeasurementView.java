@@ -15,14 +15,11 @@
 */
 package com.health.openscale.gui.views;
 
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.view.View;
 import android.widget.DatePicker;
-import android.widget.EditText;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
@@ -32,12 +29,18 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class DateMeasurementView extends MeasurementView {
+    public static final String KEY = "date";
+
     private static DateFormat dateFormat = DateFormat.getDateInstance();
     private Date date;
-    private static String DATE_KEY = "date";
 
     public DateMeasurementView(Context context) {
         super(context, context.getResources().getString(R.string.label_date), ContextCompat.getDrawable(context, R.drawable.ic_lastmonth));
+    }
+
+    @Override
+    public String getKey() {
+        return KEY;
     }
 
     private void setValue(Date newDate, boolean callListener) {
@@ -69,18 +72,18 @@ public class DateMeasurementView extends MeasurementView {
     }
 
     @Override
+    public void clearIn(ScaleMeasurement measurement) {
+        // Ignore
+    }
+
+    @Override
     public void restoreState(Bundle state) {
-        setValue(new Date(state.getLong(DATE_KEY)), true);
+        setValue(new Date(state.getLong(getKey())), true);
     }
 
     @Override
     public void saveState(Bundle state) {
-        state.putLong(DATE_KEY, date.getTime());
-    }
-
-    @Override
-    public void updatePreferences(SharedPreferences preferences) {
-        // Empty
+        state.putLong(getKey(), date.getTime());
     }
 
     @Override
@@ -89,37 +92,27 @@ public class DateMeasurementView extends MeasurementView {
     }
 
     @Override
-    protected boolean validateAndSetInput(EditText view) {
-        return false;
-    }
+    protected View getInputView() {
+        DatePicker datePicker = new DatePicker(getContext());
+        datePicker.setPadding(0, 15, 0, 0);
 
-    @Override
-    protected int getInputType() {
-        return 0;
-    }
-
-    @Override
-    protected String getHintText() {
-        return null;
-    }
-
-    private DatePickerDialog.OnDateSetListener datePickerListener = new DatePickerDialog.OnDateSetListener() {
-        @Override
-        public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(date);
-            cal.set(selectedYear, selectedMonth, selectedDay);
-            setValue(cal.getTime(), true);
-        }
-    };
-
-    @Override
-    protected AlertDialog getInputDialog() {
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
+        datePicker.updateDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH));
 
-        return new DatePickerDialog(
-            getContext(), datePickerListener, cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+        return datePicker;
+    }
+
+    @Override
+    protected boolean validateAndSetInput(View view) {
+        DatePicker datePicker = (DatePicker) view;
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth());
+        setValue(cal.getTime(), true);
+
+        return true;
     }
 }

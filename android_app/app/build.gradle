@@ -6,10 +6,10 @@ android {
     defaultConfig {
         applicationId "com.health.openscale"
         testApplicationId "com.health.openscale.test"
-        minSdkVersion 18
-        targetSdkVersion 22 // don't set target sdk > 22 otherwise bluetooth le discovery need permission to ACCESS_COARSE_LOCATION
-        versionCode 23
-        versionName "1.7"
+        minSdkVersion 19
+        targetSdkVersion 27
+        versionCode 24
+        versionName "1.7.1"
 
         javaCompileOptions {
             annotationProcessorOptions { arguments = ["room.schemaLocation":"$projectDir/schemas".toString()] }
@@ -35,7 +35,7 @@ android {
 }
 
 ext {
-    supportLibVersion = '27.0.2'
+    supportLibVersion = '27.1.0'
 }
 
 dependencies {
@@ -47,7 +47,7 @@ dependencies {
     implementation 'com.github.lecho:hellocharts-library:1.5.8@aar'
 
     // Simple CSV
-    implementation 'com.j256.simplecsv:simplecsv:2.2'
+    implementation 'com.j256.simplecsv:simplecsv:2.3'
 
     // CustomActivityOnCrash
     implementation 'cat.ereza:customactivityoncrash:2.2.0'

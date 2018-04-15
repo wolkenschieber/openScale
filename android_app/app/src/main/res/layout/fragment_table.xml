@@ -2,15 +2,43 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:weightSum="1">
+    android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/subpageView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="5dp"
         android:gravity="center"
+        android:background="?attr/colorPrimary"
         android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:gravity="left"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/subpageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:gravity="center"
+            android:layout_weight="0"
+            android:orientation="horizontal">
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:gravity="right"
+            android:layout_weight="0.9"
+            android:orientation="horizontal">
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -20,7 +48,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingBottom="5dp"
-        android:paddingTop="5dp"></LinearLayout>
+        android:paddingTop="5dp">
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,39 +61,8 @@
         <ListView
             android:id="@+id/tableDataView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="5dp">
         </ListView>
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:layout_weight="0.1"
-        android:gravity="bottom"
-        android:orientation="horizontal"
-        android:weightSum="1">
-
-        <Button
-            android:id="@+id/btnImportData"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="5dp"
-            android:layout_weight="0.5"
-            android:background="@drawable/flat_selector"
-            android:text="@string/label_import"
-            android:textColor="@android:color/white" />
-
-        <Button
-            android:id="@+id/btnExportData"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_weight="0.5"
-            android:background="@drawable/flat_selector"
-            android:text="@string/label_export"
-            android:textColor="@android:color/white" />
-
-    </LinearLayout>
-
 </LinearLayout>

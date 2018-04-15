@@ -15,7 +15,7 @@
 */
 package com.health.openscale.gui.preferences;
 
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.EditTextPreference;
@@ -30,6 +30,7 @@ import android.widget.Toast;
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.gui.utils.PermissionHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,11 +42,11 @@ import java.util.List;
 import java.util.Set;
 
 public class BackupPreferences extends PreferenceFragment {
+    private static final String PREFERENCE_KEY_EXPORT_DIR = "exportDir";
     private static final String PREFERENCE_KEY_IMPORT_BACKUP = "importBackup";
     private static final String PREFERENCE_KEY_EXPORT_BACKUP = "exportBackup";
 
-    private Preference importBackup;
-    private Preference exportBackup;
+    EditTextPreference exportDir;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -53,127 +54,103 @@ public class BackupPreferences extends PreferenceFragment {
 
         addPreferencesFromResource(R.xml.backup_preferences);
 
-        importBackup = (Preference) findPreference(PREFERENCE_KEY_IMPORT_BACKUP);
-        importBackup.setOnPreferenceClickListener(new onClickListenerImportBackup());
+        exportDir = (EditTextPreference) findPreference(PREFERENCE_KEY_EXPORT_DIR);
+        exportDir.setSummary(exportDir.getText());
+        exportDir.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                preference.setSummary((String) newValue);
+                return true;
+            }
+        });
 
-        exportBackup = (Preference) findPreference(PREFERENCE_KEY_EXPORT_BACKUP);
-        exportBackup.setOnPreferenceClickListener(new onClickListenerExportBackup());
+        Preference importBackup = findPreference(PREFERENCE_KEY_IMPORT_BACKUP);
+        importBackup.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                if (PermissionHelper.requestReadPermission(getActivity())) {
+                    importBackup();
+                }
+                return true;
+            }
+        });
 
-        initSummary(getPreferenceScreen());
+        Preference exportBackup = findPreference(PREFERENCE_KEY_EXPORT_BACKUP);
+        exportBackup.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                if (PermissionHelper.requestWritePermission(getActivity())) {
+                    exportBackup();
+                }
+                return true;
+            }
+        });
     }
 
-    private void initSummary(Preference p) {
-        if (p instanceof PreferenceGroup) {
-            PreferenceGroup pGrp = (PreferenceGroup) p;
-            for (int i = 0; i < pGrp.getPreferenceCount(); i++) {
-                initSummary(pGrp.getPreference(i));
-            }
-        } else {
-            updatePrefSummary(p);
-        }
+    private boolean isExternalStoragePresent() {
+        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
     }
 
-    private void updatePrefSummary(Preference p)
-    {
-        if (p instanceof ListPreference)
-        {
-            ListPreference listPref = (ListPreference) p;
-            p.setSummary(listPref.getEntry());
+    private File getExportDir() {
+        if (!isExternalStoragePresent()) {
+            return null;
         }
 
-        if (p instanceof EditTextPreference)
-        {
-            EditTextPreference editTextPref = (EditTextPreference) p;
-            if (p.getTitle().toString().contains("assword"))
-            {
-                p.setSummary("******");
-            }
-            else
-            {
-                p.setSummary(editTextPref.getText());
-            }
-        }
-
-        if (p instanceof MultiSelectListPreference)
-        {
-            MultiSelectListPreference editMultiListPref = (MultiSelectListPreference) p;
-
-            CharSequence[] entries = editMultiListPref.getEntries();
-            CharSequence[] entryValues = editMultiListPref.getEntryValues();
-            List<String> currentEntries = new ArrayList<>();
-            Set<String> currentEntryValues = editMultiListPref.getValues();
-
-            for (int i = 0; i < entries.length; i++)
-            {
-                if (currentEntryValues.contains(entryValues[i].toString())) currentEntries.add(entries[i].toString());
-            }
-
-            p.setSummary(currentEntries.toString());
-        }
+        return new File(Environment.getExternalStorageDirectory(), exportDir.getText());
     }
 
-    private class onClickListenerImportBackup implements Preference.OnPreferenceClickListener {
-        @Override
-        public boolean onPreferenceClick(Preference preference) {
-            File exportDir = new File(Environment.getExternalStorageDirectory(), PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext()).getString("exportDir", "openScale Backup"));
-
-            importBackup("openScale.db", exportDir);
-
-            OpenScale openScale = OpenScale.getInstance(getActivity().getApplicationContext());
-            openScale.reopenDatabase();
-
-            List<ScaleUser> scaleUserList = openScale.getScaleUserList();
-
-            if (!scaleUserList.isEmpty()) {
-                openScale.selectScaleUser(scaleUserList.get(0).getId());
-                openScale.updateScaleData();
-            }
-
-            return true;
-        }
-    }
-
-    private class onClickListenerExportBackup implements Preference.OnPreferenceClickListener {
-        @Override
-        public boolean onPreferenceClick(Preference preference) {
-            File exportDir = new File(Environment.getExternalStorageDirectory(), PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext()).getString("exportDir", "openScale Backup"));
-
-            exportBackup("openScale.db", exportDir);
-
-            return true;
-        }
-    }
-
-    private boolean importBackup(String databaseName, File exportDir) {
-        if (!isExternalStoragePresent())
+    private boolean importBackup() {
+        File exportDir = getExportDir();
+        if (exportDir == null) {
             return false;
+        }
 
-        File exportFile = getActivity().getApplicationContext().getDatabasePath(databaseName);
-        File importFile = new File(exportDir, databaseName);
+        File dbFile = getActivity().getDatabasePath(OpenScale.DATABASE_NAME);
+        File importFile = new File(exportDir, OpenScale.DATABASE_NAME);
 
         if (!importFile.exists()) {
-            Toast.makeText(getActivity().getApplicationContext(), getResources().getString(R.string.error_importing) + " "  + exportDir + "/" + databaseName  + " " + getResources().getString(R.string.label_not_found), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getResources().getString(R.string.error_importing)
+                    + " "  + importFile.getPath() + " "
+                    + getResources().getString(R.string.label_not_found), Toast.LENGTH_SHORT).show();
             return false;
         }
 
         try {
-            exportFile.createNewFile();
-            copyFile(importFile, exportFile);
-            Toast.makeText(getActivity().getApplicationContext(), getResources().getString(R.string.info_data_imported) + " " + exportDir + "/" + databaseName, Toast.LENGTH_SHORT).show();
+            dbFile.createNewFile();
+            copyFile(importFile, dbFile);
+
+            Toast.makeText(getActivity(), getResources().getString(R.string.info_data_imported)
+                    + " " + importFile.getPath(), Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
-            Toast.makeText(getActivity().getApplicationContext(), getResources().getString(R.string.error_importing) + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getResources().getString(R.string.error_importing)
+                    + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return false;
+        }
+
+        OpenScale openScale = OpenScale.getInstance(getActivity());
+        openScale.reopenDatabase();
+
+        List<ScaleUser> scaleUserList = openScale.getScaleUserList();
+
+        if (!scaleUserList.isEmpty()) {
+            openScale.selectScaleUser(scaleUserList.get(0).getId());
+            openScale.updateScaleData();
         }
 
         return true;
     }
 
-    private boolean exportBackup(String databaseName, File exportDir) {
-        if (!isExternalStoragePresent())
+    private boolean exportBackup() {
+        File exportDir = getExportDir();
+        if (exportDir == null) {
             return false;
+        }
 
-        File dbFile = getActivity().getApplicationContext().getDatabasePath(databaseName);
-        File file = new File(exportDir, databaseName);
+        // Make sure all changes are written to the file before exporting
+        OpenScale.getInstance(getActivity()).reopenDatabase();
+
+        File dbFile = getActivity().getDatabasePath(OpenScale.DATABASE_NAME);
+        File file = new File(exportDir, OpenScale.DATABASE_NAME);
 
         if (!exportDir.exists()) {
             exportDir.mkdirs();
@@ -183,9 +160,11 @@ public class BackupPreferences extends PreferenceFragment {
             file.createNewFile();
             copyFile(dbFile, file);
 
-            Toast.makeText(getActivity().getApplicationContext(), getResources().getString(R.string.info_data_exported) +  " " + exportDir + "/" + databaseName, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getResources().getString(R.string.info_data_exported)
+                    +  " " + file.getPath(), Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
-            Toast.makeText(getActivity().getApplicationContext(), getResources().getString(R.string.error_exporting) + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getResources().getString(R.string.error_exporting)
+                    + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return false;
         }
 
@@ -205,7 +184,22 @@ public class BackupPreferences extends PreferenceFragment {
         }
     }
 
-    private boolean isExternalStoragePresent() {
-        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+    public void onMyOwnRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PermissionHelper.PERMISSIONS_REQUEST_ACCESS_READ_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    importBackup();
+                } else {
+                    Toast.makeText(getActivity(), R.string.permission_not_granted, Toast.LENGTH_SHORT).show();
+                }
+            break;
+            case PermissionHelper.PERMISSIONS_REQUEST_ACCESS_WRITE_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    exportBackup();
+                } else {
+                    Toast.makeText(getActivity(), R.string.permission_not_granted, Toast.LENGTH_SHORT).show();
+                }
+            break;
+        }
     }
 }

@@ -16,14 +16,14 @@
 
 package com.health.openscale.gui.fragments;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
@@ -62,12 +62,6 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
     private TextView txtLabelGoalDiff;
     private TextView txtLabelDayLeft;
 
-    private TableLayout tableWeekAveragesLayoutColumnA;
-    private TableLayout tableWeekAveragesLayoutColumnB;
-    private TableLayout tableMonthAveragesLayoutColumnA;
-    private TableLayout tableMonthAveragesLayoutColumnB;
-
-    private SharedPreferences prefs;
     private ScaleUser currentScaleUser;
     private ScaleMeasurement lastScaleMeasurement;
 
@@ -78,7 +72,13 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         statisticsView = inflater.inflate(R.layout.fragment_statistics, container, false);
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(statisticsView.getContext());
+        // Set android:tint="?attr/editTextColor" programmatically as setting it in xml layout
+        // throws an exception on API 19.
+        int color = new EditText(getContext()).getCurrentTextColor();
+        for (int id : new int[]{R.id.imageGoalWeight, R.id.imageGoalDiff, R.id.imageDayLeft}) {
+            ImageView image = statisticsView.findViewById(id);
+            image.setColorFilter(color);
+        }
 
         txtGoalWeight = (TextView) statisticsView.findViewById(R.id.txtGoalWeight);
         txtGoalDiff = (TextView) statisticsView.findViewById(R.id.txtGoalDiff);
@@ -88,10 +88,10 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
         txtLabelGoalDiff = (TextView) statisticsView.findViewById(R.id.txtLabelGoalDiff);
         txtLabelDayLeft = (TextView) statisticsView.findViewById(R.id.txtLabelDayLeft);
 
-        tableWeekAveragesLayoutColumnA = (TableLayout) statisticsView.findViewById(R.id.tableWeekAveragesLayoutColumnA);
-        tableWeekAveragesLayoutColumnB = (TableLayout) statisticsView.findViewById(R.id.tableWeekAveragesLayoutColumnB);
-        tableMonthAveragesLayoutColumnA = (TableLayout) statisticsView.findViewById(R.id.tableMonthAveragesLayoutColumnA);
-        tableMonthAveragesLayoutColumnB = (TableLayout) statisticsView.findViewById(R.id.tableMonthAveragesLayoutColumnB);
+        TableLayout tableWeekAveragesLayoutColumnA = statisticsView.findViewById(R.id.tableWeekAveragesLayoutColumnA);
+        TableLayout tableWeekAveragesLayoutColumnB = statisticsView.findViewById(R.id.tableWeekAveragesLayoutColumnB);
+        TableLayout tableMonthAveragesLayoutColumnA = statisticsView.findViewById(R.id.tableMonthAveragesLayoutColumnA);
+        TableLayout tableMonthAveragesLayoutColumnB = statisticsView.findViewById(R.id.tableMonthAveragesLayoutColumnB);
 
         viewMeasurementsListWeek = new ArrayList<>();
 
@@ -110,9 +110,9 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
 
         for (MeasurementView measurement : viewMeasurementsListWeek) {
             measurement.setEditMode(STATISTIC);
-            measurement.updatePreferences(prefs);
 
-            if (measurement.isVisible()) {
+            if (measurement.getSettings().isEnabled()) {
+                measurement.setVisible(true);
                 measurement.setPadding(-1, -1, -1, paddingBottom);
                 if ((i % 2) == 0) {
                     tableWeekAveragesLayoutColumnA.addView(measurement);
@@ -138,9 +138,9 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
 
         for (MeasurementView measurement : viewMeasurementsListMonth) {
             measurement.setEditMode(STATISTIC);
-            measurement.updatePreferences(prefs);
 
-            if (measurement.isVisible()) {
+            if (measurement.getSettings().isEnabled()) {
+                measurement.setVisible(true);
                 measurement.setPadding(-1, -1, -1, paddingBottom);
                 if ((i % 2) == 0) {
                     tableMonthAveragesLayoutColumnA.addView(measurement);
@@ -154,6 +154,12 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
         OpenScale.getInstance(getContext()).registerFragment(this);
 
         return statisticsView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        OpenScale.getInstance(getContext()).unregisterFragment(this);
+        super.onDestroyView();
     }
 
     @Override

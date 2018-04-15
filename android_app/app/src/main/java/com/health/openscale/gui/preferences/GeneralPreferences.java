@@ -23,7 +23,6 @@ import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
-import android.widget.Toast;
 
 import com.health.openscale.R;
 
@@ -34,25 +33,11 @@ import java.util.Set;
 public class GeneralPreferences extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String PREFERENCE_KEY_APP_THEME = "app_theme";
 
-    private ListPreference appThemeList;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.general_preferences);
-
-        appThemeList = (ListPreference)findPreference(PREFERENCE_KEY_APP_THEME);
-
-        appThemeList.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object o) {
-                Toast.makeText(getActivity().getApplicationContext(), getResources().getString(R.string.info_app_restart_required), Toast.LENGTH_LONG).show();
-
-                return true;
-            }
-        });
-
 
         initSummary(getPreferenceScreen());
     }

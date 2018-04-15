@@ -21,10 +21,12 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.util.Log;
 
 import com.health.openscale.core.utils.Converters;
 import com.j256.simplecsv.common.CsvColumn;
 
+import java.lang.reflect.Field;
 import java.util.Date;
 
 @Entity(tableName = "scaleMeasurements",
@@ -87,7 +89,7 @@ public class ScaleMeasurement implements Cloneable {
         bone = 0.0f;
         waist = 0.0f;
         hip = 0.0f;
-        comment = new String();
+        comment = "";
     }
 
     @Override
@@ -104,25 +106,57 @@ public class ScaleMeasurement implements Cloneable {
     }
 
     public void add(final ScaleMeasurement summand) {
-        weight += summand.getWeight();
-        fat += summand.getFat();
-        water += summand.getWater();
-        muscle += summand.getMuscle();
-        lbw += summand.getLbw();
-        bone += summand.getBone();
-        waist += summand.getWaist();
-        hip += summand.getHip();
+        try {
+            Field[] fields = getClass().getDeclaredFields();
+
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object value = field.get(this);
+
+                if (value != null && Float.class.isAssignableFrom(value.getClass())) {
+                    field.set(this, (float)value + (float)field.get(summand));
+                }
+                field.setAccessible(false);
+            }
+        } catch (IllegalAccessException e) {
+            Log.e("ScaleMeasurement", "Error: " + e.getMessage());
+        }
     }
 
     public void divide(final float divisor) {
-        weight /= divisor;
-        fat /= divisor;
-        water /= divisor;
-        muscle /= divisor;
-        lbw /= divisor;
-        bone /= divisor;
-        waist /= divisor;
-        hip /= divisor;
+        try {
+            Field[] fields = getClass().getDeclaredFields();
+
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object value = field.get(this);
+                if (value != null && Float.class.isAssignableFrom(value.getClass())) {
+                    field.set(this, (float)value / divisor);
+                }
+                field.setAccessible(false);
+            }
+        } catch (IllegalAccessException e) {
+            Log.e("ScaleMeasurement", "Error: " + e.getMessage());
+        }
+    }
+
+    public void merge(ScaleMeasurement measurements) {
+        try {
+            Field[] fields = getClass().getDeclaredFields();
+
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object value = field.get(measurements);
+                if (value != null && Float.class.isAssignableFrom(value.getClass())) {
+                    if ((float)field.get(this) == 0.0f) {
+                        field.set(this, value);
+                    }
+                }
+                field.setAccessible(false);
+            }
+        } catch (IllegalAccessException e) {
+            Log.e("ScaleMeasurement", "Error: " + e.getMessage());
+        }
     }
 
     public int getId() {

@@ -15,15 +15,20 @@
 */
 package com.health.openscale.gui.activities;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -39,7 +44,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class UserSettingsActivity extends Activity {
+public class UserSettingsActivity extends BaseAppCompatActivity {
     public static String EXTRA_ID = "id";
     public static String EXTRA_MODE = "mode";
 
@@ -58,10 +63,6 @@ public class UserSettingsActivity extends Activity {
     private RadioGroup radioScaleUnit;
     private RadioGroup radioGender;
 
-    private Button btnOk;
-    private Button btnCancel;
-    private Button btnDelete;
-
     private DateFormat dateFormat = DateFormat.getDateInstance();
 
     private Context context;
@@ -69,8 +70,15 @@ public class UserSettingsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_usersettings);
         context = this;
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.userEntryToolbar);
+        setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(getResources().getString(R.string.label_title_user));
 
         txtUserName = (EditText) findViewById(R.id.txtUserName);
         txtBodyHeight = (EditText) findViewById(R.id.txtBodyHeight);
@@ -81,14 +89,6 @@ public class UserSettingsActivity extends Activity {
 
         txtBirthday = (EditText) findViewById(R.id.txtBirthday);
         txtGoalDate = (EditText) findViewById(R.id.txtGoalDate);
-
-        btnDelete = (Button) findViewById(R.id.btnDelete);
-        btnOk = (Button)findViewById(R.id.btnOk);
-        btnCancel = (Button)findViewById(R.id.btnCancel);
-
-        btnOk.setOnClickListener(new onClickListenerOk());
-        btnCancel.setOnClickListener(new onClickListenerCancel());
-        btnDelete.setOnClickListener(new onClickListenerDelete());
 
         Calendar birthdayCal = Calendar.getInstance();
         birthdayCal.setTime(birthday);
@@ -126,15 +126,69 @@ public class UserSettingsActivity extends Activity {
                 datePicker.show();
             }
         });
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.userentry_menu, menu);
+
+        // Apply a tint to all icons in the toolbar
+        for (int i = 0; i < menu.size(); ++i) {
+            MenuItem item = menu.getItem(i);
+            final Drawable drawable = item.getIcon();
+            if (drawable == null) {
+                continue;
+            }
+
+            final Drawable wrapped = DrawableCompat.wrap(drawable.mutate());
+
+            if (item.getItemId() == R.id.saveButton) {
+                DrawableCompat.setTint(wrapped, Color.parseColor("#FFFFFF"));
+            } else if (item.getItemId() == R.id.deleteButton) {
+                DrawableCompat.setTint(wrapped, Color.parseColor("#FF4444"));
+            }
+
+            item.setIcon(wrapped);
+        }
+
+        MenuItem deleteButton = menu.findItem(R.id.deleteButton);
 
         if (getIntent().getExtras().getInt(EXTRA_MODE) == EDIT_USER_REQUEST) {
             editMode();
+            deleteButton.setVisible(true);
         }
         else {
-            btnOk.setText(getResources().getString(R.string.label_add));
-            btnDelete.setVisibility(View.GONE);
+            deleteButton.setVisible(false);
         }
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.saveButton:
+                if (saveUserData()) {
+                    Intent returnIntent = new Intent();
+                    setResult(RESULT_OK, returnIntent);
+
+                    finish();
+                }
+                return true;
+
+            case R.id.deleteButton:
+                deleteUser();
+                return true;
+
+            // Override the default behaviour in order to return to the correct fragment
+            // (e.g. the table view) and not always go to the overview.
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void editMode()
@@ -144,6 +198,8 @@ public class UserSettingsActivity extends Activity {
         OpenScale openScale = OpenScale.getInstance(getApplicationContext());
 
         ScaleUser scaleUser = openScale.getScaleUser(id);
+
+        getSupportActionBar().setTitle(scaleUser.getUserName());
 
         birthday = scaleUser.getBirthday();
         goal_date = scaleUser.getGoalDate();
@@ -193,7 +249,7 @@ public class UserSettingsActivity extends Activity {
         }
 
         if (txtBodyHeight.getText().toString().length() == 0) {
-            txtBodyHeight.setError(getResources().getString(R.string.error_body_height_required));
+            txtBodyHeight.setError(getResources().getString(R.string.error_height_required));
             validate = false;
         }
 
@@ -232,129 +288,116 @@ public class UserSettingsActivity extends Activity {
         }
     };
 
-    private class onClickListenerDelete implements View.OnClickListener {
-        @Override
-        public void onClick(View v) {
-            AlertDialog.Builder deleteAllDialog = new AlertDialog.Builder(v.getContext());
+    private void deleteUser() {
+        AlertDialog.Builder deleteAllDialog = new AlertDialog.Builder(context);
 
-            deleteAllDialog.setMessage(getResources().getString(R.string.question_really_delete_user));
+        deleteAllDialog.setMessage(getResources().getString(R.string.question_really_delete_user));
 
-            deleteAllDialog.setPositiveButton(getResources().getString(R.string.label_yes), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    int userId = getIntent().getExtras().getInt(EXTRA_ID);
+        deleteAllDialog.setPositiveButton(getResources().getString(R.string.label_yes), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                int userId = getIntent().getExtras().getInt(EXTRA_ID);
 
-                    OpenScale openScale = OpenScale.getInstance(getApplicationContext());
-                    openScale.clearScaleData(userId);
-                    openScale.deleteScaleUser(userId);
+                OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+                boolean isSelected = openScale.getSelectedScaleUserId() == userId;
 
+                openScale.clearScaleData(userId);
+                openScale.deleteScaleUser(userId);
+
+                if (isSelected) {
                     List<ScaleUser> scaleUser = openScale.getScaleUserList();
 
                     int lastUserId = -1;
-
                     if (!scaleUser.isEmpty()) {
                         lastUserId = scaleUser.get(0).getId();
                     }
 
                     openScale.selectScaleUser(lastUserId);
-                    openScale.updateScaleData();
-
-                    Intent returnIntent = new Intent();
-                    setResult(RESULT_OK, returnIntent);
-
-                    finish();
                 }
-            });
 
-            deleteAllDialog.setNegativeButton(getResources().getString(R.string.label_no), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    dialog.dismiss();
-                }
-            });
+                openScale.updateScaleData();
 
-            deleteAllDialog.show();
-        }
-    }
+                Intent returnIntent = new Intent();
+                setResult(RESULT_OK, returnIntent);
 
-    private class onClickListenerOk implements View.OnClickListener {
-        @Override
-        public void onClick(View v) {
-            try {
-                if (validateInput()) {
-                    OpenScale openScale = OpenScale.getInstance(getApplicationContext());
-
-                    String name = txtUserName.getText().toString();
-                    int body_height = Integer.valueOf(txtBodyHeight.getText().toString());
-                    int checkedRadioButtonId = radioScaleUnit.getCheckedRadioButtonId();
-                    int checkedGenderId = radioGender.getCheckedRadioButtonId();
-                    float initial_weight = Float.valueOf(txtInitialWeight.getText().toString());
-                    float goal_weight = Float.valueOf(txtGoalWeight.getText().toString());
-
-                    Converters.WeightUnit scale_unit = Converters.WeightUnit.KG;
-
-                    switch (checkedRadioButtonId) {
-                        case R.id.btnRadioKG:
-                            scale_unit = Converters.WeightUnit.KG;
-                            break;
-                        case R.id.btnRadioLB:
-                            scale_unit = Converters.WeightUnit.LB;
-                            break;
-                        case R.id.btnRadioST:
-                            scale_unit = Converters.WeightUnit.ST;
-                            break;
-                    }
-
-                    Converters.Gender gender = Converters.Gender.MALE;
-
-                    switch (checkedGenderId) {
-                        case R.id.btnRadioMale:
-                            gender = Converters.Gender.MALE;
-                            break;
-                        case R.id.btnRadioWoman:
-                            gender = Converters.Gender.FEMALE;
-                            break;
-                    }
-
-                    final ScaleUser scaleUser = new ScaleUser();
-
-                    scaleUser.setUserName(name);
-                    scaleUser.setBirthday(birthday);
-                    scaleUser.setBodyHeight(body_height);
-                    scaleUser.setScaleUnit(scale_unit);
-                    scaleUser.setGender(gender);
-                    scaleUser.setConvertedInitialWeight(initial_weight);
-                    scaleUser.setGoalWeight(goal_weight);
-                    scaleUser.setGoalDate(goal_date);
-
-                    if (getIntent().getExtras().getInt(EXTRA_MODE) == EDIT_USER_REQUEST) {
-                        int id = getIntent().getExtras().getInt(EXTRA_ID);
-                        scaleUser.setId(id);
-                        openScale.updateScaleUser(scaleUser);
-                    } else {
-                        int id = openScale.addScaleUser(scaleUser);
-                        scaleUser.setId(id);
-                    }
-
-                    openScale.selectScaleUser(scaleUser.getId());
-                    openScale.updateScaleData();
-
-                    Intent returnIntent = new Intent();
-                    setResult(RESULT_OK, returnIntent);
-
-                    finish();
-                }
-            } catch (NumberFormatException ex) {
-                Toast.makeText(context, getResources().getString(R.string.error_value_range) + "(" + ex.getMessage() + ")", Toast.LENGTH_SHORT).show();
+                finish();
             }
-        }
+        });
+
+        deleteAllDialog.setNegativeButton(getResources().getString(R.string.label_no), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+
+        deleteAllDialog.show();
     }
 
-    private class onClickListenerCancel implements View.OnClickListener {
-        @Override
-        public void onClick(View v) {
-            Intent returnIntent = new Intent();
-            setResult(RESULT_CANCELED, returnIntent);
+    private boolean saveUserData() {
+        try {
+            if (validateInput()) {
+                OpenScale openScale = OpenScale.getInstance(getApplicationContext());
 
-            finish();
+                String name = txtUserName.getText().toString();
+                int body_height = Integer.valueOf(txtBodyHeight.getText().toString());
+                int checkedRadioButtonId = radioScaleUnit.getCheckedRadioButtonId();
+                int checkedGenderId = radioGender.getCheckedRadioButtonId();
+                float initial_weight = Float.valueOf(txtInitialWeight.getText().toString());
+                float goal_weight = Float.valueOf(txtGoalWeight.getText().toString());
+
+                Converters.WeightUnit scale_unit = Converters.WeightUnit.KG;
+
+                switch (checkedRadioButtonId) {
+                    case R.id.btnRadioKG:
+                        scale_unit = Converters.WeightUnit.KG;
+                        break;
+                    case R.id.btnRadioLB:
+                        scale_unit = Converters.WeightUnit.LB;
+                        break;
+                    case R.id.btnRadioST:
+                        scale_unit = Converters.WeightUnit.ST;
+                        break;
+                }
+
+                Converters.Gender gender = Converters.Gender.MALE;
+
+                switch (checkedGenderId) {
+                    case R.id.btnRadioMale:
+                        gender = Converters.Gender.MALE;
+                        break;
+                    case R.id.btnRadioWoman:
+                        gender = Converters.Gender.FEMALE;
+                        break;
+                }
+
+                final ScaleUser scaleUser = new ScaleUser();
+
+                scaleUser.setUserName(name);
+                scaleUser.setBirthday(birthday);
+                scaleUser.setBodyHeight(body_height);
+                scaleUser.setScaleUnit(scale_unit);
+                scaleUser.setGender(gender);
+                scaleUser.setConvertedInitialWeight(initial_weight);
+                scaleUser.setGoalWeight(goal_weight);
+                scaleUser.setGoalDate(goal_date);
+
+                if (getIntent().getExtras().getInt(EXTRA_MODE) == EDIT_USER_REQUEST) {
+                    int id = getIntent().getExtras().getInt(EXTRA_ID);
+                    scaleUser.setId(id);
+                    openScale.updateScaleUser(scaleUser);
+                } else {
+                    int id = openScale.addScaleUser(scaleUser);
+                    scaleUser.setId(id);
+                }
+
+                openScale.selectScaleUser(scaleUser.getId());
+                openScale.updateScaleData();
+
+                return true;
+            }
+        } catch (NumberFormatException ex) {
+            Toast.makeText(context, getResources().getString(R.string.error_value_range) + "(" + ex.getMessage() + ")", Toast.LENGTH_SHORT).show();
         }
+
+        return false;
     }
 }

@@ -16,21 +16,27 @@
 package com.health.openscale.gui.views;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.text.InputType;
+import android.view.View;
 import android.widget.EditText;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 
 public class CommentMeasurementView extends MeasurementView {
+    public static final String KEY = "comment";
+
     private String comment;
-    private static String COMMENT_KEY = "comment";
 
     public CommentMeasurementView(Context context) {
         super(context, context.getResources().getString(R.string.label_comment), ContextCompat.getDrawable(context, R.drawable.ic_comment));
+    }
+
+    @Override
+    public String getKey() {
+        return KEY;
     }
 
     private void setValue(String newComment, boolean callListener) {
@@ -51,18 +57,18 @@ public class CommentMeasurementView extends MeasurementView {
     }
 
     @Override
+    public void clearIn(ScaleMeasurement measurement) {
+        measurement.setComment("");
+    }
+
+    @Override
     public void restoreState(Bundle state) {
-        setValue(state.getString(COMMENT_KEY), true);
+        setValue(state.getString(getKey()), true);
     }
 
     @Override
     public void saveState(Bundle state) {
-        state.putString(COMMENT_KEY, comment);
-    }
-
-    @Override
-    public void updatePreferences(SharedPreferences preferences) {
-        // Empty
+        state.putString(getKey(), comment);
     }
 
     @Override
@@ -71,20 +77,23 @@ public class CommentMeasurementView extends MeasurementView {
     }
 
     @Override
-    protected boolean validateAndSetInput(EditText view) {
-        setValue(view.getText().toString(), true);
-        return true;
-    }
+    protected View getInputView() {
+        EditText input = new EditText(getContext());
 
-    @Override
-    protected int getInputType() {
-        return InputType.TYPE_CLASS_TEXT
+        input.setInputType(InputType.TYPE_CLASS_TEXT
                 | InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE
-                | InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+                | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        input.setHint(R.string.info_enter_comment);
+        input.setText(getValueAsString());
+        input.setSelectAllOnFocus(true);
+
+        return input;
     }
 
     @Override
-    protected String getHintText() {
-        return getResources().getString(R.string.info_enter_comment);
+    protected boolean validateAndSetInput(View view) {
+        EditText editText = (EditText) view;
+        setValue(editText.getText().toString(), true);
+        return true;
     }
 }

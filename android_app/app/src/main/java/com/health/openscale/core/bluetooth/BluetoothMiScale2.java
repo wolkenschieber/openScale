@@ -26,7 +26,6 @@ import android.util.Log;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
-import com.health.openscale.core.utils.Converters;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -54,13 +53,8 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
     }
 
     @Override
-    public String deviceName() {
+    public String driverName() {
         return "Xiaomi Mi Scale v2";
-    }
-
-    @Override
-    public String defaultDeviceName() {
-        return "MIBCS";
     }
 
     @Override

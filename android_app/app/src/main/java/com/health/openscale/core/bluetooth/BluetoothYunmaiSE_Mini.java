@@ -31,7 +31,7 @@ import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
-public class BluetoothYunmaiSE extends BluetoothCommunication {
+public class BluetoothYunmaiSE_Mini extends BluetoothCommunication {
     private final UUID WEIGHT_MEASUREMENT_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     private final UUID WEIGHT_MEASUREMENT_CHARACTERISTIC = UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb");
     private final UUID WEIGHT_CMD_SERVICE = UUID.fromString("0000ffe5-0000-1000-8000-00805f9b34fb");
@@ -39,47 +39,42 @@ public class BluetoothYunmaiSE extends BluetoothCommunication {
 
     private final UUID WEIGHT_MEASUREMENT_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
-    public BluetoothYunmaiSE(Context context) {
+    private boolean isMini;
+
+    public BluetoothYunmaiSE_Mini(Context context, boolean isMini) {
         super(context);
+        this.isMini = isMini;
     }
 
     @Override
-    public String deviceName() {
-        return "Yunmai SE";
-    }
-
-    @Override
-    public String defaultDeviceName() {
-        return "YUNMAI-ISSE-US";
-    }
-
-    @Override
-    public boolean checkDeviceName(String btDeviceName) {
-        if (btDeviceName.startsWith("YUNMAI-ISSE")) {
-            return true;
-        }
-
-        return false;
+    public String driverName() {
+        return isMini ? "Yunmai Mini" : "Yunmai SE";
     }
 
     @Override
     boolean nextInitCmd(int stateNr) {
         switch (stateNr) {
             case 0:
-                int user_id = getUniqueNumber();
+                byte[] userId = Converters.toUnsignedInt16Be(getUniqueNumber());
 
                 final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
                 byte sex = selectedUser.getGender().isMale() ? (byte)0x01 : (byte)0x02;
                 byte display_unit = selectedUser.getScaleUnit() == Converters.WeightUnit.KG ? (byte) 0x01 : (byte) 0x02;
 
-                byte[] user_add_or_query = new byte[]{(byte)0x0d, (byte)0x12, (byte)0x10, (byte)0x01, (byte)0x00, (byte) 0x00, (byte) ((user_id & 0xFF00) >> 8), (byte) ((user_id & 0xFF) >> 0), (byte)selectedUser.getBodyHeight(), (byte)sex, (byte) selectedUser.getAge(new Date()), (byte) 0x55, (byte) 0x5a, (byte) 0x00, (byte)0x00, (byte) display_unit, (byte) 0x03, (byte) 0x00 };
+                byte[] user_add_or_query = new byte[]{
+                        (byte) 0x0d, (byte) 0x12, (byte) 0x10, (byte) 0x01, (byte) 0x00, (byte) 0x00,
+                        userId[0], userId[1], (byte) selectedUser.getBodyHeight(), sex,
+                        (byte) selectedUser.getAge(new Date()), (byte) 0x55, (byte) 0x5a, (byte) 0x00,
+                        (byte)0x00, display_unit, (byte) 0x03, (byte) 0x00};
                 user_add_or_query[17] = xor_checksum(user_add_or_query);
                 writeBytes(WEIGHT_CMD_SERVICE, WEIGHT_CMD_CHARACTERISTIC, user_add_or_query);
                 break;
             case 1:
-                long unix_time = new Date().getTime() / 1000;
+                byte[] unixTime = Converters.toUnsignedInt32Be(new Date().getTime() / 1000);
 
-                byte[] set_time = new byte[]{(byte)0x0d, (byte) 0x0d, (byte) 0x11, (byte)((unix_time & 0xFF000000) >> 32), (byte)((unix_time & 0xFF0000) >> 16), (byte)((unix_time & 0xFF00) >> 8), (byte)((unix_time & 0xFF) >> 0), (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+                byte[] set_time = new byte[]{(byte)0x0d, (byte) 0x0d, (byte) 0x11,
+                        unixTime[0], unixTime[1], unixTime[2], unixTime[3],
+                        (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
 
                 set_time[12] = xor_checksum(set_time);
                 writeBytes(WEIGHT_CMD_SERVICE, WEIGHT_CMD_CHARACTERISTIC, set_time);
@@ -122,18 +117,20 @@ public class BluetoothYunmaiSE extends BluetoothCommunication {
     }
 
     private void parseBytes(byte[] weightBytes) {
-        long unix_timestamp = ((weightBytes[5] & 0xFF) << 24) | ((weightBytes[6] & 0xFF) << 16) | ((weightBytes[7] & 0xFF) << 8) | (weightBytes[8] & 0xFF);
-        Date btDate = new Date();
-        btDate.setTime(unix_timestamp*1000);
-
-        float weight = (float) (((weightBytes[13] & 0xFF) << 8) | (weightBytes[14] & 0xFF)) / 100.0f;
+        final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
 
         ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
-        final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+        long timestamp = Converters.fromUnsignedInt32Be(weightBytes, 5) * 1000;
+        scaleBtData.setDateTime(new Date(timestamp));
 
+        float weight = Converters.fromUnsignedInt16Be(weightBytes, 13) / 100.0f;
         scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
-        scaleBtData.setDateTime(btDate);
+
+        if (isMini) {
+            float fat = Converters.fromUnsignedInt16Be(weightBytes, 17) / 100.0f;
+            scaleBtData.setFat(fat);
+        }
 
         addScaleData(scaleBtData);
     }

@@ -19,8 +19,6 @@ package com.health.openscale.core.bluetooth;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
@@ -40,13 +38,8 @@ public class BluetoothExingtechY1 extends BluetoothCommunication {
     }
 
     @Override
-    public String deviceName() {
+    public String driverName() {
         return "Exingtech Y1";
-    }
-
-    @Override
-    public String defaultDeviceName() {
-        return "VScale";
     }
 
     @Override

@@ -1,29 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <resources>
-  <string name="app_name">openScale</string>
   <string name="title_overview">Prehľad</string>
   <string name="title_graph">Graf</string>
   <string name="title_table">Tabuľka</string>
   <string name="title_statistics">Štatistiky</string>
   <string name="title_users">Používatelia</string>
-  <string name="title_data">Údaje</string>
   <string name="title_measurements">Merania</string>
   <string name="action_settings">Nastavenia</string>
   <string name="action_bluetooth_status">Stav Bluetooth</string>
-  <string name="label_add">Pridať</string>
   <string name="label_cancel">Zrušiť</string>
   <string name="label_ok">OK</string>
   <string name="label_yes">Áno</string>
   <string name="label_no">Nie</string>
   <string name="label_delete">Vymazať</string>
   <string name="label_add_user">Pridať používateľa</string>
-  <string name="label_id">ID</string>
   <string name="label_weight">Hmotnosť</string>
   <string name="label_bmi">Index telesnej hmotnosti (BMI)</string>
   <string name="label_bmr">Bazálny metabolický výdaj (BMR)</string>
-  <string name="label_fat">Percento telesného tuku</string>
-  <string name="label_water">Percento vody</string>
-  <string name="label_muscle">Percento svalov</string>
+  <string name="label_fat">Telesný tuk</string>
+  <string name="label_water">Voda v tele</string>
+  <string name="label_muscle">Svalstvo</string>
   <string name="label_waist">Obvod pása</string>
   <string name="label_hip">Obvod bokov</string>
   <string name="label_comment">Komentár</string>
@@ -34,7 +30,6 @@
   <plurals name="label_days">
         <item quantity="other">%d dni</item>
     </plurals>
-  <string name="label_measures">merania</string>
   <string name="label_last_week">Posledných 7 dní</string>
   <string name="label_last_month">Posledných 30 dní</string>
   <string name="label_weight_difference">Rozdiel hmotnosti</string>
@@ -44,7 +39,7 @@
   <string name="label_time">Čas</string>
   <string name="label_birthday">Dátum narodenia</string>
   <string name="label_user_name">Meno</string>
-  <string name="label_body_height">Telesná výška</string>
+  <string name="label_height">Telesná výška</string>
   <string name="label_scale_unit">Jednotka hmotnosti</string>
   <string name="label_gender">Pohlavie</string>
   <string name="label_male">Muž</string>
@@ -54,7 +49,6 @@
   <string name="label_title_user">používateľ</string>
   <string name="label_title_last_measurement">posledné meranie</string>
   <string name="label_title_goal">cieľ</string>
-  <string name="label_title_statistics">štatistiky</string>
   <string name="label_import">Import</string>
   <string name="label_export">Export</string>
   <string name="label_delete_all">Vymazať všetko</string>
@@ -63,30 +57,22 @@
   <string name="error_exporting">Chyba pri exporte</string>
   <string name="error_importing">Chyba pri importe</string>
   <string name="error_user_name_required">Chyba, používateľské meno je povinné</string>
-  <string name="error_body_height_required">Chyba, telesná výška je povinná</string>
+  <string name="error_height_required">Chyba, telesná výška je povinná</string>
   <string name="error_initial_weight_required">Chyba, počiatočná hmotnosť je povinná</string>
   <string name="error_goal_weight_required">Chyba, cieľová hmotnosť je povinná</string>
-  <string name="error_hip_value_required">obvod bokov je povinný</string>
   <string name="info_data_deleted">Položka bola vymazaná z databázy</string>
   <string name="info_data_all_deleted">Všetkých položky boli vymazané z databázy</string>
   <string name="info_data_exported">Údaje boli exportované do</string>
   <string name="info_data_imported">Údaje boli importované z</string>
-  <string name="info_set_filename">Nastaviť názov súboru na</string>
   <string name="info_enter_value_cm">Zadajte hodnotu v cm</string>
-  <string name="info_enter_value_percent">Zadajte hodnotu v %</string>
-  <string name="info_enter_value_unit">Zadajte hodnotu v palcoch</string>
   <string name="info_enter_comment">Zadajte voliteľný komentár</string>
-  <string name="info_enter_initial_weight">Zadajte vaša počiatočná hmotnosť v jednotkách stupnice</string>
-  <string name="info_enter_goal_weight">Zadajte vaša cieľovú hmotnosť v jednotkách stupnice</string>
   <string name="info_is_visible">je viditeľná</string>
   <string name="info_is_not_visible">nie je viditeľná</string>
   <string name="info_is_enable">je povolené</string>
   <string name="info_is_not_enable">je zakázané</string>
   <string name="info_is_not_available">nie je k dispozícii</string>
-  <string name="info_delete_bluetooth_data">Vymazať všetky Bluetooth údaje</string>
-  <string name="info_delete_bluetooth_data_success">Bluetooth údaje boli vymazané</string>
   <string name="info_bluetooth_try_connection">Pokus o pripojenie ku</string>
-  <string name="info_bluetooth_connection_lost">Bluetooth pripojenie sa stratilo.</string>
+  <string name="info_bluetooth_connection_lost">Bluetooth pripojenie sa stratilo</string>
   <string name="info_bluetooth_no_device">Nenašli sa žiadne Bluetooth zariadenia</string>
   <string name="info_bluetooth_connection_successful">Spojenie úspešné nadviazané</string>
   <string name="info_bluetooth_init">Inicializácia Bluetooth zariadenia</string>
@@ -110,12 +96,6 @@
   <string name="label_reminder_time">Čas</string>
   <string name="label_reminder_notify_text">Text upozornenia</string>
   <string name="default_value_reminder_notify_text">Čas na váženie</string>
-  <string name="info_your_weight">Vaša hmotnosť bola</string>
-  <string name="info_your_fat">Váš telesný tuk bol</string>
-  <string name="info_your_water">Vaše percento vody v tele bolo</string>
-  <string name="info_your_muscle">Vaše percento svalov v tele bolo</string>
-  <string name="info_your_waist">Váš obvod pása bol</string>
-  <string name="info_your_hip">Váš obvod bokov bol</string>
   <string name="info_on_date">v deň</string>
   <string name="Monday">Pondelok</string>
   <string name="Tuesday">Utorok</string>
@@ -132,11 +112,73 @@
   <string name="label_not_found">nenájdený</string>
   <string name="label_ignoreOutOfRange">Ignorovať údaje, ktoré sú mimo rozsah</string>
   <string name="label_initial_weight">Počiatočná hmotnosť</string>
-  <string name="label_average_data">Vypočítať priemer za deň/mesiac</string>
-  <string name="label_regression_line">Vývoj úbytku hmotnosti</string>
+    <string name="label_regression_line">Vývoj úbytku hmotnosti</string>
   <string name="label_regression_line_degree">Stupeň polynomiálnej regresie</string>
   <string name="label_goal_line">Cieľová línia</string>
-  <string name="error_max_scale_users">Dosiahli ste maximálny počet viacerých používateľov.</string>
-  <string name="info_step_on_scale">Prosím, postavte sa na váhu pre referenčné meranie.</string>
+  <string name="error_max_scale_users">Dosiahli ste maximálny počet viacerých používateľov</string>
+  <string name="info_step_on_scale">Prosím, postavte sa na váhu pre referenčné meranie</string>
   <string name="info_measuring">Nameraná hmotnosť: %.2f</string>
+<string name="title_about">O aplikácii</string>
+    <string name="title_general">Všeobecné</string>
+
+    <string name="open_drawer">otvoriť</string>
+    <string name="close_drawer">zavrieť</string>
+
+    <string name="label_share">Zdieľať</string>
+    <string name="label_share_subject">openScale CSV export údajov (%s)</string>
+
+    <string name="error_user_name_too_short">Chyba: používateľské meno musí obsahovať minimálne 3 znaky</string>
+    <string name="info_bluetooth_no_device_set">Nevybrali ste žiadne bluetooth zariadenie</string>
+    <string name="info_new_data_duplicated">meranie s rovnakým dátumom a časom už existuje</string>
+
+    <string name="label_mergeWithLastMeasurement">Zlúčiť s posledným meraním</string>
+    <string name="label_bluetooth_searching_finished">Hľadanie bluetooth váh sa dokončilo</string>
+
+    <string name="label_category_measurement_database">Databáza meraní</string>
+
+    <string name="label_maintainer">Správca</string>
+    <string name="label_website">Webové stránky</string>
+    <string name="label_license">Licencia</string>
+
+    <string name="label_automatic">automaticky</string>
+
+    <string name="label_theme">Motív</string>
+
+    <string name="label_help">Pomocník</string>
+
+    <string name="label_feedback_message_enjoying">Páči sa Vám openScale?</string>
+    <string name="label_feedback_message_rate_app">Čo tak ohodnotiť na GooglePlay alebo GitHub?</string>
+    <string name="label_feedback_message_issue">Chcete nám poskytnúť spätnú väzbu?</string>
+    <string name="label_feedback_message_yes">Áno!</string>
+    <string name="label_feedback_message_no">Ani nie</string>
+    <string name="label_feedback_message_positive">OK, určite</string>
+    <string name="label_feedback_message_negative">Nie, ďakujem</string>
+
+    <string name="customactivityoncrash_error_activity_error_occurred_explanation">Vyskytla sa neočakávaná chyba.
+\n
+\nProsím, oznámte nám problém vrátane podrobných informácií o chybe na
+\nhttps://github.com/oliexdev/openScale/issues</string>
+    <string name="customactivityoncrash_error_activity_restart_app">Reštartovať aplikáciu</string>
+    <string name="customactivityoncrash_error_activity_close_app">Zavrieť aplikáciu</string>
+    <string name="customactivityoncrash_error_activity_error_details">Podrobnosti chyby</string>
+    <string name="customactivityoncrash_error_activity_error_details_title">Podrobnosti chyby</string>
+    <string name="customactivityoncrash_error_activity_error_details_close">Zavrieť</string>
+    <string name="customactivityoncrash_error_activity_error_details_copy">Skopírovať do schránky</string>
+    <string name="customactivityoncrash_error_activity_error_details_copied">Skopírované do schránky</string>
+    <string name="customactivityoncrash_error_activity_error_details_clipboard_label">Informácie o chybe</string>
+    <string name="edit">Upraviť</string>
+    <string name="save">Uložiť</string>
+
+    <string name="label_month_view">Mesačný prehľad</string>
+    <string name="label_weeks_view">Týždenný prehľad</string>
+
+    <string name="permission_not_granted">Povolenie nebolo udelené</string>
+    <string name="permission_bluetooth_info">openScale vyžaduje povolenie prístupu k približnej polohe na vyhľadávanie bluetooth zariadení</string>
+    <string name="permission_bluetooth_info_title">Informácie</string>
+    <string name="label_next">Ďalej</string>
+    <string name="label_press_hold_reorder">Stlačte a podržte pre zmenu radenia</string>
+    <string name="label_set_default_order">Nastaviť predvolené radenie</string>
+    <string name="label_export_overwrite">Prepísať predchádzajúci export \"%s\"?</string>
+
+
 </resources>

@@ -17,8 +17,6 @@ package com.health.openscale.gui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
@@ -36,6 +34,7 @@ import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.utils.CsvHelper;
+import com.health.openscale.gui.activities.BaseAppCompatActivity;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,26 +73,18 @@ public class ScreenshotRecorder {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class, false , false);
 
-    private void setLangauge(String language, String country) {
-        Locale locale = new Locale(language, country);
-        Locale.setDefault(locale);
-        Resources res = context.getResources();
-        Configuration config = res.getConfiguration();
-        config.locale = locale;
-        res.updateConfiguration(config, res.getDisplayMetrics());
-    }
-
     @Before
     public void initRecorder() {
         context = InstrumentationRegistry.getTargetContext();
         openScale = OpenScale.getInstance(context);
 
         // Set first start to true to get the user add dialog
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        prefs.edit().putBoolean("firstStart", false).commit();
-        prefs.edit().putBoolean("waistEnable", true).commit();
-        prefs.edit().putBoolean("hipEnable", true).commit();
-        prefs.edit().putBoolean("boneEnable", true).commit();
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putBoolean("firstStart", false)
+                .putBoolean("waistEnable", true)
+                .putBoolean("hipEnable", true)
+                .putBoolean("boneEnable", true)
+                .commit();
     }
 
     @Test
@@ -106,13 +97,20 @@ public class ScreenshotRecorder {
             });
         } catch (Throwable throwable) {
             throwable.printStackTrace();
-        };
+        }
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        setLangauge("en", "EN");
+        prefs.edit()
+                .remove("lastFragmentId")
+                .putString(BaseAppCompatActivity.PREFERENCE_LANGUAGE, "en")
+                .commit();
         screenshotRecorder();
 
-        setLangauge("de", "DE");
+        prefs.edit()
+                .remove("lastFragmentId")
+                .putString(BaseAppCompatActivity.PREFERENCE_LANGUAGE, "de")
+                .commit();
         screenshotRecorder();
     }
 
@@ -232,7 +230,7 @@ public class ScreenshotRecorder {
             Thread.sleep(WAIT_MS);
             captureScreenshot("overview");
 
-            onView(withId(R.id.btnInsertData)).perform(click());
+            onView(withId(R.id.action_add_measurement)).perform(click());
 
             Thread.sleep(WAIT_MS);
             captureScreenshot("dataentry");

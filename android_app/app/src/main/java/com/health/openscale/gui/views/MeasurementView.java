@@ -22,14 +22,17 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.support.v4.content.ContextCompat;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Space;
@@ -43,6 +46,9 @@ import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.evaluation.EvaluationResult;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lecho.lib.hellocharts.util.ChartUtils;
 
 import static com.health.openscale.gui.views.MeasurementView.MeasurementViewMode.ADD;
@@ -52,6 +58,10 @@ import static com.health.openscale.gui.views.MeasurementView.MeasurementViewMode
 
 public abstract class MeasurementView extends TableLayout {
     public enum MeasurementViewMode {VIEW, EDIT, ADD, STATISTIC}
+
+    public static String PREF_MEASUREMENT_ORDER = "measurementOrder";
+
+    private MeasurementViewSettings settings;
 
     private TableRow measurementRow;
     private ImageView iconView;
@@ -75,6 +85,76 @@ public abstract class MeasurementView extends TableLayout {
 
         nameView.setText(text);
         iconView.setImageDrawable(icon);
+    }
+
+    public enum DateTimeOrder { FIRST, LAST, NONE }
+
+    public static List<MeasurementView> getMeasurementList(
+            Context context, DateTimeOrder dateTimeOrder) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        final List<MeasurementView> sorted = new ArrayList<>();
+        if (dateTimeOrder == DateTimeOrder.FIRST) {
+            sorted.add(new DateMeasurementView(context));
+            sorted.add(new TimeMeasurementView(context));
+        }
+
+        {
+            final List<MeasurementView> unsorted = new ArrayList<>();
+
+            unsorted.add(new WeightMeasurementView(context));
+            unsorted.add(new BMIMeasurementView(context));
+            unsorted.add(new WaterMeasurementView(context));
+            unsorted.add(new MuscleMeasurementView(context));
+            unsorted.add(new LBWMeasurementView(context));
+            unsorted.add(new FatMeasurementView(context));
+            unsorted.add(new BoneMeasurementView(context));
+            unsorted.add(new WaistMeasurementView(context));
+            unsorted.add(new WHtRMeasurementView(context));
+            unsorted.add(new HipMeasurementView(context));
+            unsorted.add(new WHRMeasurementView(context));
+            unsorted.add(new BMRMeasurementView(context));
+            unsorted.add(new CommentMeasurementView(context));
+
+            // Get sort order
+            final String[] sortOrder = TextUtils.split(
+                    prefs.getString(PREF_MEASUREMENT_ORDER, ""), ",");
+
+            // Move views from unsorted to sorted in the correct order
+            for (String key : sortOrder) {
+                for (MeasurementView measurement : unsorted) {
+                    if (key.equals(measurement.getKey())) {
+                        sorted.add(measurement);
+                        unsorted.remove(measurement);
+                        break;
+                    }
+                }
+            }
+
+            // Any new views end up at the end
+            sorted.addAll(unsorted);
+        }
+
+        if (dateTimeOrder == DateTimeOrder.LAST) {
+            sorted.add(new DateMeasurementView(context));
+            sorted.add(new TimeMeasurementView(context));
+        }
+
+        for (MeasurementView measurement : sorted) {
+            measurement.setVisible(measurement.getSettings().isEnabled());
+        }
+
+        return sorted;
+    }
+
+    public static void saveMeasurementViewsOrder(Context context, List<MeasurementView> measurementViews) {
+        ArrayList<String> order = new ArrayList<>();
+        for (MeasurementView measurement : measurementViews) {
+            order.add(measurement.getKey());
+        }
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putString(PREF_MEASUREMENT_ORDER, TextUtils.join(",", order))
+                .commit();
     }
 
     private void initView(Context context) {
@@ -105,7 +185,7 @@ public abstract class MeasurementView extends TableLayout {
 
         iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         iconView.setPadding(20,0,20,0);
-        iconView.setColorFilter(nameView.getCurrentTextColor());
+        iconView.setColorFilter(getForegroundColor());
 
         nameView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         nameView.setLines(2);
@@ -124,7 +204,7 @@ public abstract class MeasurementView extends TableLayout {
         editModeView.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_editable));
         editModeView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         editModeView.setVisibility(View.GONE);
-        editModeView.setColorFilter(nameView.getCurrentTextColor());
+        editModeView.setColorFilter(getForegroundColor());
 
         indicatorView.setLayoutParams(new TableRow.LayoutParams(0, LayoutParams.MATCH_PARENT, 0.01f));
         indicatorView.setBackgroundColor(Color.GRAY);
@@ -139,9 +219,7 @@ public abstract class MeasurementView extends TableLayout {
         evaluatorView.setLayoutParams(new TableRow.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.99f));
         spaceAfterEvaluatorView.setLayoutParams(new TableRow.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.01f));
 
-        onClickListenerEvaluation onClickListener = new onClickListenerEvaluation();
-        measurementRow.setOnClickListener(onClickListener);
-        evaluatorRow.setOnClickListener(onClickListener);
+        setOnClickListener(new onClickListenerEvaluation());
     }
 
     protected LinearLayout getIncDecLayout() {
@@ -159,14 +237,24 @@ public abstract class MeasurementView extends TableLayout {
         return updateViews;
     }
 
+    public abstract String getKey();
+
+    public MeasurementViewSettings getSettings() {
+        if (settings ==  null) {
+            settings = new MeasurementViewSettings(
+                    PreferenceManager.getDefaultSharedPreferences(getContext()), getKey());
+        }
+        return settings;
+    }
+
     public abstract void loadFrom(ScaleMeasurement measurement, ScaleMeasurement previousMeasurement);
     public abstract void saveTo(ScaleMeasurement measurement);
+    public abstract void clearIn(ScaleMeasurement measurement);
 
     public abstract void restoreState(Bundle state);
     public abstract void saveState(Bundle state);
 
-    public abstract void updatePreferences(SharedPreferences preferences);
-
+    public CharSequence getName() { return nameView.getText(); }
     public abstract String getValueAsString();
     public void appendDiffValue(SpannableStringBuilder builder) { }
     public Drawable getIcon() { return iconView.getDrawable(); }
@@ -178,13 +266,15 @@ public abstract class MeasurementView extends TableLayout {
     public void setEditMode(MeasurementViewMode mode) {
         measurementMode = mode;
 
+        nameView.setGravity(Gravity.LEFT | (mode == ADD ? Gravity.CENTER : Gravity.TOP));
+        valueView.setGravity(Gravity.CENTER | (mode == STATISTIC ? 0 : Gravity.RIGHT));
+
         switch (mode) {
             case VIEW:
                 indicatorView.setVisibility(View.VISIBLE);
                 editModeView.setVisibility(View.GONE);
                 incDecLayout.setVisibility(View.GONE);
                 nameView.setVisibility(View.VISIBLE);
-                valueView.setGravity(Gravity.RIGHT | Gravity.CENTER);
                 break;
             case EDIT:
             case ADD:
@@ -192,20 +282,16 @@ public abstract class MeasurementView extends TableLayout {
                 editModeView.setVisibility(View.VISIBLE);
                 incDecLayout.setVisibility(View.VISIBLE);
                 nameView.setVisibility(View.VISIBLE);
-                valueView.setGravity(Gravity.RIGHT | Gravity.CENTER);
 
                 if (!isEditable()) {
                     editModeView.setVisibility(View.INVISIBLE);
                 }
-
-                showEvaluatorRow(false);
                 break;
             case STATISTIC:
                 indicatorView.setVisibility(View.GONE);
                 incDecLayout.setVisibility(View.GONE);
                 editModeView.setVisibility(View.GONE);
                 nameView.setVisibility(View.GONE);
-                valueView.setGravity(Gravity.CENTER);
                 break;
         }
     }
@@ -229,6 +315,10 @@ public abstract class MeasurementView extends TableLayout {
         }
     }
 
+    public int getForegroundColor() {
+        return valueView.getCurrentTextColor();
+    }
+
     protected void showEvaluatorRow(boolean show) {
         if (show) {
             evaluatorRow.setVisibility(View.VISIBLE);
@@ -242,7 +332,7 @@ public abstract class MeasurementView extends TableLayout {
         showEvaluatorRow(false);
     }
 
-    protected void setVisible(boolean isVisible) {
+    public void setVisible(boolean isVisible) {
         if (isVisible) {
             measurementRow.setVisibility(View.VISIBLE);
         } else {
@@ -294,62 +384,89 @@ public abstract class MeasurementView extends TableLayout {
         return openScale.getSelectedScaleUser();
     }
 
-    protected abstract boolean validateAndSetInput(EditText view);
-    protected abstract int getInputType();
-    protected abstract String getHintText();
+    public String getPreferenceSummary() { return ""; }
+    public boolean hasExtraPreferences() { return false; }
+    public void prepareExtraPreferencesScreen(PreferenceScreen screen) { }
 
-    protected AlertDialog getInputDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle(nameView.getText());
-        builder.setIcon(iconView.getDrawable());
+    protected abstract View getInputView();
+    protected abstract boolean validateAndSetInput(View view);
 
-        final EditText input = new EditText(getContext());
+    private MeasurementView getNextView() {
+        ViewGroup parent = (ViewGroup) getParent();
+        for (int i = parent.indexOfChild(this) + 1; i < parent.getChildCount(); ++i) {
+            MeasurementView next = (MeasurementView) parent.getChildAt(i);
+            if (next.isEditable()) {
+                return next;
+            }
+        }
+        return null;
+    }
 
-        input.setInputType(getInputType());
-        input.setHint(getHintText());
-        input.setText(getValueAsString());
-        input.setSelectAllOnFocus(true);
-        builder.setView(input);
+    private void prepareInputDialog(final AlertDialog dialog) {
+        dialog.setTitle(getName());
+        dialog.setIcon(getIcon());
 
-        builder.setPositiveButton(getResources().getString(R.string.label_ok), null);
-        builder.setNegativeButton(getResources().getString(R.string.label_cancel), null);
+        final View input = getInputView();
 
-        final AlertDialog floatDialog = builder.create();
+        FrameLayout fl = dialog.findViewById(android.R.id.custom);
+        fl.removeAllViews();
+        fl.addView(input, new LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        floatDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
+        View.OnClickListener clickListener = new View.OnClickListener() {
             @Override
-            public void onShow(DialogInterface dialog) {
+            public void onClick(View view) {
+                if (view == dialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                    && !validateAndSetInput(input)) {
+                    return;
+                }
+                dialog.dismiss();
+            }
+        };
 
-                Button positiveButton = floatDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                positiveButton.setOnClickListener(new View.OnClickListener() {
+        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(clickListener);
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(clickListener);
 
-                    @Override
-                    public void onClick(View view) {
-                        if (validateAndSetInput(input)) {
-                            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                            floatDialog.dismiss();
-                        }
+        final MeasurementView next = getNextView();
+        if (next != null) {
+            dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (validateAndSetInput(input)) {
+                        next.prepareInputDialog(dialog);
                     }
-                });
+                }
+            });
+        }
+        else {
+            dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setVisibility(GONE);
+        }
+    }
 
-                Button negativeButton = floatDialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-                negativeButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
-                        floatDialog.dismiss();
-                    }
-                });
+    private void showInputDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+        builder.setTitle(getName());
+        builder.setIcon(getIcon());
+
+        // Dummy view to have the "custom" frame layout being created and show
+        // the soft input (if needed).
+        builder.setView(new EditText(getContext()));
+
+        builder.setPositiveButton(R.string.label_ok, null);
+        builder.setNegativeButton(R.string.label_cancel, null);
+        builder.setNeutralButton(R.string.label_next, null);
+
+        final AlertDialog dialog = builder.create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                prepareInputDialog(dialog);
             }
         });
 
-        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-
-        return floatDialog;
+        dialog.show();
     }
 
     private class onClickListenerEvaluation implements View.OnClickListener {
@@ -361,7 +478,7 @@ public abstract class MeasurementView extends TableLayout {
 
             if (getMeasurementMode() == EDIT || getMeasurementMode() == ADD) {
                 if (isEditable()) {
-                    getInputDialog().show();
+                    showInputDialog();
                 }
                 return;
             }
@@ -370,4 +487,3 @@ public abstract class MeasurementView extends TableLayout {
         }
     }
 }
-
