@@ -17,6 +17,7 @@
 package com.health.openscale.gui.fragments;
 
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -33,11 +34,13 @@ import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.utils.Converters;
 import com.health.openscale.core.utils.DateTimeHelpers;
+import com.health.openscale.gui.views.BMIMeasurementView;
 import com.health.openscale.gui.views.BoneMeasurementView;
 import com.health.openscale.gui.views.FatMeasurementView;
 import com.health.openscale.gui.views.HipMeasurementView;
-import com.health.openscale.gui.views.LBWMeasurementView;
+import com.health.openscale.gui.views.LBMMeasurementView;
 import com.health.openscale.gui.views.MeasurementView;
+import com.health.openscale.gui.views.MeasurementViewSettings;
 import com.health.openscale.gui.views.MuscleMeasurementView;
 import com.health.openscale.gui.views.WaistMeasurementView;
 import com.health.openscale.gui.views.WaterMeasurementView;
@@ -80,13 +83,13 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
             image.setColorFilter(color);
         }
 
-        txtGoalWeight = (TextView) statisticsView.findViewById(R.id.txtGoalWeight);
-        txtGoalDiff = (TextView) statisticsView.findViewById(R.id.txtGoalDiff);
-        txtGoalDayLeft = (TextView) statisticsView.findViewById(R.id.txtGoalDayLeft);
+        txtGoalWeight = statisticsView.findViewById(R.id.txtGoalWeight);
+        txtGoalDiff = statisticsView.findViewById(R.id.txtGoalDiff);
+        txtGoalDayLeft = statisticsView.findViewById(R.id.txtGoalDayLeft);
 
-        txtLabelGoalWeight = (TextView) statisticsView.findViewById(R.id.txtLabelGoalWeight);
-        txtLabelGoalDiff = (TextView) statisticsView.findViewById(R.id.txtLabelGoalDiff);
-        txtLabelDayLeft = (TextView) statisticsView.findViewById(R.id.txtLabelDayLeft);
+        txtLabelGoalWeight = statisticsView.findViewById(R.id.txtLabelGoalWeight);
+        txtLabelGoalDiff = statisticsView.findViewById(R.id.txtLabelGoalDiff);
+        txtLabelDayLeft = statisticsView.findViewById(R.id.txtLabelDayLeft);
 
         TableLayout tableWeekAveragesLayoutColumnA = statisticsView.findViewById(R.id.tableWeekAveragesLayoutColumnA);
         TableLayout tableWeekAveragesLayoutColumnB = statisticsView.findViewById(R.id.tableWeekAveragesLayoutColumnB);
@@ -98,7 +101,7 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
         viewMeasurementsListWeek.add(new WeightMeasurementView(statisticsView.getContext()));
         viewMeasurementsListWeek.add(new WaterMeasurementView(statisticsView.getContext()));
         viewMeasurementsListWeek.add(new MuscleMeasurementView(statisticsView.getContext()));
-        viewMeasurementsListWeek.add(new LBWMeasurementView(statisticsView.getContext()));
+        viewMeasurementsListWeek.add(new LBMMeasurementView(statisticsView.getContext()));
         viewMeasurementsListWeek.add(new FatMeasurementView(statisticsView.getContext()));
         viewMeasurementsListWeek.add(new BoneMeasurementView(statisticsView.getContext()));
         viewMeasurementsListWeek.add(new WaistMeasurementView(statisticsView.getContext()));
@@ -128,7 +131,7 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
         viewMeasurementsListMonth.add(new WeightMeasurementView(statisticsView.getContext()));
         viewMeasurementsListMonth.add(new WaterMeasurementView(statisticsView.getContext()));
         viewMeasurementsListMonth.add(new MuscleMeasurementView(statisticsView.getContext()));
-        viewMeasurementsListMonth.add(new LBWMeasurementView(statisticsView.getContext()));
+        viewMeasurementsListMonth.add(new LBMMeasurementView(statisticsView.getContext()));
         viewMeasurementsListMonth.add(new FatMeasurementView(statisticsView.getContext()));
         viewMeasurementsListMonth.add(new BoneMeasurementView(statisticsView.getContext()));
         viewMeasurementsListMonth.add(new WaistMeasurementView(statisticsView.getContext()));
@@ -151,24 +154,25 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
             }
         }
 
-        OpenScale.getInstance(getContext()).registerFragment(this);
+        OpenScale.getInstance().registerFragment(this);
 
         return statisticsView;
     }
 
     @Override
     public void onDestroyView() {
-        OpenScale.getInstance(getContext()).unregisterFragment(this);
+        OpenScale.getInstance().unregisterFragment(this);
         super.onDestroyView();
     }
 
     @Override
     public void updateOnView(List<ScaleMeasurement> scaleMeasurementList) {
-        currentScaleUser = OpenScale.getInstance(getContext()).getSelectedScaleUser();
+        currentScaleUser = OpenScale.getInstance().getSelectedScaleUser();
 
         if (scaleMeasurementList.isEmpty()) {
             lastScaleMeasurement = new ScaleMeasurement();
             lastScaleMeasurement.setUserId(currentScaleUser.getId());
+            lastScaleMeasurement.setWeight(currentScaleUser.getInitialWeight());
         } else {
             lastScaleMeasurement = scaleMeasurementList.get(0);
         }
@@ -182,49 +186,50 @@ public class StatisticsFragment extends Fragment implements FragmentUpdateListen
 
         ScaleMeasurement goalScaleMeasurement = new ScaleMeasurement();
         goalScaleMeasurement.setUserId(currentScaleUser.getId());
-        goalScaleMeasurement.setConvertedWeight(currentScaleUser.getGoalWeight(), unit);
+        goalScaleMeasurement.setWeight(currentScaleUser.getGoalWeight());
 
-        txtGoalWeight.setText(String.format("%.1f %s", goalScaleMeasurement.getConvertedWeight(unit), unit.toString()));
+        txtGoalWeight.setText(String.format("%.1f %s",
+                Converters.fromKilogram(goalScaleMeasurement.getWeight(), unit),
+                unit.toString()));
 
-        double weight_diff = goalScaleMeasurement.getConvertedWeight(unit) - lastScaleMeasurement.getConvertedWeight(unit);
-        txtGoalDiff.setText(String.format("%.1f %s", weight_diff, unit.toString()));
+        txtGoalDiff.setText(String.format("%.1f %s",
+                Converters.fromKilogram(goalScaleMeasurement.getWeight() - lastScaleMeasurement.getWeight(), unit),
+                unit.toString()));
 
         Calendar goalCalendar = Calendar.getInstance();
         goalCalendar.setTime(currentScaleUser.getGoalDate());
         int days = Math.max(0, DateTimeHelpers.daysBetween(Calendar.getInstance(), goalCalendar));
         txtGoalDayLeft.setText(getResources().getQuantityString(R.plurals.label_days, days, days));
 
+        boolean isBmiEnabled = new MeasurementViewSettings(
+                PreferenceManager.getDefaultSharedPreferences(getActivity()), BMIMeasurementView.KEY)
+                .isEnabled();
         final float goalBmi = goalScaleMeasurement.getBMI(currentScaleUser.getBodyHeight());
+
         txtLabelGoalWeight.setText(
-                Html.fromHtml(
-                        getResources().getString(R.string.label_goal_weight) +
-                                " <br> <font color='grey'><small>" +
-                                getResources().getString(R.string.label_bmi) +
-                                ": " +
-                                String.format("%.1f", goalBmi) +
-                                " </small></font>"
-                )
-        );
+                isBmiEnabled
+                        ? Html.fromHtml(String.format(
+                                "%s<br><font color='grey'><small>%s: %.1f</small></font>",
+                                getResources().getString(R.string.label_goal_weight),
+                                getResources().getString(R.string.label_bmi),
+                                goalBmi))
+                        : getResources().getString(R.string.label_goal_weight));
+
         txtLabelGoalDiff.setText(
-                Html.fromHtml(
-                        getResources().getString(R.string.label_weight_difference) +
-                                " <br> <font color='grey'><small>" +
-                                getResources().getString(R.string.label_bmi) +
-                                ": " +
-                                String.format("%.1f", lastScaleMeasurement.getBMI(currentScaleUser.getBodyHeight()) - goalBmi)  +
-                                " </small></font>"
-                )
-        );
+                isBmiEnabled
+                        ? Html.fromHtml(String.format(
+                                "%s<br><font color='grey'><small>%s: %.1f</small></font>",
+                                getResources().getString(R.string.label_weight_difference),
+                                getResources().getString(R.string.label_bmi),
+                                lastScaleMeasurement.getBMI(currentScaleUser.getBodyHeight()) - goalBmi))
+                        : getResources().getString(R.string.label_weight_difference));
+
         txtLabelDayLeft.setText(
-                Html.fromHtml(
-                        getResources().getString(R.string.label_days_left) +
-                                " <br> <font color='grey'><small>" +
-                                getResources().getString(R.string.label_goal_date_is) +
-                                " "
-                                + DateFormat.getDateInstance(DateFormat.LONG).format(currentScaleUser.getGoalDate()) +
-                                " </small></font>"
-                )
-        );
+                Html.fromHtml(String.format(
+                        "%s<br><font color='grey'><small>%s %s</small></font>",
+                        getResources().getString(R.string.label_days_left),
+                        getResources().getString(R.string.label_goal_date_is),
+                        DateFormat.getDateInstance(DateFormat.LONG).format(currentScaleUser.getGoalDate()))));
     }
 
     private void updateStatistics(List<ScaleMeasurement> scaleMeasurementList) {

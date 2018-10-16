@@ -2,38 +2,63 @@
 <resources>
     <string-array name="language_entries">
         <item>@string/language_default</item>
-        <item>@string/language_brazilian_portuguese</item>
-        <item>@string/language_catalan</item>
-        <item>@string/language_czech</item>
-        <item>@string/language_dutch</item>
-        <item>@string/language_english</item>
-        <item>@string/language_french</item>
-        <item>@string/language_german</item>
-        <item>@string/language_japanese</item>
-        <item>@string/language_norwegian_bokmal</item>
-        <item>@string/language_polish</item>
-        <item>@string/language_slovak</item>
-        <item>@string/language_spanish</item>
-        <item>@string/language_swedish</item>
-        <item>@string/language_turkish</item>
+        <!-- Keep the list below alphabetically sorted -->
+        <!-- Native names from https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes -->
+        <item>Catalan (català)</item>
+        <item>Chinese (traditional; 中文 (繁體))</item>
+        <item>Croatian (hrvatski jezik)</item>
+        <item>Czech (čeština)</item>
+        <item>Danish (dansk)</item>
+        <item>Dutch (Nederlands)</item>
+        <item>English</item>
+        <item>French (français)</item>
+        <item>Galician (Galego)</item>
+        <item>German (Deutsch)</item>
+        <item>Greek (ελληνικά)</item>
+        <item>Hebrew (עברית)</item>
+        <item>Italian (Italiano)</item>
+        <item>Japanese (日本語)</item>
+        <item>Norwegian Bokmål (Norsk)</item>
+        <item>Polish (język polski)</item>
+        <item>Portuguese (Brazil; Português)</item>
+        <item>Romanian (Română)</item>
+        <item>Russian (русский)</item>
+        <item>Slovak (Slovenčina)</item>
+        <item>Slovenian (Slovenski Jezik)</item>
+        <item>Spanish (Español)</item>
+        <item>Swedish (Svenska)</item>
+        <item>Turkish (Türkçe)</item>
+        <item>Vietnamese (Tiếng Việt)</item>
     </string-array>
 
     <string-array name="language_values">
         <item>default</item>
-        <item>pt-BR</item>
+        <!-- The order below should match the language order above -->
         <item>ca</item>
+        <item>zh-TW</item>
+        <item>hr</item>
         <item>cs</item>
+        <item>da</item>
         <item>nl</item>
         <item>en</item>
         <item>fr</item>
+        <item>gl</item>
         <item>de</item>
+        <item>el</item>
+        <item>iw</item>
+        <item>it</item>
         <item>ja</item>
         <item>nb</item>
         <item>pl</item>
+        <item>pt-BR</item>
+        <item>ro</item>
+        <item>ru</item>
         <item>sk</item>
+        <item>sl</item>
         <item>es</item>
         <item>sv</item>
         <item>tr</item>
+        <item>vi</item>
     </string-array>
 
     <string-array name="theme_entries">
@@ -45,4 +70,13 @@
         <item>Light</item>
         <item>Dark</item>
     </string-array>
+
+    <string-array name="activity_level_entries">
+        <item>@string/activity_level_sedentary</item>
+        <item>@string/activity_level_mild</item>
+        <item>@string/activity_level_moderate</item>
+        <item>@string/activity_level_heavy</item>
+        <item>@string/activity_level_extreme</item>
+    </string-array>
+
 </resources>

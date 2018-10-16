@@ -23,6 +23,7 @@ import android.content.Context;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
 
 import java.util.Date;
 import java.util.UUID;
@@ -43,17 +44,17 @@ public class BluetoothExingtechY1 extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextInitCmd(int stateNr) {
+    protected boolean nextInitCmd(int stateNr) {
         switch (stateNr) {
             case 0:
                 setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
                 break;
             case 1:
-                final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+                final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
 
                 byte gender = selectedUser.getGender().isMale() ? (byte)0x00 : (byte)0x01; // 00 - male; 01 - female
-                byte height = (byte)(selectedUser.getBodyHeight() & 0xff); // cm
-                byte age = (byte)(selectedUser.getAge(new Date()) & 0xff);
+                byte height = (byte)(((int)selectedUser.getBodyHeight()) & 0xff); // cm
+                byte age = (byte)(selectedUser.getAge() & 0xff);
 
                 int userId = selectedUser.getId();
 
@@ -69,12 +70,12 @@ public class BluetoothExingtechY1 extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextBluetoothCmd(int stateNr) {
+    protected boolean nextBluetoothCmd(int stateNr) {
         return false;
     }
 
     @Override
-    boolean nextCleanUpCmd(int stateNr) {
+    protected boolean nextCleanUpCmd(int stateNr) {
         return false;
     }
 
@@ -82,37 +83,37 @@ public class BluetoothExingtechY1 extends BluetoothCommunication {
     public void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {
         final byte[] data = gattCharacteristic.getValue();
 
-        if (data != null && data.length > 0) {
-            // if data is body scale type
-            if (data[0] == (byte)0x01 && data.length == 20) {
-                parseBytes(data);
-            }
+        // The first notification only includes weight and all other fields are
+        // either 0x00 (user info) or 0xff (fat, water, etc.)
+        if (data != null && data.length == 20 && data[6] != (byte)0xff) {
+            parseBytes(data);
         }
     }
 
     private void parseBytes(byte[] weightBytes) {
-        int userId = (int)(weightBytes[0] & 0x0F);
-        int gender = (int)(weightBytes[1]); // 0x00 male; 0x01 female
-        int age = (int)(weightBytes[2]); // 10 ~ 99
-        int height = (int)(weightBytes[3]); // 0 ~ 255
-        float weight = (float) (((weightBytes[4] & 0xFF) << 8) | (weightBytes[5] & 0xFF)) / 10.0f; // kg
-        float fat = (float)(((weightBytes[6] & 0xFF) << 8) | (weightBytes[7] & 0xFF)) / 10.0f; // %
-        float water = (float)(((weightBytes[8] & 0xFF) << 8) | (weightBytes[9] & 0xFF)) / 10.0f; // %
-        float bone = (float)(((weightBytes[10] & 0xFF) << 8) | (weightBytes[11] & 0xFF)) / weight * 10.0f; // kg
-        float muscle = (float)(((weightBytes[12] & 0xFF) << 8) | (weightBytes[13] & 0xFF)) / 10.0f; // %
-        float visc_muscle = (float)(weightBytes[14] & 0xFF); // %
-        float calorie = (float)(((weightBytes[15] & 0xFF) << 8) | (weightBytes[16] & 0xFF));
-        float bmi = (float)(((weightBytes[17] & 0xFF) << 8) | (weightBytes[18] & 0xFF)) / 10.0f;
+        int userId = weightBytes[0] & 0xFF;
+        int gender = weightBytes[1] & 0xFF; // 0x00 male; 0x01 female
+        int age = weightBytes[2] & 0xFF; // 10 ~ 99
+        int height = weightBytes[3] & 0xFF; // 0 ~ 255
+        float weight = Converters.fromUnsignedInt16Be(weightBytes, 4) / 10.0f; // kg
+        float fat = Converters.fromUnsignedInt16Be(weightBytes, 6) / 10.0f; // %
+        float water = Converters.fromUnsignedInt16Be(weightBytes, 8) / 10.0f; // %
+        float bone = Converters.fromUnsignedInt16Be(weightBytes, 10) / 10.0f; // kg
+        float muscle = Converters.fromUnsignedInt16Be(weightBytes, 12) / 10.0f; // %
+        float visc_fat = weightBytes[14] & 0xFF; // index
+        float calorie = Converters.fromUnsignedInt16Be(weightBytes, 15);
+        float bmi = Converters.fromUnsignedInt16Be(weightBytes, 17) / 10.0f;
 
         ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
-        final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+        final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
 
-        scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
+        scaleBtData.setWeight(weight);
         scaleBtData.setFat(fat);
         scaleBtData.setMuscle(muscle);
         scaleBtData.setWater(water);
         scaleBtData.setBone(bone);
+        scaleBtData.setVisceralFat(visc_fat);
         scaleBtData.setDateTime(new Date());
 
         addScaleData(scaleBtData);

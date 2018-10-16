@@ -17,7 +17,6 @@ package com.health.openscale.gui.views;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.text.InputType;
 import android.view.View;
 import android.widget.EditText;
@@ -26,12 +25,13 @@ import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 
 public class CommentMeasurementView extends MeasurementView {
+    // Don't change key value, it may be stored persistent in preferences
     public static final String KEY = "comment";
 
     private String comment;
 
     public CommentMeasurementView(Context context) {
-        super(context, context.getResources().getString(R.string.label_comment), ContextCompat.getDrawable(context, R.drawable.ic_comment));
+        super(context, R.string.label_comment, R.drawable.ic_comment);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class CommentMeasurementView extends MeasurementView {
     }
 
     @Override
-    public String getValueAsString() {
+    public String getValueAsString(boolean withUnit) {
         return comment;
     }
 
@@ -84,7 +84,7 @@ public class CommentMeasurementView extends MeasurementView {
                 | InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE
                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         input.setHint(R.string.info_enter_comment);
-        input.setText(getValueAsString());
+        input.setText(getValueAsString(false));
         input.setSelectAllOnFocus(true);
 
         return input;

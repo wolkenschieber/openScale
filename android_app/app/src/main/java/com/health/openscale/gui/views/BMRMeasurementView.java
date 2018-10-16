@@ -17,20 +17,18 @@ package com.health.openscale.gui.views;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.evaluation.EvaluationResult;
 import com.health.openscale.core.evaluation.EvaluationSheet;
 
-import java.util.Locale;
-
 public class BMRMeasurementView extends FloatMeasurementView {
+    // Don't change key value, it may be stored persistent in preferences
     public static final String KEY = "bmr";
 
     public BMRMeasurementView(Context context) {
-        super(context, context.getResources().getString(R.string.label_bmr), ContextCompat.getDrawable(context, R.drawable.ic_bmr));
+        super(context, R.string.label_bmr, R.drawable.ic_bmr);
     }
 
     @Override
@@ -41,11 +39,6 @@ public class BMRMeasurementView extends FloatMeasurementView {
     @Override
     public boolean isEditable() {
         return false;
-    }
-
-    @Override
-    protected String formatValue(float value) {
-        return String.format(Locale.getDefault(), "%d", Math.round(value));
     }
 
     @Override
@@ -66,6 +59,11 @@ public class BMRMeasurementView extends FloatMeasurementView {
     @Override
     protected float getMaxValue() {
         return 5000;
+    }
+
+    @Override
+    protected int getDecimalPlaces() {
+        return 0;
     }
 
     @Override

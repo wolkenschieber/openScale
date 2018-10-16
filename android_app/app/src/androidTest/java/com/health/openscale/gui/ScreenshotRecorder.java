@@ -15,18 +15,19 @@
 */
 package com.health.openscale.gui;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.rule.GrantPermissionRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.screenshot.BasicScreenCaptureProcessor;
 import android.support.test.runner.screenshot.ScreenCapture;
 import android.support.test.runner.screenshot.Screenshot;
-import android.test.suitebuilder.annotation.LargeTest;
-import android.util.Log;
+import android.support.test.filters.LargeTest;
 import android.view.Gravity;
 
 import com.health.openscale.R;
@@ -51,6 +52,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import timber.log.Timber;
+
 import static android.os.Environment.DIRECTORY_PICTURES;
 import static android.os.Environment.getExternalStoragePublicDirectory;
 import static android.support.test.espresso.Espresso.onView;
@@ -73,10 +76,13 @@ public class ScreenshotRecorder {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class, false , false);
 
+    @Rule
+    public GrantPermissionRule permissionRule = GrantPermissionRule.grant(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
     @Before
     public void initRecorder() {
         context = InstrumentationRegistry.getTargetContext();
-        openScale = OpenScale.getInstance(context);
+        openScale = OpenScale.getInstance();
 
         // Set first start to true to get the user add dialog
         PreferenceManager.getDefaultSharedPreferences(context).edit()
@@ -101,6 +107,8 @@ public class ScreenshotRecorder {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
+        String language = prefs.getString(BaseAppCompatActivity.PREFERENCE_LANGUAGE, "default");
+
         prefs.edit()
                 .remove("lastFragmentId")
                 .putString(BaseAppCompatActivity.PREFERENCE_LANGUAGE, "en")
@@ -112,9 +120,14 @@ public class ScreenshotRecorder {
                 .putString(BaseAppCompatActivity.PREFERENCE_LANGUAGE, "de")
                 .commit();
         screenshotRecorder();
+
+        // Restore language setting
+        prefs.edit()
+                .putString(BaseAppCompatActivity.PREFERENCE_LANGUAGE, language)
+                .commit();
     }
 
-    ScaleUser getTestUser() {
+    private ScaleUser getTestUser() {
         ScaleUser user = new ScaleUser();
         user.setUserName("Test");
         user.setBodyHeight(180);
@@ -138,10 +151,10 @@ public class ScreenshotRecorder {
         return user;
     }
 
-    List<ScaleMeasurement> getTestMeasurements() {
+    private List<ScaleMeasurement> getTestMeasurements() {
         List<ScaleMeasurement> scaleMeasurementList = new ArrayList<>();
 
-        String data = "\"dateTime\",\"weight\",\"fat\",\"water\",\"muscle\",\"lbw\",\"bone\",\"waist\",\"hip\",\"comment\"\n" +
+        String data = "\"dateTime\",\"weight\",\"fat\",\"water\",\"muscle\",\"lbm\",\"bone\",\"waist\",\"hip\",\"comment\"\n" +
                         "04.08.2015 08:08,89.7,21.2,58.0,41.5\n" +
                         "03.08.2015 05:17,89.0,26.4,54.6,41.6\n" +
                         "02.08.2015 07:32,88.8,25.0,55.6,41.7\n" +
@@ -193,10 +206,8 @@ public class ScreenshotRecorder {
 
         try {
             scaleMeasurementList = CsvHelper.importFrom(new BufferedReader(new StringReader(data)));
-        } catch (IOException e) {
-            Log.e("ScreenshotRecorder", e.getMessage());
-        } catch (ParseException e) {
-            Log.e("ScreenshotRecorder", e.getMessage());
+        } catch (IOException | ParseException e) {
+            Timber.e(e);
         }
 
         // set current year to the measurement data
@@ -284,7 +295,7 @@ public class ScreenshotRecorder {
 
             mActivityTestRule.finishActivity();
         } catch (InterruptedException e) {
-            Log.e("ScreenshotRecorder", e.getMessage());
+            Timber.e(e);
         }
     }
 

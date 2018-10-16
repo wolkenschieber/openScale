@@ -9,12 +9,22 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
+    <!-- Permission to allow read of data from the database through a ContentProvider.
+         Marked "dangerous" so that explicit user approval is required to read this data, not
+         just the permission implied from installing the app from the Play Store. -->
+    <permission
+        android:name="${applicationId}.READ_DATA"
+        android:description="@string/permission_read_data_description"
+        android:label="@string/permission_read_data_label"
+        android:protectionLevel="dangerous" />
+
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher_openscale"
         android:label="@string/app_name"
+        android:name=".core.Application"
         android:theme="@style/AppTheme_Light" >
         <activity
             android:name=".gui.MainActivity"
@@ -35,6 +45,20 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".gui.widget.WidgetProvider">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
+        <activity android:name=".gui.widget.WidgetConfigure">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -43,6 +67,13 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />
+        </provider>
+        <provider
+            android:name=".core.database.ScaleDatabaseProvider"
+            android:authorities="${applicationId}.provider"
+            android:enabled="true"
+            android:exported="true"
+            android:readPermission="${applicationId}.READ_DATA">
         </provider>
     </application>
 

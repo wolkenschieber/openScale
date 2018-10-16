@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -59,12 +60,13 @@ import static com.health.openscale.gui.views.MeasurementView.MeasurementViewMode
 public abstract class MeasurementView extends TableLayout {
     public enum MeasurementViewMode {VIEW, EDIT, ADD, STATISTIC}
 
-    public static String PREF_MEASUREMENT_ORDER = "measurementOrder";
+    public static final String PREF_MEASUREMENT_ORDER = "measurementOrder";
 
     private MeasurementViewSettings settings;
 
     private TableRow measurementRow;
     private ImageView iconView;
+    private int iconId;
     private TextView nameView;
     private TextView valueView;
     private LinearLayout incDecLayout;
@@ -79,12 +81,13 @@ public abstract class MeasurementView extends TableLayout {
 
     private boolean updateViews = true;
 
-    public MeasurementView(Context context, String text, Drawable icon) {
+    public MeasurementView(Context context, int textId, int iconId) {
         super(context);
         initView(context);
 
-        nameView.setText(text);
-        iconView.setImageDrawable(icon);
+        nameView.setText(textId);
+        this.iconId = iconId;
+        iconView.setImageResource(iconId);
     }
 
     public enum DateTimeOrder { FIRST, LAST, NONE }
@@ -106,13 +109,22 @@ public abstract class MeasurementView extends TableLayout {
             unsorted.add(new BMIMeasurementView(context));
             unsorted.add(new WaterMeasurementView(context));
             unsorted.add(new MuscleMeasurementView(context));
-            unsorted.add(new LBWMeasurementView(context));
+            unsorted.add(new LBMMeasurementView(context));
             unsorted.add(new FatMeasurementView(context));
             unsorted.add(new BoneMeasurementView(context));
+            unsorted.add(new VisceralFatMeasurementView(context));
             unsorted.add(new WaistMeasurementView(context));
             unsorted.add(new WHtRMeasurementView(context));
             unsorted.add(new HipMeasurementView(context));
             unsorted.add(new WHRMeasurementView(context));
+            unsorted.add(new ChestMeasurementView(context));
+            unsorted.add(new ThighMeasurementView(context));
+            unsorted.add(new BicepsMeasurementView(context));
+            unsorted.add(new NeckMeasurementView(context));
+            unsorted.add(new FatCaliperMeasurementView(context));
+            unsorted.add(new Caliper1MeasurementView(context));
+            unsorted.add(new Caliper2MeasurementView(context));
+            unsorted.add(new Caliper3MeasurementView(context));
             unsorted.add(new BMRMeasurementView(context));
             unsorted.add(new CommentMeasurementView(context));
 
@@ -154,7 +166,7 @@ public abstract class MeasurementView extends TableLayout {
         }
         PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putString(PREF_MEASUREMENT_ORDER, TextUtils.join(",", order))
-                .commit();
+                .apply();
     }
 
     private void initView(Context context) {
@@ -255,9 +267,10 @@ public abstract class MeasurementView extends TableLayout {
     public abstract void saveState(Bundle state);
 
     public CharSequence getName() { return nameView.getText(); }
-    public abstract String getValueAsString();
-    public void appendDiffValue(SpannableStringBuilder builder) { }
+    public abstract String getValueAsString(boolean withUnit);
+    public void appendDiffValue(SpannableStringBuilder builder, boolean newLine) { }
     public Drawable getIcon() { return iconView.getDrawable(); }
+    public int getIconResource() { return iconId; }
 
     protected boolean isEditable() {
         return true;
@@ -317,6 +330,11 @@ public abstract class MeasurementView extends TableLayout {
 
     public int getForegroundColor() {
         return valueView.getCurrentTextColor();
+    }
+
+    public int getIndicatorColor() {
+        ColorDrawable background = (ColorDrawable)indicatorView.getBackground();
+        return background.getColor();
     }
 
     protected void showEvaluatorRow(boolean show) {
@@ -379,7 +397,7 @@ public abstract class MeasurementView extends TableLayout {
     }
 
     protected ScaleUser getScaleUser() {
-        OpenScale openScale = OpenScale.getInstance(getContext());
+        OpenScale openScale = OpenScale.getInstance();
 
         return openScale.getSelectedScaleUser();
     }
@@ -395,7 +413,7 @@ public abstract class MeasurementView extends TableLayout {
         ViewGroup parent = (ViewGroup) getParent();
         for (int i = parent.indexOfChild(this) + 1; i < parent.getChildCount(); ++i) {
             MeasurementView next = (MeasurementView) parent.getChildAt(i);
-            if (next.isEditable()) {
+            if (next.isVisible() && next.isEditable()) {
                 return next;
             }
         }

@@ -21,6 +21,10 @@ import android.content.Context;
 import java.util.Locale;
 
 public class BluetoothFactory {
+    public static BluetoothCommunication createDebugDriver(Context context) {
+        return new BluetoothDebug(context);
+    }
+
     public static BluetoothCommunication createDeviceDriver(Context context, String deviceName) {
         final String name = deviceName.toLowerCase(Locale.US);
 
@@ -34,14 +38,14 @@ public class BluetoothFactory {
         if (name.startsWith("BEURER BF710".toLowerCase(Locale.US))) {
             return new BluetoothBeurerSanitas(context, BluetoothBeurerSanitas.DeviceType.BEURER_BF710);
         }
-        if (name.equals("openScale_MCU".toLowerCase(Locale.US))) {
+        if (name.equals("openScale".toLowerCase(Locale.US))) {
             return new BluetoothCustomOpenScale(context);
         }
         if (name.equals("Mengii".toLowerCase(Locale.US))) {
             return new BluetoothDigooDGSO38H(context);
         }
         if (name.equals("Electronic Scale".toLowerCase(Locale.US))) {
-            return new BluetoothExcelvanCF369BLE(context);
+            return new BluetoothExcelvanCF36xBLE(context);
         }
         if (name.equals("VScale".toLowerCase(Locale.US))) {
             return new BluetoothExingtechY1(context);
@@ -52,10 +56,11 @@ public class BluetoothFactory {
         if (deviceName.startsWith("iHealth HS3")) {
             return new BluetoothIhealthHS3(context);
         }
-        if (deviceName.startsWith("013197")) {
-            return new BluetoothMedisanaBS444(context);
+        // BS444 || BS440
+        if (deviceName.startsWith("013197") || deviceName.startsWith("0202B6")) {
+            return new BluetoothMedisanaBS44x(context);
         }
-        if (deviceName.startsWith("SWAN")) {
+        if (deviceName.startsWith("SWAN") || name.equals("icomon".toLowerCase(Locale.US))) {
             return new BluetoothMGB(context);
         }
         if (name.equals("MI_SCALE".toLowerCase(Locale.US))) {
@@ -70,11 +75,15 @@ public class BluetoothFactory {
         if (name.startsWith("SANITAS SBF70".toLowerCase(Locale.US)) || name.startsWith("sbf75")) {
             return new BluetoothBeurerSanitas(context, BluetoothBeurerSanitas.DeviceType.SANITAS_SBF70_70);
         }
-        if (deviceName.startsWith("YUNMAI-SIGNAL-M") || deviceName.startsWith("YUNMAI-ISM2-W")) {
+        if (deviceName.startsWith("YUNMAI-SIGNAL-M") || deviceName.startsWith("YUNMAI-ISM2-")) {
             return new BluetoothYunmaiSE_Mini(context, true);
         }
         if (deviceName.startsWith("YUNMAI-ISSE")) {
             return new BluetoothYunmaiSE_Mini(context, false);
+        }
+        if (deviceName.startsWith("01257B") || deviceName.startsWith("11257B")) {
+            // Trisa Body Analyze 4.0, aka Transtek GBF-1257-B
+            return new BluetoothTrisaBodyAnalyze(context);
         }
         return null;
     }

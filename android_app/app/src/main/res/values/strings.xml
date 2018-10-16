@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name" translatable="false">openScale</string>
     <string name="title_overview">Overview</string>
     <string name="title_graph">Chart</string>
@@ -22,8 +21,9 @@
     <string name="label_no">No</string>
     <string name="label_delete">Delete</string>
     <string name="label_add_user">Add user</string>
+    <string name="label_add_measurement">Add measurement</string>
     <string name="label_share">Share</string>
-    <string name="label_share_subject">openScale CSV data export (%s)</string>
+    <string name="label_share_subject">CSV data export (%s)</string>
 
     <string name="label_weight">Weight</string>
     <string name="label_bmi">Body mass index (BMI)</string>
@@ -31,7 +31,7 @@
     <string name="label_fat">Body fat</string>
     <string name="label_water">Body water</string>
     <string name="label_muscle">Muscle</string>
-    <string name="label_lbw">Lean body weight</string>
+    <string name="label_lbm">Lean body mass</string>
     <string name="label_waist">Waist circumference</string>
     <string name="label_hip">Hip circumference</string>
     <string name="label_comment">Comment</string>
@@ -44,10 +44,10 @@
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
     </plurals>
-    <string name="label_last_week">Last 7 days</string>
-    <string name="label_last_month">Last 30 days</string>
+    <string name="label_last_week">Average past week</string>
+    <string name="label_last_month">Average past month</string>
     <string name="label_weight_difference">Weight difference</string>
-    <string name="label_goal_date_is">Goal date is</string>
+    <string name="label_goal_date_is">Goal date:</string>
     <string name="label_days_left">Days left</string>
 
     <string name="label_date">Date</string>
@@ -58,67 +58,65 @@
     <string name="label_scale_unit">Scale unit</string>
     <string name="label_gender">Gender</string>
     <string name="label_male">Male</string>
-    <string name="label_woman">Woman</string>
+    <string name="label_female">Female</string>
     <string name="label_goal_weight">Goal weight</string>
     <string name="label_goal_date">Goal date</string>
 
     <string name="label_title_user">user</string>
     <string name="label_title_last_measurement">last measurement</string>
-    <string name="label_title_goal">goal</string>
+    <string name="label_title_goal">Goal</string>
 
     <string name="label_import">Import</string>
     <string name="label_export">Export</string>
     <string name="label_delete_all">Delete all</string>
 
-    <string name="error_value_required">Value is required</string>
-    <string name="error_value_range">The value is not in range</string>
+    <string name="error_value_required">Value required</string>
+    <string name="error_value_range">Value out of range</string>
     <string name="error_exporting">Error exporting</string>
     <string name="error_importing">Error importing</string>
-    <string name="error_user_name_required">Error: user name is required</string>
-    <string name="error_user_name_too_short">Error: user name have to be at least 3 characters</string>
-    <string name="error_height_required">Error: height is required</string>
-    <string name="error_initial_weight_required">Error: initial weight is required</string>
-    <string name="error_goal_weight_required">Error: goal weight is required</string>
+    <string name="error_user_name_required">Error: Name required</string>
+    <string name="error_user_name_too_short">Error: Name must be 3 characters or more</string>
+    <string name="error_height_required">Error: Height required</string>
+    <string name="error_initial_weight_required">Error: Initial weight required</string>
+    <string name="error_goal_weight_required">Error: Goal weight required</string>
 
-    <string name="info_data_deleted">Database entry deleted</string>
-    <string name="info_data_all_deleted">All database entries deleted</string>
-    <string name="info_data_exported">Data exported to</string>
-    <string name="info_data_imported">Data imported from</string>
-    <string name="info_enter_value_cm">Enter value in cm</string>
-    <string name="info_enter_comment">Enter an optional comment</string>
-    <string name="info_enter_value_scale_unit">Enter value in scale unit</string>
+    <string name="info_data_deleted">Entry deleted</string>
+    <string name="info_data_all_deleted">All entries deleted</string>
+    <string name="info_data_exported">Exported to</string>
+    <string name="info_data_imported">Imported from</string>
+    <string name="info_enter_value_in">Value in</string>
+    <string name="info_enter_comment">Optional comment</string>
     <string name="info_is_visible">is visible</string>
     <string name="info_is_not_visible">is not visible</string>
-    <string name="info_is_enable">is enabled</string>
-    <string name="info_is_not_enable">is disabled</string>
-    <string name="info_is_not_available">is not available</string>
-    <string name="info_bluetooth_try_connection">Trying to connect to</string>
+    <string name="info_is_enable">enabled</string>
+    <string name="info_is_not_enable">disabled</string>
+    <string name="info_is_not_available">not available</string>
+    <string name="info_bluetooth_try_connection">Connecting to:</string>
     <string name="info_bluetooth_connection_lost">Lost Bluetooth connection</string>
     <string name="info_bluetooth_no_device">No Bluetooth device found</string>
     <string name="info_bluetooth_no_device_set">No Bluetooth device selected</string>
-    <string name="info_bluetooth_connection_successful">Connection successful established</string>
+    <string name="info_bluetooth_connection_successful">Connection established</string>
     <string name="info_bluetooth_init">Initialize Bluetooth device</string>
-    <string name="info_bluetooth_connection_error">Bluetooth has an unexpected error</string>
+    <string name="info_bluetooth_connection_error">Unexpected Bluetooth error</string>
     <string name="info_new_data_added">%1$.2f%2$s [%3$s] to %4$s added</string>
     <string name="info_new_data_duplicated">measurement with the same date and time already exist</string>
 
-    <string name="info_enter_user_name">Enter your name</string>
-    <string name="info_no_selected_user">No user exists. Please create a new user in the settings.</string>
-    <string name="info_no_evaluation_available">Can\'t evaluate the value</string>
+    <string name="info_enter_user_name">Your name</string>
+    <string name="info_no_selected_user">No user exists. Please create one in the settings.</string>
+    <string name="info_no_evaluation_available">Could not evaluate the value</string>
 
-    <string name="question_really_delete">Do you really want to delete database entry?</string>
-    <string name="question_really_delete_all">Do you really want to delete all database entries?</string>
-    <string name="question_really_delete_user">Do you really want to delete the user? </string>
+    <string name="question_really_delete">Delete entry?</string>
+    <string name="question_really_delete_all">Delete all entries for all users?</string>
+    <string name="question_really_delete_user">Delete user?</string>
 
     <string name="label_bluetooth_title">Bluetooth</string>
-    <string name="label_bluetooth_enable">Search for scale on startup</string>
+    <string name="label_bluetooth_enable">Connect to scale on startup</string>
     <string name="label_mergeWithLastMeasurement">Merge with last measurement</string>
-    <string name="label_bluetooth_searching">Searching for Bluetooth scales</string>
-    <string name="label_bluetooth_searching_finished">Finished searching for Bluetooth scales</string>
-    <string name="label_device_type">Device Type</string>
+    <string name="label_bluetooth_searching">Searching for your Bluetooth scale</string>
+    <string name="label_bluetooth_searching_finished">Search finished</string>
 
-    <string name="label_enable_labels">Label on data point</string>
-    <string name="label_enable_points">Point on data point</string>
+    <string name="label_enable_labels">Data label</string>
+    <string name="label_enable_points">Data point</string>
 
     <string name="label_delete_confirmation">Delete confirmation</string>
 
@@ -133,10 +131,10 @@
     <string name="label_theme">Theme</string>
 
     <string name="label_reminder">Reminder</string>
-    <string name="label_reminder_weekdays">Weekdays</string>
+    <string name="label_reminder_weekdays">Days</string>
     <string name="label_reminder_time">Time</string>
     <string name="label_reminder_notify_text">Notification text</string>
-    <string name="default_value_reminder_notify_text">Time to weight</string>
+    <string name="default_value_reminder_notify_text">Time to weigh in</string>
 
     <string name="info_on_date">on</string>
 
@@ -153,26 +151,28 @@
     <string name="label_backup">Backup</string>
     <string name="label_export_dir">Export dir</string>
     <string name="label_not_found">not found</string>
-    <string name="label_ignoreOutOfRange">Ignore data that are out of range</string>
+    <string name="label_ignoreOutOfRange">Ignore out of range data</string>
     <string name="label_initial_weight">Initial weight</string>
     <string name="label_regression_line">Regression weight line</string>
-    <string name="label_regression_line_degree">Regression polynom degree</string>
+    <string name="label_regression_line_degree">Regression polynomial degree</string>
     <string name="label_goal_line">Goal line</string>
     <string name="label_help">Help</string>
 
     <string name="label_feedback_message_enjoying">Enjoying openScale?</string>
-    <string name="label_feedback_message_rate_app">How about a rating on GooglePlay or on GitHub, then?</string>
-    <string name="label_feedback_message_issue">Would you mind giving us some feedback?</string>
-    <string name="label_feedback_message_yes">Yes!</string>
+    <string name="label_feedback_message_rate_app">How about a rating on Google Play or GitHub?</string>
+    <string name="label_feedback_message_issue">Would you like to provide some feedback?</string>
+    <string name="label_feedback_message_yes">Yes</string>
     <string name="label_feedback_message_no">Not really</string>
-    <string name="label_feedback_message_positive">Ok, sure</string>
+    <string name="label_feedback_message_positive">OK</string>
     <string name="label_feedback_message_negative">No, thanks</string>
 
-    <string name="error_max_scale_users">Maximum number of concurrent scale users reached</string>
+    <string name="error_max_scale_users">Max. number of concurrent scale users reached</string>
     <string name="info_step_on_scale">Please step barefoot on the scale for reference measurements</string>
     <string name="info_measuring">Measuring weight: %.2f</string>
+    <string name="trisa_scale_not_paired">This scale has not been paired!\n\nHold the button on the bottom of the scale to switch it to pairing mode, and then reconnect to retrieve the device password.</string>
+    <string name="trisa_scale_pairing_succeeded">Pairing succeeded!\n\nReconnect to retrieve measurement data.</string>
 
-    <string name="customactivityoncrash_error_activity_error_occurred_explanation">An unexpected error occurred.\n\nPlease create a new issue including the detailed error details on\nhttps://github.com/oliexdev/openScale/issues</string>
+    <string name="customactivityoncrash_error_activity_error_occurred_explanation">An unexpected error occurred.\n\nPlease create a new issue including the error details on\nhttps://github.com/oliexdev/openScale/issues</string>
     <string name="customactivityoncrash_error_activity_restart_app">Restart app</string>
     <string name="customactivityoncrash_error_activity_close_app">Close app</string>
     <string name="customactivityoncrash_error_activity_error_details">Error details</string>
@@ -180,7 +180,7 @@
     <string name="customactivityoncrash_error_activity_error_details_close">Close</string>
     <string name="customactivityoncrash_error_activity_error_details_copy">Copy to clipboard</string>
     <string name="customactivityoncrash_error_activity_error_details_copied">Copied to clipboard</string>
-    <string name="customactivityoncrash_error_activity_error_details_clipboard_label">Error information</string>
+    <string name="customactivityoncrash_error_activity_error_details_clipboard_label">Error info</string>
     <string name="toggle_expand">Toggle expand</string>
     <string name="edit">Edit</string>
     <string name="save">Save</string>
@@ -189,10 +189,13 @@
     <string name="label_weeks_view">Week view</string>
 
     <string name="permission_not_granted">Permission not granted</string>
-    <string name="permission_bluetooth_info">openScale requires permission to access the coarse location to search for Bluetooth devices. The permission can be revoked after the device is found.</string>
-    <string name="permission_bluetooth_info_title">Information</string>
+    <string name="permission_bluetooth_info">Coarse location permission needed to search for Bluetooth devices. It can be revoked after the device is found.</string>
+    <string name="permission_bluetooth_info_title">Info</string>
+    <string name="permission_read_data_description">read openScale data, including user information and all saved measurements</string>
+    <string name="permission_read_data_label">Read openScale Data</string>
     <string name="label_next">Next</string>
-    <string name="label_press_hold_reorder">Press and hold to reorder</string>
+    <string name="label_long_press_drag_reorder">Long press and drag measurement to reorder</string>
+    <string name="label_click_measurement_configure">Click measurement to configure</string>
     <string name="label_set_default_order">Set default order</string>
     <string name="label_export_overwrite">Overwrite previous export \"%s\"?</string>
     <string name="label_include_in_overview_graph">Include in overview graph</string>
@@ -201,20 +204,6 @@
     <string name="label_estimation_formula">Estimation formula</string>
     <string name="language_default">System default</string>
     <string name="label_language">Language</string>
-    <string name="language_brazilian_portuguese" translatable="false">Brazilian Portuguese</string>
-    <string name="language_catalan" translatable="false">Catalan (català)</string>
-    <string name="language_czech" translatable="false">Czech (čeština)</string>
-    <string name="language_dutch" translatable="false">Dutch (Nederlands)</string>
-    <string name="language_english" translatable="false">English</string>
-    <string name="language_french" translatable="false">French (français)</string>
-    <string name="language_german" translatable="false">German (Deutsch)</string>
-    <string name="language_japanese" translatable="false">Japanese (日本語 (にほんご))</string>
-    <string name="language_norwegian_bokmal" translatable="false">Norwegian Bokmål (Norsk)</string>
-    <string name="language_polish" translatable="false">Polish (język polski)</string>
-    <string name="language_slovak" translatable="false">Slovak (Slovenčina)</string>
-    <string name="language_spanish" translatable="false">Spanish (Español)</string>
-    <string name="language_swedish" translatable="false">Swedish (Svenska)</string>
-    <string name="language_turkish" translatable="false">Turkish (Türkçe)</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="label_contribute_translation">Contribute translation</string>
@@ -223,6 +212,38 @@
     <string name="label_percent">Percent</string>
     <string name="label_estimated">Estimated</string>
     <string name="label_estimate_measurement_summary">Based on weight, height, age, gender, etc.</string>
+    <string name="label_auto_backup">Auto backup</string>
+    <string name="label_auto_backup_schedule">Backup schedule</string>
+    <string name="label_overwrite_backup">Overwrite previous backup</string>
+    <string name="label_daily">daily</string>
+    <string name="label_weekly">weekly</string>
+    <string name="label_monthly">monthly</string>
     <string name="label_scale_not_supported">Is your scale not supported?</string>
-    <string name="label_click_to_help_add_support">Click here if you want to help add support for it</string>
+    <string name="label_click_to_help_add_support">Click here to help add support for it</string>
+    <string name="label_development">Development</string>
+    <string name="label_debug_log">Save debug log to file</string>
+    <string name="label_your_bluetooth_scale">Your Bluetooth scale</string>
+    <string name="label_select_measurement">Select measurement</string>
+    <string name="label_select_user">Select user</string>
+    <string name="label_configure_widget">Configure widget</string>
+    <string name="label_visceral_fat">Visceral fat</string>
+    <string name="label_chest">Chest circumference</string>
+    <string name="label_thigh">Thigh circumference</string>
+    <string name="label_biceps">Biceps circumference</string>
+    <string name="label_neck">Neck circumference</string>
+    <string name="label_fat_caliper">Body fat caliper</string>
+    <string name="label_caliper1_male">Chest skinfold</string>
+    <string name="label_caliper2_male">Abdominal skinfold</string>
+    <string name="label_caliper3_male">Thigh skinfold</string>
+    <string name="label_caliper1_female">Triceps skinfold</string>
+    <string name="label_caliper2_female">Abdominal skinfold</string>
+    <string name="label_caliper3_female">Hip skinfold</string>
+    <string name="label_measure_unit">Measurement unit</string>
+    <string name="label_activity_level">Activity level</string>
+    <string name="activity_level_sedentary">Sedentary</string>
+    <string name="activity_level_mild">Mild</string>
+    <string name="activity_level_moderate">Moderate</string>
+    <string name="activity_level_heavy">Heavy</string>
+    <string name="activity_level_extreme">Extreme</string>
+    <string name="label_data_provider_enable">Third-party app access</string>
 </resources>

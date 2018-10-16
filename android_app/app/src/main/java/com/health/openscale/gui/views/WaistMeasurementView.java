@@ -17,18 +17,19 @@ package com.health.openscale.gui.views;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.evaluation.EvaluationResult;
 import com.health.openscale.core.evaluation.EvaluationSheet;
+import com.health.openscale.core.utils.Converters;
 
 public class WaistMeasurementView extends FloatMeasurementView {
+    // Don't change key value, it may be stored persistent in preferences
     public static final String KEY = "waist";
 
     public WaistMeasurementView(Context context) {
-        super(context, context.getResources().getString(R.string.label_waist), ContextCompat.getDrawable(context, R.drawable.ic_waist));
+        super(context, R.string.label_waist, R.drawable.ic_waist);
     }
 
     @Override
@@ -38,17 +39,17 @@ public class WaistMeasurementView extends FloatMeasurementView {
 
     @Override
     protected float getMeasurementValue(ScaleMeasurement measurement) {
-        return measurement.getWaist();
+        return Converters.fromCentimeter(measurement.getWaist(), getScaleUser().getMeasureUnit());
     }
 
     @Override
     protected void setMeasurementValue(float value, ScaleMeasurement measurement) {
-        measurement.setWaist(value);
+        measurement.setWaist(Converters.toCentimeter(value, getScaleUser().getMeasureUnit()));
     }
 
     @Override
     public String getUnit() {
-        return "cm";
+        return getScaleUser().getMeasureUnit().toString();
     }
 
     @Override

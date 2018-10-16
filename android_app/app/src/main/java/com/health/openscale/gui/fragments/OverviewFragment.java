@@ -102,13 +102,13 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
 
         context = overviewView.getContext();
 
-        txtTitleUser = (TextView) overviewView.findViewById(R.id.txtTitleUser);
-        txtTitleLastMeasurement = (TextView) overviewView.findViewById(R.id.txtTitleLastMeasurment);
+        txtTitleUser = overviewView.findViewById(R.id.txtTitleUser);
+        txtTitleLastMeasurement = overviewView.findViewById(R.id.txtTitleLastMeasurement);
 
-        pieChartLast = (PieChartView) overviewView.findViewById(R.id.pieChartLast);
-        lineChartLast = (LineChartView) overviewView.findViewById(R.id.lineChartLast);
+        pieChartLast = overviewView.findViewById(R.id.pieChartLast);
+        lineChartLast = overviewView.findViewById(R.id.lineChartLast);
 
-        spinUser = (Spinner) overviewView.findViewById(R.id.spinUser);
+        spinUser = overviewView.findViewById(R.id.spinUser);
 
         lineChartLast.setOnValueTouchListener(new LineChartTouchListener());
 
@@ -142,14 +142,14 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
 
         prefs = PreferenceManager.getDefaultSharedPreferences(overviewView.getContext());
 
-        OpenScale.getInstance(getContext()).registerFragment(this);
+        OpenScale.getInstance().registerFragment(this);
 
         return overviewView;
     }
 
     @Override
     public void onDestroyView() {
-        OpenScale.getInstance(getContext()).unregisterFragment(this);
+        OpenScale.getInstance().unregisterFragment(this);
         super.onDestroyView();
     }
 
@@ -163,7 +163,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
             lastScaleMeasurement = scaleMeasurementList.get(0);
         }
 
-        ScaleMeasurement[] tupleScaleData = OpenScale.getInstance(context).getTupleScaleData(lastScaleMeasurement.getId());
+        ScaleMeasurement[] tupleScaleData = OpenScale.getInstance().getTupleScaleData(lastScaleMeasurement.getId());
         ScaleMeasurement prevScaleMeasurement = tupleScaleData[0];
 
         updateUserSelection();
@@ -177,12 +177,12 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
 
     private void updateUserSelection() {
 
-        currentScaleUser = OpenScale.getInstance(getContext()).getSelectedScaleUser();
+        currentScaleUser = OpenScale.getInstance().getSelectedScaleUser();
 
         userSelectedData = null;
 
         spinUserAdapter.clear();
-        List<ScaleUser> scaleUserList = OpenScale.getInstance(getContext()).getScaleUserList();
+        List<ScaleUser> scaleUserList = OpenScale.getInstance().getScaleUserList();
 
         int posUser = 0;
 
@@ -232,7 +232,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
             }
 
             FloatMeasurementView measurementView = (FloatMeasurementView) view;
-            Stack<PointValue> valuesStack = new Stack<PointValue>();
+            Stack<PointValue> valuesStack = new Stack<>();
 
             for (int i = 0; i < max_i; ++i) {
                 ScaleMeasurement measurement = scaleMeasurementList.get(max_i - i - 1);
@@ -272,18 +272,17 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         List<SliceValue> arcValuesLast = new ArrayList<>();
 
         for (MeasurementView view : measurementViews) {
-            if (view instanceof FloatMeasurementView) {
-                FloatMeasurementView measurementView = (FloatMeasurementView) view;
+            if (!view.isVisible()
+                || !(view instanceof FloatMeasurementView)
+                || view instanceof BMRMeasurementView) {
+                continue;
+            }
 
-                if (measurementView instanceof BMRMeasurementView) {
-                    continue;
-                }
+            FloatMeasurementView measurementView = (FloatMeasurementView) view;
+            measurementView.loadFrom(lastScaleMeasurement, null);
 
-                measurementView.loadFrom(lastScaleMeasurement, null);
-
-                if (measurementView.getValue() != 0) {
-                    arcValuesLast.add(new SliceValue(measurementView.getValue(), measurementView.getColor()));
-                }
+            if (measurementView.getValue() != 0) {
+                arcValuesLast.add(new SliceValue(measurementView.getValue(), measurementView.getColor()));
             }
         }
 
@@ -291,7 +290,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         PieChartData pieChartData = new PieChartData(arcValuesLast);
         pieChartData.setHasLabels(false);
         pieChartData.setHasCenterCircle(true);
-        pieChartData.setCenterText1(String.format("%.2f %s", lastScaleMeasurement.getConvertedWeight(unit), unit.toString()));
+        pieChartData.setCenterText1(String.format("%.2f %s", Converters.fromKilogram(lastScaleMeasurement.getWeight(), unit), unit.toString()));
         pieChartData.setCenterText2(DateFormat.getDateInstance(DateFormat.MEDIUM).format(lastScaleMeasurement.getDateTime()));
         pieChartData.setCenterText1Color(txtTitleLastMeasurement.getCurrentTextColor());
         pieChartData.setCenterText2Color(txtTitleLastMeasurement.getCurrentTextColor());
@@ -317,16 +316,15 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
                 return;
             }
 
-            String date_time = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.SHORT).format(lastScaleMeasurement.getDateTime());
-
             for (MeasurementView view : measurementViews) {
                 if (view instanceof FloatMeasurementView) {
                     FloatMeasurementView measurementView = (FloatMeasurementView) view;
 
-                    measurementView.loadFrom(lastScaleMeasurement, null);
-
                     if (measurementView.getColor() == arcValue.getColor()) {
-                        Toast.makeText(getActivity(), measurementView.getName() + " " + measurementView.getValueAsString() + measurementView.getUnit() + " " + getResources().getString(R.string.info_on_date) + " " + date_time, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), String.format("%s: %s",
+                                measurementView.getName(), measurementView.getValueAsString(true)),
+                                Toast.LENGTH_SHORT).show();
+                        break;
                     }
                 }
             }
@@ -343,7 +341,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
         public void onValueSelected(int lineIndex, int pointIndex, PointValue pointValue) {
             userSelectedData = scaleMeasurementLastDays.get(pointIndex);
 
-            updateOnView(OpenScale.getInstance(getContext()).getScaleMeasurementList());
+            updateOnView(OpenScale.getInstance().getScaleMeasurementList());
         }
 
         @Override
@@ -359,7 +357,7 @@ public class OverviewFragment extends Fragment implements FragmentUpdateListener
              if (parent.getChildCount() > 0) {
                  ((TextView) parent.getChildAt(0)).setTextColor(Color.GRAY);
 
-                 OpenScale openScale = OpenScale.getInstance(getContext());
+                 OpenScale openScale = OpenScale.getInstance();
 
                  List<ScaleUser> scaleUserList = openScale.getScaleUserList();
                  ScaleUser scaleUser = scaleUserList.get(position);

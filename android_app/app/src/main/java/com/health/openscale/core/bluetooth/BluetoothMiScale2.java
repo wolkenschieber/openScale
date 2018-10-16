@@ -21,11 +21,18 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.health.openscale.core.OpenScale;
+import com.health.openscale.core.bodymetric.EstimatedFatMetric;
+import com.health.openscale.core.bodymetric.EstimatedLBMMetric;
+import com.health.openscale.core.bodymetric.EstimatedWaterMetric;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
+import com.health.openscale.gui.views.FatMeasurementView;
+import com.health.openscale.gui.views.LBMMeasurementView;
+import com.health.openscale.gui.views.MeasurementViewSettings;
+import com.health.openscale.gui.views.WaterMeasurementView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,6 +41,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
+
+import timber.log.Timber;
 
 import static com.health.openscale.core.bluetooth.BluetoothCommunication.BT_STATUS_CODE.BT_UNEXPECTED_ERROR;
 
@@ -62,7 +71,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
         final byte[] data = gattCharacteristic.getValue();
 
         if (data != null && data.length > 0) {
-            Log.d("MIScale_v2", "DataChange hex data: "+ byteInHex(data));
+            Timber.d("DataChange hex data: %s", byteInHex(data));
 
             // Stop command from mi scale received
             if (data[0] == 0x03) {
@@ -85,11 +94,11 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
 
     @Override
-    boolean nextInitCmd(int stateNr) {
+    protected boolean nextInitCmd(int stateNr) {
         switch (stateNr) {
             case 0:
                 // set scale units
-                final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+                final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
                 byte[] setUnitCmd = new byte[]{(byte)0x06, (byte)0x04, (byte)0x00, (byte) selectedUser.getScaleUnit().toInt()};
                 writeBytes(WEIGHT_CUSTOM_SERVICE, WEIGHT_CUSTOM_CONFIG, setUnitCmd);
                 break;
@@ -119,7 +128,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextBluetoothCmd(int stateNr) {
+    protected boolean nextBluetoothCmd(int stateNr) {
         switch (stateNr) {
             case 0:
                 // configure scale to get only last measurements
@@ -148,7 +157,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextCleanUpCmd(int stateNr) {
+    protected boolean nextCleanUpCmd(int stateNr) {
 
         switch (stateNr) {
             case 0:
@@ -175,8 +184,6 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
     private void parseBytes(byte[] weightBytes) {
         try {
-            float weight = 0.0f;
-
             final byte ctrlByte0 = weightBytes[0];
             final byte ctrlByte1 = weightBytes[1];
 
@@ -195,6 +202,7 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
                 final int min = (int) weightBytes[7];
                 final int sec = (int) weightBytes[8];
 
+                float weight;
                 if (isLBSUnit || isCattyUnit) {
                     weight = (float) (((weightBytes[12] & 0xFF) << 8) | (weightBytes[11] & 0xFF)) / 100.0f;
                 } else {
@@ -206,15 +214,33 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
                 // Is the year plausible? Check if the year is in the range of 20 years...
                 if (validateDate(date_time, 20)) {
-                    final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+                    final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
                     ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
-                    scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
+                    scaleBtData.setWeight(Converters.toKilogram(weight, selectedUser.getScaleUnit()));
                     scaleBtData.setDateTime(date_time);
+
+                    // estimate fat, water and LBM until library is reversed engineered
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+                    MeasurementViewSettings settings = new MeasurementViewSettings(prefs, WaterMeasurementView.KEY);
+                    EstimatedWaterMetric waterMetric = EstimatedWaterMetric.getEstimatedMetric(
+                            EstimatedWaterMetric.FORMULA.valueOf(settings.getEstimationFormula()));
+                    scaleBtData.setWater(waterMetric.getWater(selectedUser, scaleBtData));
+
+                    settings = new MeasurementViewSettings(prefs, FatMeasurementView.KEY);
+                    EstimatedFatMetric fatMetric = EstimatedFatMetric.getEstimatedMetric(
+                            EstimatedFatMetric.FORMULA.valueOf(settings.getEstimationFormula()));
+                    scaleBtData.setFat(fatMetric.getFat(selectedUser, scaleBtData));
+
+                    settings = new MeasurementViewSettings(prefs, LBMMeasurementView.KEY);
+                    EstimatedLBMMetric lbmMetric = EstimatedLBMMetric.getEstimatedMetric(
+                            EstimatedLBMMetric.FORMULA.valueOf(settings.getEstimationFormula()));
+                    scaleBtData.setLbm(lbmMetric.getLBM(selectedUser, scaleBtData));
 
                     addScaleData(scaleBtData);
                 } else {
-                    Log.e("BluetoothMiScale", "Invalid Mi scale weight year " + year);
+                    Timber.e("Invalid Mi scale weight year %d", year);
                 }
             }
         } catch (ParseException e) {
@@ -248,10 +274,10 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
             Random r = new Random();
             uniqueNumber = r.nextInt(65535 - 100 + 1) + 100;
 
-            prefs.edit().putInt("uniqueNumber", uniqueNumber).commit();
+            prefs.edit().putInt("uniqueNumber", uniqueNumber).apply();
         }
 
-        int userId = OpenScale.getInstance(context).getSelectedScaleUserId();
+        int userId = OpenScale.getInstance().getSelectedScaleUserId();
 
         return uniqueNumber + userId;
     }

@@ -23,6 +23,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.health.openscale.core.OpenScale;
+import com.health.openscale.core.bluetooth.lib.YunmaiLib;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.utils.Converters;
@@ -30,6 +31,8 @@ import com.health.openscale.core.utils.Converters;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
+
+import timber.log.Timber;
 
 public class BluetoothYunmaiSE_Mini extends BluetoothCommunication {
     private final UUID WEIGHT_MEASUREMENT_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
@@ -52,31 +55,33 @@ public class BluetoothYunmaiSE_Mini extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextInitCmd(int stateNr) {
+    protected boolean nextInitCmd(int stateNr) {
         switch (stateNr) {
             case 0:
-                byte[] userId = Converters.toUnsignedInt16Be(getUniqueNumber());
+                byte[] userId = Converters.toInt16Be(getUniqueNumber());
 
-                final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+                final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
                 byte sex = selectedUser.getGender().isMale() ? (byte)0x01 : (byte)0x02;
                 byte display_unit = selectedUser.getScaleUnit() == Converters.WeightUnit.KG ? (byte) 0x01 : (byte) 0x02;
 
                 byte[] user_add_or_query = new byte[]{
                         (byte) 0x0d, (byte) 0x12, (byte) 0x10, (byte) 0x01, (byte) 0x00, (byte) 0x00,
                         userId[0], userId[1], (byte) selectedUser.getBodyHeight(), sex,
-                        (byte) selectedUser.getAge(new Date()), (byte) 0x55, (byte) 0x5a, (byte) 0x00,
+                        (byte) selectedUser.getAge(), (byte) 0x55, (byte) 0x5a, (byte) 0x00,
                         (byte)0x00, display_unit, (byte) 0x03, (byte) 0x00};
-                user_add_or_query[17] = xor_checksum(user_add_or_query);
+                user_add_or_query[user_add_or_query.length - 1] =
+                        xorChecksum(user_add_or_query, 1, user_add_or_query.length - 1);
                 writeBytes(WEIGHT_CMD_SERVICE, WEIGHT_CMD_CHARACTERISTIC, user_add_or_query);
                 break;
             case 1:
-                byte[] unixTime = Converters.toUnsignedInt32Be(new Date().getTime() / 1000);
+                byte[] unixTime = Converters.toInt32Be(new Date().getTime() / 1000);
 
                 byte[] set_time = new byte[]{(byte)0x0d, (byte) 0x0d, (byte) 0x11,
                         unixTime[0], unixTime[1], unixTime[2], unixTime[3],
                         (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00};
+                set_time[set_time.length - 1] =
+                        xorChecksum(set_time, 1, set_time.length - 1);
 
-                set_time[12] = xor_checksum(set_time);
                 writeBytes(WEIGHT_CMD_SERVICE, WEIGHT_CMD_CHARACTERISTIC, set_time);
                 break;
             case 2:
@@ -94,12 +99,12 @@ public class BluetoothYunmaiSE_Mini extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextBluetoothCmd(int stateNr) {
+    protected boolean nextBluetoothCmd(int stateNr) {
         return false;
     }
 
     @Override
-    boolean nextCleanUpCmd(int stateNr) {
+    protected boolean nextCleanUpCmd(int stateNr) {
         return false;
     }
 
@@ -117,7 +122,7 @@ public class BluetoothYunmaiSE_Mini extends BluetoothCommunication {
     }
 
     private void parseBytes(byte[] weightBytes) {
-        final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+        final ScaleUser scaleUser = OpenScale.getInstance().getSelectedScaleUser();
 
         ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
@@ -125,11 +130,29 @@ public class BluetoothYunmaiSE_Mini extends BluetoothCommunication {
         scaleBtData.setDateTime(new Date(timestamp));
 
         float weight = Converters.fromUnsignedInt16Be(weightBytes, 13) / 100.0f;
-        scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
+        scaleBtData.setWeight(weight);
 
         if (isMini) {
-            float fat = Converters.fromUnsignedInt16Be(weightBytes, 17) / 100.0f;
-            scaleBtData.setFat(fat);
+            int sex;
+
+            if (scaleUser.getGender() == Converters.Gender.MALE) {
+                sex = 1;
+            } else {
+                sex = 0;
+            }
+
+            YunmaiLib yunmaiLib = new YunmaiLib(sex, scaleUser.getBodyHeight());
+            float bodyFat = Converters.fromUnsignedInt16Be(weightBytes, 17) / 100.0f;
+            int resistance = Converters.fromUnsignedInt16Be(weightBytes, 15);
+            scaleBtData.setFat(bodyFat);
+            scaleBtData.setMuscle(yunmaiLib.getMuscle(bodyFat));
+            scaleBtData.setWater(yunmaiLib.getWater(bodyFat));
+            scaleBtData.setBone(yunmaiLib.getBoneMass(scaleBtData.getMuscle(), weight));
+
+            Timber.d("received bytes [%s]", byteInHex(weightBytes));
+            Timber.d("received decrypted bytes [weight: %.2f, fat: %.2f, resistance: %d]", weight, bodyFat, resistance);
+            Timber.d("user [%s]", scaleUser);
+            Timber.d("scale measurement [%s]", scaleBtData);
         }
 
         addScaleData(scaleBtData);
@@ -146,21 +169,11 @@ public class BluetoothYunmaiSE_Mini extends BluetoothCommunication {
             Random r = new Random();
             uniqueNumber = r.nextInt(65535 - 100 + 1) + 100;
 
-            prefs.edit().putInt("uniqueNumber", uniqueNumber).commit();
+            prefs.edit().putInt("uniqueNumber", uniqueNumber).apply();
         }
 
-        int userId = OpenScale.getInstance(context).getSelectedScaleUserId();
+        int userId = OpenScale.getInstance().getSelectedScaleUserId();
 
         return uniqueNumber + userId;
-    }
-
-    private byte xor_checksum(byte[] data) {
-        byte checksum = 0x00;
-
-        for (int i=0; i<data.length-1; i++) {
-            checksum ^= data[i];
-        }
-
-        return checksum;
     }
 }

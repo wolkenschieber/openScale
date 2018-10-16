@@ -17,7 +17,6 @@ package com.health.openscale.gui.views;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
@@ -25,10 +24,11 @@ import com.health.openscale.core.evaluation.EvaluationResult;
 import com.health.openscale.core.evaluation.EvaluationSheet;
 
 public class MuscleMeasurementView extends FloatMeasurementView {
+    // Don't change key value, it may be stored persistent in preferences
     public static final String KEY = "muscle";
 
     public MuscleMeasurementView(Context context) {
-        super(context, context.getResources().getString(R.string.label_muscle), ContextCompat.getDrawable(context, R.drawable.ic_muscle));
+        super(context, R.string.label_muscle, R.drawable.ic_muscle);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class MuscleMeasurementView extends FloatMeasurementView {
     }
 
     @Override
-    protected boolean canConvertPercentageToAbsoluteWeight() {
+    protected boolean supportsPercentageToAbsoluteWeightConversion() {
         return true;
     }
 
@@ -62,7 +62,7 @@ public class MuscleMeasurementView extends FloatMeasurementView {
 
     @Override
     protected float getMaxValue() {
-        return maybeConvertPercentageToAbsolute(80);
+        return maybeConvertPercentageToAbsoluteWeight(80);
     }
 
     @Override

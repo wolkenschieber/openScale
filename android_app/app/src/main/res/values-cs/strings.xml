@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<resources><string name="title_overview">Přehled</string>
+<resources>
+    <string name="title_overview">Přehled</string>
     <string name="title_graph">Graf</string>
     <string name="title_table">Tabulka</string>
     <string name="title_statistics">Statistiky</string>
@@ -23,16 +24,16 @@
     <string name="label_weight">Hmotnost</string>
     <string name="label_bmi">Index tělesné hmotnosti (BMI)</string>
     <string name="label_bmr">Bazální metabolický výdej (BMR)</string>
-    <string name="label_fat">Procento tělesného tuku</string>
-    <string name="label_water">Procento vody</string>
-    <string name="label_muscle">Procento svalů</string>
+    <string name="label_fat">Tělesný tuk</string>
+    <string name="label_water">Tělesná voda</string>
+    <string name="label_muscle">Svaly</string>
     <string name="label_comment">Komentář</string>
     <string name="label_smartUserAssign">Chytré přiřazení uživatele</string>
 
     <plurals name="label_days">
-	<item quantity="one">%d den</item>
-	<item quantity="few">%d dny</item>
-	<item quantity="other">%d dnů</item>
+        <item quantity="one">%d den</item>
+        <item quantity="few">%d dny</item>
+        <item quantity="other">%d dnů</item>
     </plurals>
     <string name="label_last_week">Uplynulých 7 dnů</string>
     <string name="label_last_month">Uplynulých 30 dnů</string>
@@ -44,10 +45,10 @@
     <string name="label_time">Čas</string>
     <string name="label_birthday">Narozeniny</string>
     <string name="label_user_name">Jméno</string>
-    <string name="label_height">Tělesná hmotnost</string>
+    <string name="label_height">Výška</string>
     <string name="label_gender">Pohlaví</string>
     <string name="label_male">Muž</string>
-    <string name="label_woman">Žena</string>
+    <string name="label_female">Žena</string>
     <string name="label_goal_weight">Cílová hmotnost</string>
     <string name="label_goal_date">Cílové datum</string>
 
@@ -72,7 +73,7 @@
     <string name="info_data_all_deleted">Všechny položky vymazány z databáze</string>
     <string name="info_data_exported">Data exportována na</string>
     <string name="info_data_imported">Data importována z</string>
-    <string name="info_enter_value_cm">Zadejte hodnotu v cm</string>
+    <string name="info_enter_value_in">Zadejte hodnotu v</string>
     <string name="info_enter_comment">Zadejte volitelný komentář</string>
     <string name="info_is_visible">je viditelné</string>
     <string name="info_is_not_visible">není viditelné</string>
@@ -92,7 +93,6 @@
     <string name="question_really_delete_user">Opravdu chcete smazat tohoto uživatele?</string>
 
     <string name="label_bluetooth_title">Bluetooth</string>
-    <string name="label_device_type">Typ zařízení</string>
 
     <string name="label_delete_confirmation">Potvrzení smazání</string>
 
@@ -148,4 +148,61 @@
 
     <string name="permission_bluetooth_info_title">Informace</string>
 
+    <string name="label_ok">OK</string>
+    <string name="label_add_measurement">Přidat měření</string>
+    <string name="label_share_subject">export dat do CSV souboru (%s)</string>
+
+    <string name="label_scale_unit">Jednotky vahy</string>
+    <string name="info_bluetooth_try_connection">Přípojit se k:</string>
+    <string name="info_bluetooth_connection_error">Neočekavaná chyba Bluetooth</string>
+    <string name="info_new_data_duplicated">měření za stejný den a čas už existuje</string>
+
+    <string name="info_no_selected_user">Žádný uživatel neexistuje. Založte nového uživatele v nastavení</string>
+    <string name="question_really_delete_all">Smazat všechny záznamy všech uživatelů?</string>
+    <string name="label_bluetooth_enable">Připojit se k váze při startu</string>
+    <string name="label_mergeWithLastMeasurement">Pokračovat za posledním měřením</string>
+    <string name="label_bluetooth_searching">Hledání vaše Bluetooth váhy</string>
+    <string name="label_bluetooth_searching_finished">Hledání skončilo</string>
+
+    <string name="label_enable_points">Bod pro data</string>
+
+    <string name="label_category_measurement_database">Databáze měření</string>
+
+    <string name="error_max_scale_users">Nalezen maximální počet uživatelů vah</string>
+    <string name="label_month_view">Měsíční přehled</string>
+    <string name="label_weeks_view">Týdenní přehled</string>
+
+    <string name="permission_not_granted">Oprávnění nebylo nastavené</string>
+    <string name="permission_read_data_label">Číst data openScale</string>
+    <string name="label_next">Další</string>
+    <string name="label_set_default_order">Nastavit implicitní pořadí</string>
+    <string name="language_default">Systémové nastavení</string>
+    <string name="label_language">Jazyk</string>
+    <string name="theme_light">Světlé</string>
+    <string name="theme_dark">Tmavé</string>
+    <string name="label_add_or_fix_translation">Přidat nové nebo přepsat existujíci</string>
+    <string name="label_overview_graph">Graf přehledu</string>
+    <string name="label_percent">Procent</string>
+    <string name="label_estimated">Průměr</string>
+    <string name="label_estimate_measurement_summary">Založen na hmotnosti, výšce, věku, pohlaví atd.</string>
+    <string name="label_auto_backup">Automatické zálohování</string>
+    <string name="label_auto_backup_schedule">Časování zálohování</string>
+    <string name="label_overwrite_backup">Přepsat předchozí zálohu</string>
+    <string name="label_daily">denně</string>
+    <string name="label_weekly">týdně</string>
+    <string name="label_monthly">měsíčně</string>
+    <string name="label_scale_not_supported">Není vaše váha podporovaná?</string>
+    <string name="label_development">Vývoj</string>
+    <string name="label_debug_log">Uložit krokovací log do souboru</string>
+    <string name="label_your_bluetooth_scale">Vaše Bluetooth váha</string>
+    <string name="label_select_measurement">Zvolte měření</string>
+    <string name="label_select_user">Zvolte uživatele</string>
+    <string name="label_configure_widget">Nastavit widget</string>
+    <string name="label_visceral_fat">Viscerální tuk</string>
+    <string name="label_measure_unit">Jednotky měření</string>
+    <string name="activity_level_sedentary">Málo pohyblivý</string>
+    <string name="activity_level_mild">Středně</string>
+    <string name="activity_level_moderate">Pruměrně</string>
+    <string name="activity_level_heavy">Hodně</string>
+    <string name="activity_level_extreme">Extrémně</string>
 </resources>

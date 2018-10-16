@@ -17,7 +17,6 @@ package com.health.openscale.gui.views;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
 
 import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
@@ -26,10 +25,11 @@ import com.health.openscale.core.evaluation.EvaluationSheet;
 import com.health.openscale.core.utils.Converters;
 
 public class WeightMeasurementView extends FloatMeasurementView {
+    // Don't change key value, it may be stored persistent in preferences
     public static final String KEY = "weight";
 
     public WeightMeasurementView(Context context) {
-        super(context, context.getResources().getString(R.string.label_weight), ContextCompat.getDrawable(context, R.drawable.ic_weight));
+        super(context, R.string.label_weight, R.drawable.ic_weight);
     }
 
     @Override
@@ -39,12 +39,12 @@ public class WeightMeasurementView extends FloatMeasurementView {
 
     @Override
     protected float getMeasurementValue(ScaleMeasurement measurement) {
-        return measurement.getConvertedWeight(getScaleUser().getScaleUnit());
+        return Converters.fromKilogram(measurement.getWeight(), getScaleUser().getScaleUnit());
     }
 
     @Override
     protected void setMeasurementValue(float value, ScaleMeasurement measurement) {
-        measurement.setConvertedWeight(value, getScaleUser().getScaleUnit());
+        measurement.setWeight(Converters.toKilogram(value, getScaleUser().getScaleUnit()));
     }
 
     @Override

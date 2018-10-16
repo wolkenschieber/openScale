@@ -26,7 +26,7 @@ import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.utils.Converters;
 
-@Database(entities = {ScaleMeasurement.class, ScaleUser.class}, version = 2)
+@Database(entities = {ScaleMeasurement.class, ScaleUser.class}, version = 3)
 @TypeConverters({Converters.class})
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ScaleMeasurementDAO measurementDAO();
@@ -72,5 +72,62 @@ public abstract class AppDatabase extends RoomDatabase {
             }
         }
     };
-}
 
+    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.beginTransaction();
+            try {
+                // Drop old index
+                database.execSQL("DROP INDEX index_scaleMeasurements_userId_datetime");
+
+                // Rename old table
+                database.execSQL("ALTER TABLE scaleMeasurements RENAME TO scaleMeasurementsOld");
+                database.execSQL("ALTER TABLE scaleUsers RENAME TO scaleUsersOld");
+
+                // Create new table with foreign key
+                database.execSQL("CREATE TABLE scaleMeasurements"
+                        + " (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                        + " userId INTEGER NOT NULL, enabled INTEGER NOT NULL,"
+                        + " datetime INTEGER, weight REAL NOT NULL, fat REAL NOT NULL,"
+                        + " water REAL NOT NULL, muscle REAL NOT NULL, visceralFat REAL NOT NULL,"
+                        + " lbm REAL NOT NULL, waist REAL NOT NULL, hip REAL NOT NULL,"
+                        + " bone REAL NOT NULL, chest REAL NOT NULL, thigh REAL NOT NULL,"
+                        + " biceps REAL NOT NULL, neck REAL NOT NULL, caliper1 REAL NOT NULL,"
+                        + " caliper2 REAL NOT NULL, caliper3 REAL NOT NULL, comment TEXT,"
+                        + " FOREIGN KEY(userId) REFERENCES scaleUsers(id)"
+                        + " ON UPDATE NO ACTION ON DELETE CASCADE)");
+
+                database.execSQL("CREATE TABLE scaleUsers "
+                        + "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                        + "username TEXT NOT NULL, birthday INTEGER NOT NULL, bodyHeight REAL NOT NULL, "
+                        + "scaleUnit INTEGER NOT NULL, gender INTEGER NOT NULL, initialWeight REAL NOT NULL, "
+                        + "goalWeight REAL NOT NULL, goalDate INTEGER, measureUnit INTEGER NOT NULL, activityLevel INTEGER NOT NULL)");
+
+                // Create new index on datetime + userId
+                database.execSQL("CREATE UNIQUE INDEX index_scaleMeasurements_userId_datetime"
+                        + " ON scaleMeasurements (userId, datetime)");
+
+                // Copy data from the old table
+                database.execSQL("INSERT INTO scaleMeasurements"
+                        + " SELECT id, userId, enabled, datetime, weight, fat, water, muscle,"
+                        + " 0 AS visceralFat, lbw AS lbm, waist, hip, bone, 0 AS chest,"
+                        + " 0 as thigh, 0 as biceps, 0 as neck, 0 as caliper1,"
+                        + " 0 as caliper2, 0 as caliper3, comment FROM scaleMeasurementsOld");
+
+                database.execSQL("INSERT INTO scaleUsers"
+                        + " SELECT id, username, birthday, bodyHeight, scaleUnit, gender, initialWeight, goalWeight,"
+                        + " goalDate, 0 AS measureUnit, 0 AS activityLevel FROM scaleUsersOld");
+
+                // Delete old table
+                database.execSQL("DROP TABLE scaleMeasurementsOld");
+                database.execSQL("DROP TABLE scaleUsersOld");
+
+                database.setTransactionSuccessful();
+            }
+            finally {
+                database.endTransaction();
+            }
+        }
+    };
+}

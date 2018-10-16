@@ -16,7 +16,6 @@
 
 package com.health.openscale.gui;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -31,8 +30,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.design.internal.BottomNavigationItemView;
-import android.support.design.internal.BottomNavigationMenuView;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -43,10 +40,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import com.health.openscale.BuildConfig;
@@ -66,10 +61,10 @@ import com.health.openscale.gui.fragments.TableFragment;
 import com.health.openscale.gui.preferences.BluetoothPreferences;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.List;
 
 import cat.ereza.customactivityoncrash.config.CaocConfig;
+import timber.log.Timber;
 
 public class MainActivity extends BaseAppCompatActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener{
@@ -98,7 +93,7 @@ public class MainActivity extends BaseAppCompatActivity
         prefs.registerOnSharedPreferenceChangeListener(this);
 
         CaocConfig.Builder.create()
-                .trackActivities(true)
+                .trackActivities(false)
                 .apply();
 
         setContentView(R.layout.activity_main);
@@ -111,12 +106,12 @@ public class MainActivity extends BaseAppCompatActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Find our drawer view
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerLayout = findViewById(R.id.drawer_layout);
 
         // Find our drawer view
-        navDrawer = (NavigationView) findViewById(R.id.navigation_view);
+        navDrawer = findViewById(R.id.navigation_view);
 
-        navBottomDrawer = (BottomNavigationView) findViewById(R.id.navigation_bottom_view);
+        navBottomDrawer = findViewById(R.id.navigation_bottom_view);
         navBottomDrawer.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -125,19 +120,9 @@ public class MainActivity extends BaseAppCompatActivity
             }
         });
 
-        disableShiftMode(navBottomDrawer);
-
         //Create Drawer Toggle
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open_drawer, R.string.close_drawer){
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
 
-            @Override
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-            }
         };
 
         drawerLayout.addDrawerListener(drawerToggle);
@@ -154,7 +139,7 @@ public class MainActivity extends BaseAppCompatActivity
             intent.putExtra(UserSettingsActivity.EXTRA_MODE, UserSettingsActivity.ADD_USER_REQUEST);
             startActivity(intent);
 
-            prefs.edit().putBoolean("firstStart", false).commit();
+            prefs.edit().putBoolean("firstStart", false).apply();
         }
 
         if(!valueOfCountModified){
@@ -197,7 +182,7 @@ public class MainActivity extends BaseAppCompatActivity
     @Override
     public void onDestroy() {
         prefs.unregisterOnSharedPreferenceChangeListener(this);
-        OpenScale.getInstance(getApplicationContext()).disconnectFromBluetoothDevice();
+        OpenScale.getInstance().disconnectFromBluetoothDevice();
         super.onDestroy();
     }
 
@@ -205,6 +190,7 @@ public class MainActivity extends BaseAppCompatActivity
     public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
         if (settingsActivityRunning) {
             recreate();
+            OpenScale.getInstance().triggerWidgetUpdate();
         }
     }
 
@@ -217,7 +203,7 @@ public class MainActivity extends BaseAppCompatActivity
                         dialog.dismiss();
                         Uri uri = Uri.parse("market://details?id=" + getPackageName());
                         Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-                        // To count with Play market backstack, After pressing back button,
+                        // To count with Play market back stack, After pressing back button,
                         // to taken back to our application, we need to add following flags to intent.
                         goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
                                 Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET |
@@ -274,7 +260,7 @@ public class MainActivity extends BaseAppCompatActivity
                 });
     }
 
-    public void selectDrawerItem(int menuItemId) {
+    private void selectDrawerItem(int menuItemId) {
         // Create a new fragment and specify the fragment to show based on nav item clicked
         Class fragmentClass;
         String fragmentTitle;
@@ -309,7 +295,7 @@ public class MainActivity extends BaseAppCompatActivity
                 return;
         }
 
-        prefs.edit().putInt("lastFragmentId", menuItemId).commit();
+        prefs.edit().putInt("lastFragmentId", menuItemId).apply();
 
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -339,7 +325,7 @@ public class MainActivity extends BaseAppCompatActivity
             try {
                 transaction.add(R.id.fragment_content, (Fragment) fragmentClass.newInstance(), tag);
             } catch (Exception e) {
-                e.printStackTrace();
+                Timber.e(e, "Failed to add fragment %s", tag);
             }
         }
 
@@ -375,7 +361,7 @@ public class MainActivity extends BaseAppCompatActivity
                 drawerLayout.openDrawer(GravityCompat.START);
                 return true;
             case R.id.action_add_measurement:
-                if (OpenScale.getInstance(getApplicationContext()).getSelectedScaleUserId() == -1) {
+                if (OpenScale.getInstance().getSelectedScaleUserId() == -1) {
                     showNoSelectedUserDialog();
                     return true;
                 }
@@ -384,7 +370,7 @@ public class MainActivity extends BaseAppCompatActivity
                 startActivity(intent);
                 return true;
             case R.id.action_bluetooth_status:
-                if (OpenScale.getInstance(getApplicationContext()).disconnectFromBluetoothDevice()) {
+                if (OpenScale.getInstance().disconnectFromBluetoothDevice()) {
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_disabled);
                 }
                 else {
@@ -445,7 +431,7 @@ public class MainActivity extends BaseAppCompatActivity
     }
 
     private void invokeConnectToBluetoothDevice() {
-        final OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+        final OpenScale openScale = OpenScale.getInstance();
 
         if (openScale.getSelectedScaleUserId() == -1) {
             showNoSelectedUserDialog();
@@ -458,12 +444,14 @@ public class MainActivity extends BaseAppCompatActivity
                 BluetoothPreferences.PREFERENCE_KEY_BLUETOOTH_HW_ADDRESS, "");
 
         if (!BluetoothAdapter.checkBluetoothAddress(hwAddress)) {
+            setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
             Toast.makeText(getApplicationContext(), R.string.info_bluetooth_no_device_set, Toast.LENGTH_SHORT).show();
             return;
         }
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         if (!bluetoothManager.getAdapter().isEnabled()) {
+            setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST);
             return;
@@ -473,6 +461,7 @@ public class MainActivity extends BaseAppCompatActivity
         setBluetoothStatusIcon(R.drawable.ic_bluetooth_searching);
 
         if (!openScale.connectToBluetoothDevice(deviceName, hwAddress, callbackBtHandler)) {
+            setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
             Toast.makeText(getApplicationContext(), deviceName + " " + getResources().getString(R.string.label_bt_device_no_support), Toast.LENGTH_SHORT).show();
         }
     }
@@ -488,7 +477,7 @@ public class MainActivity extends BaseAppCompatActivity
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_success);
                     ScaleMeasurement scaleBtData = (ScaleMeasurement) msg.obj;
 
-                    OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+                    OpenScale openScale = OpenScale.getInstance();
 
                     if (prefs.getBoolean("mergeWithLastMeasurement", true)) {
                         List<ScaleMeasurement> scaleMeasurementList = openScale.getScaleMeasurementList();
@@ -504,27 +493,27 @@ public class MainActivity extends BaseAppCompatActivity
                 case BT_INIT_PROCESS:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_success);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_init), Toast.LENGTH_SHORT).show();
-                    Log.d("OpenScale", "Bluetooth initializing");
+                    Timber.d("Bluetooth initializing");
                     break;
                 case BT_CONNECTION_LOST:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_connection_lost), Toast.LENGTH_SHORT).show();
-                    Log.d("OpenScale", "Bluetooth connection lost");
+                    Timber.d("Bluetooth connection lost");
                     break;
                 case BT_NO_DEVICE_FOUND:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_no_device), Toast.LENGTH_SHORT).show();
-                    Log.d("OpenScale", "No Bluetooth device found");
+                    Timber.d("No Bluetooth device found");
                     break;
                 case BT_CONNECTION_ESTABLISHED:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_success);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_connection_successful), Toast.LENGTH_SHORT).show();
-                    Log.d("OpenScale", "Bluetooth connection successful established");
+                    Timber.d("Bluetooth connection successful established");
                     break;
                 case BT_UNEXPECTED_ERROR:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_connection_error) + ": " + msg.obj, Toast.LENGTH_SHORT).show();
-                    Log.e("OpenScale", "Bluetooth unexpected error: " + msg.obj);
+                    Timber.e("Bluetooth unexpected error: %s", msg.obj);
                     break;
                 case BT_SCALE_MESSAGE:
                     String toastMessage = String.format(getResources().getString(msg.arg1), msg.obj);
@@ -534,13 +523,13 @@ public class MainActivity extends BaseAppCompatActivity
         }
     };
 
-    private void setBluetoothStatusIcon(int iconRessource) {
-        bluetoothStatusIcon = iconRessource;
+    private void setBluetoothStatusIcon(int iconResource) {
+        bluetoothStatusIcon = iconResource;
         bluetoothStatus.setIcon(getResources().getDrawable(bluetoothStatusIcon));
     }
 
     private void importCsvFile() {
-        int selectedUserId = OpenScale.getInstance(getApplicationContext()).getSelectedScaleUserId();
+        int selectedUserId = OpenScale.getInstance().getSelectedScaleUserId();
 
         if (selectedUserId == -1) {
             AlertDialog.Builder infoDialog = new AlertDialog.Builder(this);
@@ -566,7 +555,7 @@ public class MainActivity extends BaseAppCompatActivity
     }
 
     private void startActionCreateDocumentForExportIntent() {
-        OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+        OpenScale openScale = OpenScale.getInstance();
         ScaleUser selectedScaleUser = openScale.getSelectedScaleUser();
 
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
@@ -578,7 +567,7 @@ public class MainActivity extends BaseAppCompatActivity
     }
 
     private boolean doExportData(Uri uri) {
-        OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+        OpenScale openScale = OpenScale.getInstance();
         if (openScale.exportData(uri)) {
             String filename = openScale.getFilenameFromUri(uri);
             Toast.makeText(this,
@@ -594,7 +583,7 @@ public class MainActivity extends BaseAppCompatActivity
     }
 
     private void exportCsvFile() {
-        OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+        OpenScale openScale = OpenScale.getInstance();
         final ScaleUser selectedScaleUser = openScale.getSelectedScaleUser();
 
         Uri uri;
@@ -646,11 +635,11 @@ public class MainActivity extends BaseAppCompatActivity
     }
 
     private void shareCsvFile() {
-        final ScaleUser selectedScaleUser = OpenScale.getInstance(getApplicationContext()).getSelectedScaleUser();
+        final ScaleUser selectedScaleUser = OpenScale.getInstance().getSelectedScaleUser();
 
         File shareFile = new File(getApplicationContext().getCacheDir(),
                 getExportFilename(selectedScaleUser));
-        if (!OpenScale.getInstance(getApplicationContext()).exportData(Uri.fromFile(shareFile))) {
+        if (!OpenScale.getInstance().exportData(Uri.fromFile(shareFile))) {
             return;
         }
 
@@ -686,7 +675,7 @@ public class MainActivity extends BaseAppCompatActivity
             return;
         }
 
-        OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+        OpenScale openScale = OpenScale.getInstance();
 
         switch (requestCode) {
             case IMPORT_DATA_REQUEST:
@@ -722,30 +711,6 @@ public class MainActivity extends BaseAppCompatActivity
                     editor.apply();
                 }
                 break;
-        }
-    }
-
-    @SuppressLint("RestrictedApi")
-    public static void disableShiftMode(BottomNavigationView view) {
-        BottomNavigationMenuView menuView = (BottomNavigationMenuView) view.getChildAt(0);
-        try {
-            Field shiftingMode = menuView.getClass().getDeclaredField("mShiftingMode");
-            shiftingMode.setAccessible(true);
-            shiftingMode.setBoolean(menuView, false);
-            shiftingMode.setAccessible(false);
-            for (int i = 0; i < menuView.getChildCount(); i++) {
-                BottomNavigationItemView item = (BottomNavigationItemView) menuView.getChildAt(i);
-                //noinspection RestrictedApi
-                item.setShiftingMode(false);
-                item.setPadding(0, 20, 0, 0);
-                // set once again checked value, so view will be updated
-                //noinspection RestrictedApi
-                item.setChecked(item.getItemData().isChecked());
-            }
-        } catch (NoSuchFieldException e) {
-            Log.e("BNVHelper", "Unable to get shift mode field", e);
-        } catch (IllegalAccessException e) {
-            Log.e("BNVHelper", "Unable to change value of shift mode", e);
         }
     }
 }

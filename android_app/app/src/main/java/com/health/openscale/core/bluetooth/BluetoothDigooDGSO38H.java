@@ -19,7 +19,6 @@ package com.health.openscale.core.bluetooth;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
-import android.util.Log;
 
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
@@ -27,6 +26,8 @@ import com.health.openscale.core.datatypes.ScaleUser;
 
 import java.util.Date;
 import java.util.UUID;
+
+import timber.log.Timber;
 
 public class BluetoothDigooDGSO38H extends BluetoothCommunication {
     private final UUID WEIGHT_MEASUREMENT_SERVICE = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
@@ -43,10 +44,6 @@ public class BluetoothDigooDGSO38H extends BluetoothCommunication {
     }
 
     @Override
-    public void onBluetoothDataRead(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic, int status) {
-    }
-
-    @Override
     public void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {
         final byte[] data = gattCharacteristic.getValue();
 
@@ -60,7 +57,7 @@ public class BluetoothDigooDGSO38H extends BluetoothCommunication {
 
 
     @Override
-    boolean nextInitCmd(int stateNr) {
+    protected boolean nextInitCmd(int stateNr) {
         switch (stateNr) {
             case 0:
                 //Tell device to send us weight measurements
@@ -72,7 +69,7 @@ public class BluetoothDigooDGSO38H extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextBluetoothCmd(int stateNr) {
+    protected boolean nextBluetoothCmd(int stateNr) {
         switch (stateNr) {
             default:
                 return false;
@@ -80,7 +77,7 @@ public class BluetoothDigooDGSO38H extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextCleanUpCmd(int stateNr) {
+    protected boolean nextCleanUpCmd(int stateNr) {
 
         switch (stateNr) {
             default:
@@ -89,19 +86,19 @@ public class BluetoothDigooDGSO38H extends BluetoothCommunication {
     }
 
     private void parseBytes(byte[] weightBytes) {
-            float weight, fat, water, muscle, boneWeight;
-            //float subcutaneousFat, visceralFat, metabolicBaseRate, biologicalAge,  boneWeight;
+            float weight, fat, water, muscle, boneWeight, visceralFat;
+            //float subcutaneousFat, metabolicBaseRate, biologicalAge,  boneWeight;
 
             final byte ctrlByte = weightBytes[5];
             final boolean allValues = isBitSet(ctrlByte, 1);
             final boolean weightStabilized = isBitSet(ctrlByte, 0);
-            final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+            final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
 
             if (weightStabilized) {
                 //The weight is stabilized, now we want to measure all available values
                 byte gender = selectedUser.getGender().isMale() ? (byte)0x00: (byte)0x01;
-                byte height = (byte) (selectedUser.getBodyHeight() & 0xFF);
-                byte age = (byte)(selectedUser.getAge(new Date()) & 0xff);
+                byte height = (byte) (((int)selectedUser.getBodyHeight()) & 0xFF);
+                byte age = (byte)(selectedUser.getAge() & 0xff);
                 byte unit = 0x01; // kg
                 switch (selectedUser.getScaleUnit()) {
                     case LB:
@@ -124,25 +121,25 @@ public class BluetoothDigooDGSO38H extends BluetoothCommunication {
                 weight = (float) (((weightBytes[3] & 0xFF) << 8) | (weightBytes[4] & 0xFF)) / 100.0f;
                 fat = (float) (((weightBytes[6] & 0xFF) << 8) | (weightBytes[7] & 0xFF)) / 10.0f;
                 if (Math.abs(fat - 0.0) < 0.00001) {
-                        Log.d("BluetoothDigooDGSO38H", "Scale signaled that measurement of all data " +
-                                "is done, but fat ist still zero. Settling for just adding weight.");
+                        Timber.d("Scale signaled that measurement of all data " +
+                                "is done, but fat is still zero. Settling for just adding weight.");
                 } else {
                     //subcutaneousFat = (float) (((weightBytes[8] & 0xFF) << 8) | (weightBytes[9] & 0xFF)) / 10.0f;
-                    //visceralFat = (float) (weightBytes[10] & 0xFF) / 10.0f;
+                    visceralFat = (float) (weightBytes[10] & 0xFF) / 10.0f;
                     water = (float) (((weightBytes[11] & 0xFF) << 8) | (weightBytes[12] & 0xFF)) / 10.0f;
                     //metabolicBaseRate = (float) (((weightBytes[13] & 0xFF) << 8) | (weightBytes[14] & 0xFF));
                     //biologicalAge = (float) (weightBytes[15] & 0xFF) + 1;
                     muscle = (float) (((weightBytes[16] & 0xFF) << 8) | (weightBytes[17] & 0xFF)) / 10.0f;
                     boneWeight = (float) (weightBytes[18] & 0xFF) / 10.0f;
 
-                    //TODO: Add extra measurements?
                     scaleBtData.setDateTime(new Date());
                     scaleBtData.setFat(fat);
                     scaleBtData.setMuscle(muscle);
                     scaleBtData.setWater(water);
                     scaleBtData.setBone(boneWeight);
+                    scaleBtData.setVisceralFat(visceralFat);
                 }
-                scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
+                scaleBtData.setWeight(weight);
                 addScaleData(scaleBtData);
             }
     }

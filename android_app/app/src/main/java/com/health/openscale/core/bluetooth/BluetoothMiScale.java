@@ -21,11 +21,11 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,6 +34,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
+
+import timber.log.Timber;
 
 import static com.health.openscale.core.bluetooth.BluetoothCommunication.BT_STATUS_CODE.BT_UNEXPECTED_ERROR;
 
@@ -67,7 +69,7 @@ public class BluetoothMiScale extends BluetoothCommunication {
         if (currentYear == scaleYear && currentMonth == scaleMonth && currentDay == scaleDay) {
             setBtMachineState(BT_MACHINE_STATE.BT_CMD_STATE);
         } else {
-            Log.d("BluetoothMiScale", "Current year and scale year is different");
+            Timber.d("Current year and scale year is different");
         }
     }
 
@@ -98,7 +100,7 @@ public class BluetoothMiScale extends BluetoothCommunication {
 
 
     @Override
-    boolean nextInitCmd(int stateNr) {
+    protected boolean nextInitCmd(int stateNr) {
         switch (stateNr) {
             case 0:
                 // read device time
@@ -136,7 +138,7 @@ public class BluetoothMiScale extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextBluetoothCmd(int stateNr) {
+    protected boolean nextBluetoothCmd(int stateNr) {
         switch (stateNr) {
             case 0:
                 // set notification on for weight measurement history
@@ -173,7 +175,7 @@ public class BluetoothMiScale extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextCleanUpCmd(int stateNr) {
+    protected boolean nextCleanUpCmd(int stateNr) {
 
         switch (stateNr) {
             case 0:
@@ -196,8 +198,6 @@ public class BluetoothMiScale extends BluetoothCommunication {
 
     private void parseBytes(byte[] weightBytes) {
         try {
-            float weight = 0.0f;
-
             final byte ctrlByte = weightBytes[0];
 
             final boolean isWeightRemoved = isBitSet(ctrlByte, 7);
@@ -205,14 +205,14 @@ public class BluetoothMiScale extends BluetoothCommunication {
             final boolean isLBSUnit = isBitSet(ctrlByte, 0);
             final boolean isCattyUnit = isBitSet(ctrlByte, 4);
 
-            /*Log.d("GattCallback", "IsWeightRemoved: " + isBitSet(ctrlByte, 7));
-            Log.d("GattCallback", "6 LSB Unknown: " + isBitSet(ctrlByte, 6));
-            Log.d("GattCallback", "IsStabilized: " + isBitSet(ctrlByte, 5));
-            Log.d("GattCallback", "IsCattyOrKg: " + isBitSet(ctrlByte, 4));
-            Log.d("GattCallback", "3 LSB Unknown: " + isBitSet(ctrlByte, 3));
-            Log.d("GattCallback", "2 LSB Unknown: " + isBitSet(ctrlByte, 2));
-            Log.d("GattCallback", "1 LSB Unknown: " + isBitSet(ctrlByte, 1));
-            Log.d("GattCallback", "IsLBS: " + isBitSet(ctrlByte, 0));*/
+            /*Timber.d("IsWeightRemoved: " + isBitSet(ctrlByte, 7));
+            Timber.d("6 LSB Unknown: " + isBitSet(ctrlByte, 6));
+            Timber.d("IsStabilized: " + isBitSet(ctrlByte, 5));
+            Timber.d("IsCattyOrKg: " + isBitSet(ctrlByte, 4));
+            Timber.d("3 LSB Unknown: " + isBitSet(ctrlByte, 3));
+            Timber.d("2 LSB Unknown: " + isBitSet(ctrlByte, 2));
+            Timber.d("1 LSB Unknown: " + isBitSet(ctrlByte, 1));
+            Timber.d("IsLBS: " + isBitSet(ctrlByte, 0));*/
 
             // Only if the value is stabilized and the weight is *not* removed, the date is valid
             if (isStabilized && !isWeightRemoved) {
@@ -224,6 +224,7 @@ public class BluetoothMiScale extends BluetoothCommunication {
                 final int min = (int) weightBytes[8];
                 final int sec = (int) weightBytes[9];
 
+                float weight;
                 if (isLBSUnit || isCattyUnit) {
                     weight = (float) (((weightBytes[2] & 0xFF) << 8) | (weightBytes[1] & 0xFF)) / 100.0f;
                 } else {
@@ -235,15 +236,15 @@ public class BluetoothMiScale extends BluetoothCommunication {
 
                 // Is the year plausible? Check if the year is in the range of 20 years...
                 if (validateDate(date_time, 20)) {
-                    final ScaleUser selectedUser = OpenScale.getInstance(context).getSelectedScaleUser();
+                    final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
                     ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
-                    scaleBtData.setConvertedWeight(weight, selectedUser.getScaleUnit());
+                    scaleBtData.setWeight(Converters.toKilogram(weight, selectedUser.getScaleUnit()));
                     scaleBtData.setDateTime(date_time);
 
                     addScaleData(scaleBtData);
                 } else {
-                    Log.e("BluetoothMiScale", "Invalid Mi scale weight year " + year);
+                    Timber.e("Invalid Mi scale weight year %d", year);
                 }
             }
         } catch (ParseException e) {
@@ -277,10 +278,10 @@ public class BluetoothMiScale extends BluetoothCommunication {
             Random r = new Random();
             uniqueNumber = r.nextInt(65535 - 100 + 1) + 100;
 
-            prefs.edit().putInt("uniqueNumber", uniqueNumber).commit();
+            prefs.edit().putInt("uniqueNumber", uniqueNumber).apply();
         }
 
-        int userId = OpenScale.getInstance(context).getSelectedScaleUserId();
+        int userId = OpenScale.getInstance().getSelectedScaleUserId();
 
         return uniqueNumber + userId;
     }

@@ -37,10 +37,13 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
+import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.core.utils.Converters;
 import com.health.openscale.core.utils.PolynomialFitter;
 import com.health.openscale.gui.activities.DataEntryActivity;
 import com.health.openscale.gui.views.BMRMeasurementView;
@@ -91,11 +94,11 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
 
     private OpenScale openScale;
 
-    private Calendar calYears;
+    private final Calendar calYears;
     private Calendar calLastSelected;
 
-    private static String CAL_YEARS_KEY = "calYears";
-    private static String CAL_LAST_SELECTED_KEY = "calLastSelected";
+    private static final String CAL_YEARS_KEY = "calYears";
+    private static final String CAL_LAST_SELECTED_KEY = "calLastSelected";
 
     private List<ScaleMeasurement> pointIndexScaleMeasurementList;
 
@@ -107,7 +110,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        openScale = OpenScale.getInstance(getContext());
+        openScale = OpenScale.getInstance();
 
         if (savedInstanceState == null) {
             List<ScaleMeasurement> scaleMeasurementList = openScale.getScaleMeasurementList();
@@ -123,8 +126,8 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
 
         graphView = inflater.inflate(R.layout.fragment_graph, container, false);
 
-        chartBottom = (LineChartView) graphView.findViewById(R.id.chart_bottom);
-        chartTop = (ColumnChartView) graphView.findViewById(R.id.chart_top);
+        chartBottom = graphView.findViewById(R.id.chart_bottom);
+        chartTop = graphView.findViewById(R.id.chart_top);
 
         chartBottom.setOnTouchListener(new chartBottomListener());
         chartBottom.setOnValueTouchListener(new chartBottomValueTouchListener());
@@ -133,10 +136,10 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
         // HACK: get default text color from hidden text view to set the correct axis colors
         textColor = ((TextView)graphView.findViewById(R.id.colorHack)).getCurrentTextColor();
 
-        txtYear = (TextView) graphView.findViewById(R.id.txtYear);
+        txtYear = graphView.findViewById(R.id.txtYear);
         txtYear.setText(Integer.toString(calYears.get(Calendar.YEAR)));
 
-        floatingActionBar = (LinearLayout) graphView.findViewById(R.id.floatingActionBar);
+        floatingActionBar = graphView.findViewById(R.id.floatingActionBar);
 
         ImageView optionMenu = graphView.findViewById(R.id.optionMenu);
         optionMenu.setOnClickListener(new View.OnClickListener() {
@@ -153,7 +156,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
                 txtYear.setText(Integer.toString(calYears.get(Calendar.YEAR)));
 
                 List<ScaleMeasurement> scaleMeasurementList =
-                        OpenScale.getInstance(getContext()).getScaleDataOfYear(calYears.get(Calendar.YEAR));
+                        OpenScale.getInstance().getScaleDataOfYear(calYears.get(Calendar.YEAR));
                 if (!scaleMeasurementList.isEmpty()) {
                     calLastSelected.setTime(scaleMeasurementList.get(0).getDateTime());
                 }
@@ -168,7 +171,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
                 txtYear.setText(Integer.toString(calYears.get(Calendar.YEAR)));
 
                 List<ScaleMeasurement> scaleMeasurementList =
-                        OpenScale.getInstance(getContext()).getScaleDataOfYear(calYears.get(Calendar.YEAR));
+                        OpenScale.getInstance().getScaleDataOfYear(calYears.get(Calendar.YEAR));
                 if (!scaleMeasurementList.isEmpty()) {
                     calLastSelected.setTime(scaleMeasurementList.get(scaleMeasurementList.size() - 1).getDateTime());
                 }
@@ -188,10 +191,10 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
                     case R.id.enableMonth:
                         if (item.isChecked()) {
                             item.setChecked(false);
-                            prefs.edit().putBoolean("showMonth", false).commit();
+                            prefs.edit().putBoolean("showMonth", false).apply();
                         } else {
                             item.setChecked(true);
-                            prefs.edit().putBoolean("showMonth", true).commit();
+                            prefs.edit().putBoolean("showMonth", true).apply();
                         }
 
                         generateGraphs();
@@ -199,10 +202,10 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
                     case R.id.enableWeek:
                         if (item.isChecked()) {
                             item.setChecked(false);
-                            prefs.edit().putBoolean("showWeek", false).commit();
+                            prefs.edit().putBoolean("showWeek", false).apply();
                         } else {
                             item.setChecked(true);
-                            prefs.edit().putBoolean("showWeek", true).commit();
+                            prefs.edit().putBoolean("showWeek", true).apply();
                         }
 
                         generateGraphs();
@@ -229,7 +232,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
 
     @Override
     public void onDestroyView() {
-        OpenScale.getInstance(getContext()).unregisterFragment(this);
+        OpenScale.getInstance().unregisterFragment(this);
         super.onDestroyView();
     }
 
@@ -311,7 +314,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
             calDays.add(field, 1);
         }
 
-        List<Line> diagramLineList = new ArrayList<Line>();
+        List<Line> diagramLineList = new ArrayList<>();
 
         Calendar calDB = Calendar.getInstance();
 
@@ -319,7 +322,18 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
 
         floatingActionBar.removeAllViews();
 
-        PolynomialFitter polyFitter = new PolynomialFitter(Integer.parseInt(prefs.getString("regressionLineOrder", "1")));
+        int regressLineOrder = 1;
+
+        try {
+            regressLineOrder = Integer.parseInt(prefs.getString("regressionLineOrder", "1"));
+        } catch (NumberFormatException e) {
+            Toast.makeText(getContext(), getString(R.string.error_value_required) + ":" + e.getMessage(), Toast.LENGTH_LONG).show();
+            prefs.edit().putString("regressionLineOrder", "1").apply();
+        }
+
+        PolynomialFitter polyFitter = new PolynomialFitter(Math.min(regressLineOrder, 100));
+
+        float maxYValue = 0;
 
         for (MeasurementView view : measurementViews) {
             if (view instanceof FloatMeasurementView) {
@@ -371,6 +385,11 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
                     if (avgBin.size() > 1) {
                         avgValue.setLabel(String.format("Ø %.2f", avgValue.getY()));
                     }
+
+                    if (avgValue.getY() > maxYValue) {
+                        maxYValue = avgValue.getY();
+                    }
+
                     valuesStack.push(avgValue);
                     pointIndexScaleMeasurementList.add(indexScaleMeasurement[i]);
                 }
@@ -408,9 +427,10 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
         defaultTopViewport = new Viewport(calDays.getActualMinimum(field), chartBottom.getCurrentViewport().top, calDays.getMaximum(field)+1, chartBottom.getCurrentViewport().bottom);
 
         if (prefs.getBoolean("goalLine", true)) {
-            Stack<PointValue> valuesGoalLine = new Stack<PointValue>();
+            Stack<PointValue> valuesGoalLine = new Stack<>();
 
-            float goalWeight = openScale.getSelectedScaleUser().getGoalWeight();
+            final ScaleUser user = openScale.getSelectedScaleUser();
+            float goalWeight = Converters.fromKilogram(user.getGoalWeight(), user.getScaleUnit());
 
             valuesGoalLine.push(new PointValue(0, goalWeight));
             valuesGoalLine.push(new PointValue(maxDays, goalWeight));
@@ -424,12 +444,12 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
         }
 
         if (prefs.getBoolean("regressionLine", false)) {
-            PolynomialFitter.Polynomial polynom = polyFitter.getBestFit();
+            PolynomialFitter.Polynomial polynomial = polyFitter.getBestFit();
 
             Stack<PointValue> valuesLinearRegression = new Stack<>();
 
             for (int i = 0; i < maxDays; i++) {
-                    double y_value = polynom.getY(i);
+                    double y_value = polynomial.getY(i);
                     valuesLinearRegression.push(new PointValue((float) i, (float) y_value));
             }
 
@@ -446,26 +466,52 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
         chartBottom.setLineChartData(lineData);
 
         chartBottom.setCurrentViewport(defaultTopViewport);
+        chartBottom.setMaximumViewport(new Viewport(0, maxYValue + (maxYValue / 100) * 20, calDays.getMaximum(field)+1, 0));
     }
 
     private void generateColumnData()
     {
         int[] numOfMonth = openScale.getCountsOfMonth(calYears.get(Calendar.YEAR));
 
+        float[] normNumOfMonth = new float[12];
+
+        int max = 0;
+        int min = Integer.MAX_VALUE;
+
+        for (int i=0; i<12; i++) {
+            if (numOfMonth[i] > max) {
+                max = numOfMonth[i];
+            }
+
+            if (numOfMonth[i] < min) {
+                min = numOfMonth[i];
+            }
+        }
+
+        final float heightOffset = 0.2f; // increase month selector minimum height
+
+        for (int i=0; i<12; i++) {
+            normNumOfMonth[i] = (numOfMonth[i] - min) / (float)(max - min); // normalize data to [0..1]
+
+            if (normNumOfMonth[i] != 0.0f) {
+                normNumOfMonth[i] += heightOffset;
+            }
+        }
+
         Calendar calMonths = Calendar.getInstance();
         calMonths.set(Calendar.MONTH, Calendar.JANUARY);
 
         SimpleDateFormat month_date = new SimpleDateFormat("MMM", Locale.getDefault());
 
-        List<AxisValue> axisValues = new ArrayList<AxisValue>();
-        List<Column> columns = new ArrayList<Column>();
+        List<AxisValue> axisValues = new ArrayList<>();
+        List<Column> columns = new ArrayList<>();
 
         for (int i=0; i<12; i++) {
             String month_name = month_date.format(calMonths.getTime());
 
             axisValues.add(new AxisValue(i, month_name.toCharArray()));
-            List<SubcolumnValue> values = new ArrayList<SubcolumnValue>();
-            values.add(new SubcolumnValue(numOfMonth[i], ChartUtils.COLORS[i % ChartUtils.COLORS.length]));
+            List<SubcolumnValue> values = new ArrayList<>();
+            values.add(new SubcolumnValue(normNumOfMonth[i], ChartUtils.COLORS[i % ChartUtils.COLORS.length]).setLabel(Integer.toString(numOfMonth[i])));
 
             columns.add(new Column(values).setHasLabelsOnlyForSelected(true));
 
@@ -549,7 +595,7 @@ public class GraphFragment extends Fragment implements FragmentUpdateListener {
     }
 
     private class chartBottomListener implements View.OnTouchListener {
-        final GestureDetector gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener() {
+        final GestureDetector gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
             public void onLongPress(MotionEvent e) {
                 chartBottom.setCurrentViewport(defaultTopViewport);
             }

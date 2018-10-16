@@ -32,6 +32,7 @@ import android.view.View;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.health.openscale.R;
@@ -45,8 +46,8 @@ import java.util.Date;
 import java.util.List;
 
 public class UserSettingsActivity extends BaseAppCompatActivity {
-    public static String EXTRA_ID = "id";
-    public static String EXTRA_MODE = "mode";
+    public static final String EXTRA_ID = "id";
+    public static final String EXTRA_MODE = "mode";
 
     public static final int ADD_USER_REQUEST = 0;
     public static final int EDIT_USER_REQUEST = 1;
@@ -62,8 +63,10 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
     private EditText txtGoalDate;
     private RadioGroup radioScaleUnit;
     private RadioGroup radioGender;
+    private RadioGroup radioMeasurementUnit;
+    private Spinner spinnerActivityLevel;
 
-    private DateFormat dateFormat = DateFormat.getDateInstance();
+    private final DateFormat dateFormat = DateFormat.getDateInstance();
 
     private Context context;
 
@@ -74,21 +77,27 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
         setContentView(R.layout.activity_usersettings);
         context = this;
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.userEntryToolbar);
+        Toolbar toolbar = findViewById(R.id.userEntryToolbar);
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle(getResources().getString(R.string.label_title_user));
+        getSupportActionBar().setTitle(R.string.label_add_user);
 
-        txtUserName = (EditText) findViewById(R.id.txtUserName);
-        txtBodyHeight = (EditText) findViewById(R.id.txtBodyHeight);
-        radioScaleUnit = (RadioGroup) findViewById(R.id.groupScaleUnit);
-        radioGender = (RadioGroup) findViewById(R.id.groupGender);
-        txtInitialWeight = (EditText) findViewById(R.id.txtInitialWeight);
-        txtGoalWeight = (EditText) findViewById(R.id.txtGoalWeight);
+        txtUserName = findViewById(R.id.txtUserName);
+        txtBodyHeight = findViewById(R.id.txtBodyHeight);
+        radioScaleUnit = findViewById(R.id.groupScaleUnit);
+        radioGender = findViewById(R.id.groupGender);
+        radioMeasurementUnit = findViewById(R.id.groupMeasureUnit);
+        spinnerActivityLevel = findViewById(R.id.spinnerActivityLevel);
+        txtInitialWeight = findViewById(R.id.txtInitialWeight);
+        txtGoalWeight = findViewById(R.id.txtGoalWeight);
 
-        txtBirthday = (EditText) findViewById(R.id.txtBirthday);
-        txtGoalDate = (EditText) findViewById(R.id.txtGoalDate);
+        txtBirthday = findViewById(R.id.txtBirthday);
+        txtGoalDate = findViewById(R.id.txtGoalDate);
+
+        txtBodyHeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + Converters.MeasureUnit.CM.toString());
+        txtInitialWeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + Converters.WeightUnit.KG.toString());
+        txtGoalWeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + Converters.WeightUnit.KG.toString());
 
         Calendar birthdayCal = Calendar.getInstance();
         birthdayCal.setTime(birthday);
@@ -124,6 +133,46 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
                     context, goalDatePickerListener, cal.get(Calendar.YEAR),
                     cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
                 datePicker.show();
+            }
+        });
+
+        radioScaleUnit.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                Converters.WeightUnit scale_unit = Converters.WeightUnit.KG;
+
+                switch (checkedId) {
+                    case R.id.btnRadioKG:
+                        scale_unit = Converters.WeightUnit.KG;
+                        break;
+                    case R.id.btnRadioLB:
+                        scale_unit = Converters.WeightUnit.LB;
+                        break;
+                    case R.id.btnRadioST:
+                        scale_unit = Converters.WeightUnit.ST;
+                        break;
+                }
+
+                txtInitialWeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + scale_unit.toString());
+                txtGoalWeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + scale_unit.toString());
+            }
+        });
+
+        radioMeasurementUnit.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                Converters.MeasureUnit measure_unit = Converters.MeasureUnit.CM;
+
+                switch (radioMeasurementUnit.getCheckedRadioButtonId()) {
+                    case R.id.btnRadioCM:
+                        measure_unit = Converters.MeasureUnit.CM;
+                        break;
+                    case R.id.btnRadioINCH:
+                        measure_unit = Converters.MeasureUnit.INCH;
+                        break;
+                }
+
+                txtBodyHeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + measure_unit.toString());
             }
         });
     }
@@ -195,7 +244,7 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
     {
         int id = getIntent().getExtras().getInt(EXTRA_ID);
 
-        OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+        OpenScale openScale = OpenScale.getInstance();
 
         ScaleUser scaleUser = openScale.getScaleUser(id);
 
@@ -205,11 +254,23 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
         goal_date = scaleUser.getGoalDate();
 
         txtUserName.setText(scaleUser.getUserName());
-        txtBodyHeight.setText(Integer.toString(scaleUser.getBodyHeight()));
+        txtBodyHeight.setText(Float.toString(Math.round(Converters.fromCentimeter(scaleUser.getBodyHeight(), scaleUser.getMeasureUnit()) * 100.0f) / 100.0f));
+        txtBodyHeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + scaleUser.getMeasureUnit().toString());
         txtBirthday.setText(dateFormat.format(birthday));
         txtGoalDate.setText(dateFormat.format(goal_date));
-        txtInitialWeight.setText(Math.round(scaleUser.getConvertedInitialWeight()*100.0f)/100.0f + "");
-        txtGoalWeight.setText(scaleUser.getGoalWeight() +"");
+        txtInitialWeight.setText(Float.toString(Math.round(Converters.fromKilogram(scaleUser.getInitialWeight(), scaleUser.getScaleUnit())*100.0f)/100.0f));
+        txtGoalWeight.setText(Float.toString(Math.round(Converters.fromKilogram(scaleUser.getGoalWeight(), scaleUser.getScaleUnit())*100.0f)/100.0f));
+        txtInitialWeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + scaleUser.getScaleUnit().toString());
+        txtGoalWeight.setHint(getResources().getString(R.string.info_enter_value_in) + " " + scaleUser.getScaleUnit().toString());
+
+        switch (scaleUser.getMeasureUnit()) {
+            case CM:
+                radioMeasurementUnit.check(R.id.btnRadioCM);
+                break;
+            case INCH:
+                radioMeasurementUnit.check(R.id.btnRadioINCH);
+                break;
+        }
 
         switch (scaleUser.getScaleUnit())
         {
@@ -233,6 +294,8 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
                 radioGender.check(R.id.btnRadioWoman);
                 break;
         }
+
+        spinnerActivityLevel.setSelection(scaleUser.getActivityLevel().toInt());
     }
 
     private boolean validateInput()
@@ -266,7 +329,7 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
         return validate;
     }
 
-   private DatePickerDialog.OnDateSetListener birthdayPickerListener = new DatePickerDialog.OnDateSetListener() {
+   private final DatePickerDialog.OnDateSetListener birthdayPickerListener = new DatePickerDialog.OnDateSetListener() {
         @Override
         public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
             Calendar cal = Calendar.getInstance();
@@ -277,7 +340,7 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
            }
         };
 
-    private DatePickerDialog.OnDateSetListener goalDatePickerListener = new DatePickerDialog.OnDateSetListener() {
+    private final DatePickerDialog.OnDateSetListener goalDatePickerListener = new DatePickerDialog.OnDateSetListener() {
         @Override
         public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
             Calendar cal = Calendar.getInstance();
@@ -297,7 +360,7 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
             public void onClick(DialogInterface dialog, int id) {
                 int userId = getIntent().getExtras().getInt(EXTRA_ID);
 
-                OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+                OpenScale openScale = OpenScale.getInstance();
                 boolean isSelected = openScale.getSelectedScaleUserId() == userId;
 
                 openScale.clearScaleData(userId);
@@ -335,18 +398,27 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
     private boolean saveUserData() {
         try {
             if (validateInput()) {
-                OpenScale openScale = OpenScale.getInstance(getApplicationContext());
+                OpenScale openScale = OpenScale.getInstance();
 
                 String name = txtUserName.getText().toString();
-                int body_height = Integer.valueOf(txtBodyHeight.getText().toString());
-                int checkedRadioButtonId = radioScaleUnit.getCheckedRadioButtonId();
-                int checkedGenderId = radioGender.getCheckedRadioButtonId();
+                float body_height = Float.valueOf(txtBodyHeight.getText().toString());
                 float initial_weight = Float.valueOf(txtInitialWeight.getText().toString());
                 float goal_weight = Float.valueOf(txtGoalWeight.getText().toString());
 
+                Converters.MeasureUnit measure_unit = Converters.MeasureUnit.CM;
+
+                switch (radioMeasurementUnit.getCheckedRadioButtonId()) {
+                    case R.id.btnRadioCM:
+                        measure_unit = Converters.MeasureUnit.CM;
+                        break;
+                    case R.id.btnRadioINCH:
+                        measure_unit = Converters.MeasureUnit.INCH;
+                        break;
+                }
+
                 Converters.WeightUnit scale_unit = Converters.WeightUnit.KG;
 
-                switch (checkedRadioButtonId) {
+                switch (radioScaleUnit.getCheckedRadioButtonId()) {
                     case R.id.btnRadioKG:
                         scale_unit = Converters.WeightUnit.KG;
                         break;
@@ -360,7 +432,7 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
 
                 Converters.Gender gender = Converters.Gender.MALE;
 
-                switch (checkedGenderId) {
+                switch (radioGender.getCheckedRadioButtonId()) {
                     case R.id.btnRadioMale:
                         gender = Converters.Gender.MALE;
                         break;
@@ -373,11 +445,14 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
 
                 scaleUser.setUserName(name);
                 scaleUser.setBirthday(birthday);
-                scaleUser.setBodyHeight(body_height);
+                scaleUser.setBodyHeight(Converters.toCentimeter(body_height, measure_unit));
                 scaleUser.setScaleUnit(scale_unit);
+                scaleUser.setMeasureUnit(measure_unit);
+                scaleUser.setActivityLevel(Converters.fromActivityLevelInt(
+                        spinnerActivityLevel.getSelectedItemPosition()));
                 scaleUser.setGender(gender);
-                scaleUser.setConvertedInitialWeight(initial_weight);
-                scaleUser.setGoalWeight(goal_weight);
+                scaleUser.setInitialWeight(Converters.toKilogram(initial_weight, scale_unit));
+                scaleUser.setGoalWeight(Converters.toKilogram(goal_weight, scale_unit));
                 scaleUser.setGoalDate(goal_date);
 
                 if (getIntent().getExtras().getInt(EXTRA_MODE) == EDIT_USER_REQUEST) {

@@ -16,11 +16,14 @@
 
 package com.health.openscale.gui.views;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.DataSetObserver;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.CheckBoxPreference;
@@ -46,18 +49,19 @@ import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.evaluation.EvaluationResult;
 import com.health.openscale.core.evaluation.EvaluationSheet;
+import com.health.openscale.core.utils.Converters;
 
 import java.util.Date;
 import java.util.Locale;
 
 public abstract class FloatMeasurementView extends MeasurementView {
-    private static char SYMBOL_UP = '\u279a';
-    private static char SYMBOL_NEUTRAL = '\u2799';
-    private static char SYMBOL_DOWN = '\u2798';
+    private static final char SYMBOL_UP = '\u279a';
+    private static final char SYMBOL_NEUTRAL = '\u2799';
+    private static final char SYMBOL_DOWN = '\u2798';
 
-    private static float NO_VALUE = -1.0f;
-    private static float AUTO_VALUE = -2.0f;
-    private static float INC_DEC_DELTA = 0.1f;
+    private static final float NO_VALUE = -1.0f;
+    private static final float AUTO_VALUE = -2.0f;
+    private static final float INC_DEC_DELTA = 0.1f;
 
     private Date dateTime;
     private float value = NO_VALUE;
@@ -70,11 +74,11 @@ public abstract class FloatMeasurementView extends MeasurementView {
     private Button incButton;
     private Button decButton;
 
-    public FloatMeasurementView(Context context, String text, Drawable icon) {
-        super(context, text, icon);
+    public FloatMeasurementView(Context context, int textId, int iconId) {
+        super(context, textId, iconId);
         initView(context);
 
-        nameText = text;
+        nameText = getResources().getString(textId);
     }
 
     private void initView(Context context) {
@@ -127,7 +131,12 @@ public abstract class FloatMeasurementView extends MeasurementView {
         return Math.max(0.0f, Math.min(getMaxValue(), value));
     }
 
-    private void setValueInner(float newValue, String suffix, boolean callListener) {
+    private float roundValue(float value) {
+        final float factor = (float) Math.pow(10, getDecimalPlaces());
+        return Math.round(value * factor) / factor;
+    }
+
+    private void setValueInner(float newValue, boolean callListener) {
         value = newValue;
         evaluationResult = null;
 
@@ -139,26 +148,25 @@ public abstract class FloatMeasurementView extends MeasurementView {
             setValueView(getContext().getString(R.string.label_automatic), false);
         }
         else {
-            setValueView(formatValue(value) + suffix, callListener);
+            setValueView(formatValue(value, true), callListener);
 
             if (getMeasurementMode() != MeasurementViewMode.ADD) {
+                final float evalValue = maybeConvertToOriginalValue(value);
+
                 EvaluationSheet evalSheet = new EvaluationSheet(getScaleUser(), dateTime);
-                float evalValue = value;
-                if (shouldConvertPercentageToAbsoluteWeight()) {
-                    evalValue = makeRelativeWeight(value);
-                }
                 evaluationResult = evaluateSheet(evalSheet, evalValue);
-                if (shouldConvertPercentageToAbsoluteWeight()) {
+
+                if (evaluationResult != null) {
                     evaluationResult.value = value;
-                    evaluationResult.lowLimit = makeAbsoluteWeight(evaluationResult.lowLimit);
-                    evaluationResult.highLimit = makeAbsoluteWeight(evaluationResult.highLimit);
+                    evaluationResult.lowLimit = maybeConvertValue(evaluationResult.lowLimit);
+                    evaluationResult.highLimit = maybeConvertValue(evaluationResult.highLimit);
                 }
             }
         }
         setEvaluationView(evaluationResult);
     }
 
-    private void setPreviousValueInner(float newPreviousValue, String suffix) {
+    private void setPreviousValueInner(float newPreviousValue) {
         previousValue = newPreviousValue;
 
         if (!getUpdateViews()) {
@@ -188,8 +196,7 @@ public abstract class FloatMeasurementView extends MeasurementView {
 
             start = text.length();
             text.append(' ');
-            text.append(formatValue(diff));
-            text.append(suffix);
+            text.append(formatValue(diff, true));
             text.setSpan(new RelativeSizeSpan(0.8f), start, text.length(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
@@ -201,18 +208,15 @@ public abstract class FloatMeasurementView extends MeasurementView {
     }
 
     private void setValue(float newValue, float newPreviousValue, boolean callListener) {
-        final String unit = getUnit();
-        final String suffix = unit.isEmpty() ? "" : " " + unit;
-
         final boolean valueChanged = newValue != value;
         final boolean previousValueChanged = newPreviousValue != previousValue;
 
         if (valueChanged) {
-            setValueInner(newValue, suffix, callListener);
+            setValueInner(newValue, callListener);
         }
 
         if (valueChanged || previousValueChanged) {
-            setPreviousValueInner(newPreviousValue, suffix);
+            setPreviousValueInner(newPreviousValue);
         }
     }
 
@@ -223,8 +227,14 @@ public abstract class FloatMeasurementView extends MeasurementView {
         setValue(clampValue(value - INC_DEC_DELTA), previousValue, true);
     }
 
+    private String formatValue(float value, boolean withUnit) {
+        final String format = String.format(Locale.getDefault(), "%%.%df%s",
+                getDecimalPlaces(), withUnit && !getUnit().isEmpty() ? " %s" : "");
+        return String.format(Locale.getDefault(), format, value, getUnit());
+    }
+
     protected String formatValue(float value) {
-        return String.format(Locale.getDefault(), "%.2f", value);
+        return formatValue(value, false);
     }
 
     protected abstract float getMeasurementValue(ScaleMeasurement measurement);
@@ -232,6 +242,9 @@ public abstract class FloatMeasurementView extends MeasurementView {
 
     public abstract String getUnit();
     protected abstract float getMaxValue();
+    protected int getDecimalPlaces() {
+        return 2;
+    }
 
     public abstract int getColor();
 
@@ -246,10 +259,28 @@ public abstract class FloatMeasurementView extends MeasurementView {
                 && getMeasurementMode() == MeasurementViewMode.ADD;
     }
 
-    protected boolean canConvertPercentageToAbsoluteWeight() { return false; }
+    // Only one of these can return true
+    protected boolean supportsAbsoluteWeightToPercentageConversion() { return false; }
+    protected boolean supportsPercentageToAbsoluteWeightConversion() { return false; }
+
+    private boolean supportsConversion() {
+        return supportsAbsoluteWeightToPercentageConversion()
+                || supportsPercentageToAbsoluteWeightConversion();
+    }
+
+    protected boolean shouldConvertAbsoluteWeightToPercentage() {
+        return supportsAbsoluteWeightToPercentageConversion()
+                && getSettings().isPercentageEnabled();
+    }
+
     protected boolean shouldConvertPercentageToAbsoluteWeight() {
-        return canConvertPercentageToAbsoluteWeight()
+        return supportsPercentageToAbsoluteWeightConversion()
                 && !getSettings().isPercentageEnabled();
+    }
+
+    private boolean shouldConvert() {
+        return shouldConvertAbsoluteWeightToPercentage()
+                || shouldConvertPercentageToAbsoluteWeight();
     }
 
     private float makeAbsoluteWeight(float percentage) {
@@ -260,7 +291,15 @@ public abstract class FloatMeasurementView extends MeasurementView {
         return 100.0f / userConvertedWeight * absolute;
     }
 
-    protected float maybeConvertPercentageToAbsolute(float value) {
+    protected float maybeConvertAbsoluteWeightToPercentage(float value) {
+        if (shouldConvertAbsoluteWeightToPercentage()) {
+            return makeRelativeWeight(value);
+        }
+
+        return value;
+    }
+
+    protected float maybeConvertPercentageToAbsoluteWeight(float value) {
         if (shouldConvertPercentageToAbsoluteWeight()) {
             return makeAbsoluteWeight(value);
         }
@@ -268,14 +307,36 @@ public abstract class FloatMeasurementView extends MeasurementView {
         return value;
     }
 
-    private void updateUserConvertedWeight(ScaleMeasurement measurement) {
+    private float maybeConvertValue(float value) {
+        if (shouldConvertAbsoluteWeightToPercentage()) {
+            return makeRelativeWeight(value);
+        }
         if (shouldConvertPercentageToAbsoluteWeight()) {
+            return makeAbsoluteWeight(value);
+        }
+
+        return value;
+    }
+
+    private float maybeConvertToOriginalValue(float value) {
+        if (shouldConvertAbsoluteWeightToPercentage()){
+            return makeAbsoluteWeight(value);
+        }
+        if (shouldConvertPercentageToAbsoluteWeight()) {
+            return makeRelativeWeight(value);
+        }
+
+        return value;
+    }
+
+    private void updateUserConvertedWeight(ScaleMeasurement measurement) {
+        if (shouldConvert()) {
             // Make sure weight is never 0 to avoid division by 0
             userConvertedWeight = Math.max(1.0f,
-                    measurement.getConvertedWeight(getScaleUser().getScaleUnit()));
+                    Converters.fromKilogram(measurement.getWeight(), getScaleUser().getScaleUnit()));
         }
         else {
-            // Only valid when shouldConvertPercentageToAbsoluteWeight() returns true
+            // Only valid when a conversion is enabled
             userConvertedWeight = -1.0f;
         }
     }
@@ -291,16 +352,18 @@ public abstract class FloatMeasurementView extends MeasurementView {
             updateUserConvertedWeight(measurement);
 
             newValue = getMeasurementValue(measurement);
-            newValue = maybeConvertPercentageToAbsolute(newValue);
+            newValue = maybeConvertValue(newValue);
             newValue = clampValue(newValue);
+            newValue = roundValue(newValue);
 
             if (previousMeasurement != null) {
                 float saveUserConvertedWeight = userConvertedWeight;
                 updateUserConvertedWeight(previousMeasurement);
 
                 newPreviousValue = getMeasurementValue(previousMeasurement);
-                newPreviousValue = maybeConvertPercentageToAbsolute(newPreviousValue);
+                newPreviousValue = maybeConvertValue(newPreviousValue);
                 newPreviousValue = clampValue(newPreviousValue);
+                newPreviousValue = roundValue(newPreviousValue);
 
                 userConvertedWeight = saveUserConvertedWeight;
             }
@@ -312,14 +375,13 @@ public abstract class FloatMeasurementView extends MeasurementView {
     @Override
     public void saveTo(ScaleMeasurement measurement) {
         if (!useAutoValue()) {
-            if (shouldConvertPercentageToAbsoluteWeight()) {
-                // Make sure to use the current weight to get a correct percentage
+            if (shouldConvert()) {
+                // Make sure to use the current weight to get a correct value
                 updateUserConvertedWeight(measurement);
-                setMeasurementValue(makeRelativeWeight(value), measurement);
             }
-            else {
-                setMeasurementValue(value, measurement);
-            }
+
+            // May need to convert back to original value before saving
+            setMeasurementValue(maybeConvertToOriginalValue(value), measurement);
         }
     }
 
@@ -339,11 +401,11 @@ public abstract class FloatMeasurementView extends MeasurementView {
     }
 
     @Override
-    public String getValueAsString() {
+    public String getValueAsString(boolean withUnit) {
         if (useAutoValue()) {
             return getContext().getString(R.string.label_automatic);
         }
-        return formatValue(value);
+        return formatValue(value, withUnit);
     }
 
     public float getValue() {
@@ -355,8 +417,13 @@ public abstract class FloatMeasurementView extends MeasurementView {
         return nameText;
     }
 
+    protected void setName(int textId) {
+        nameText = getResources().getString(textId);
+        setNameView(nameText);
+    }
+
     @Override
-    public void appendDiffValue(SpannableStringBuilder text) {
+    public void appendDiffValue(SpannableStringBuilder text, boolean newLine) {
         if (previousValue < 0.0f) {
             return;
         }
@@ -376,7 +443,9 @@ public abstract class FloatMeasurementView extends MeasurementView {
             color = Color.GRAY;
         }
 
-        text.append('\n');
+        if (newLine) {
+            text.append('\n');
+        }
         int start = text.length();
         text.append(symbol);
         text.setSpan(new ForegroundColorSpan(color), start, text.length(),
@@ -430,7 +499,7 @@ public abstract class FloatMeasurementView extends MeasurementView {
         if (settings.isInOverviewGraph()) {
             summary += res.getString(R.string.label_overview_graph) + separator;
         }
-        if (canConvertPercentageToAbsoluteWeight() && settings.isPercentageEnabled()) {
+        if (supportsConversion() && settings.isPercentageEnabled()) {
             summary += res.getString(R.string.label_percent) + separator;
         }
         if (isEstimationSupported() && settings.isEstimationEnabled()) {
@@ -447,6 +516,26 @@ public abstract class FloatMeasurementView extends MeasurementView {
     @Override
     public boolean hasExtraPreferences() { return true; }
 
+    private class ListPreferenceWithNeutralButton extends ListPreference {
+        ListPreferenceWithNeutralButton(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
+            super.onPrepareDialogBuilder(builder);
+
+            builder.setNeutralButton(R.string.label_help, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    getContext().startActivity(new Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://github.com/oliexdev/openScale/wiki/Body-metric-estimations")));
+                }
+            });
+        }
+    }
+
     @Override
     public void prepareExtraPreferencesScreen(PreferenceScreen screen) {
         MeasurementViewSettings settings = getSettings();
@@ -458,7 +547,7 @@ public abstract class FloatMeasurementView extends MeasurementView {
         overview.setDefaultValue(settings.isInOverviewGraph());
         screen.addPreference(overview);
 
-        if (canConvertPercentageToAbsoluteWeight()) {
+        if (supportsConversion()) {
             SwitchPreference percentage = new SwitchPreference(screen.getContext());
             percentage.setKey(settings.getPercentageEnabledKey());
             percentage.setTitle(R.string.label_measurement_in_percent);
@@ -476,7 +565,7 @@ public abstract class FloatMeasurementView extends MeasurementView {
             estimate.setDefaultValue(settings.isEstimationEnabled());
             screen.addPreference(estimate);
 
-            final ListPreference formula = new ListPreference(screen.getContext());
+            final ListPreference formula = new ListPreferenceWithNeutralButton(screen.getContext());
             formula.setKey(settings.getEstimationFormulaKey());
             formula.setTitle(R.string.label_estimation_formula);
             formula.setPersistent(true);
@@ -593,13 +682,13 @@ public abstract class FloatMeasurementView extends MeasurementView {
     }
 
     private class RepeatListener implements OnTouchListener {
-        private Handler handler = new Handler();
+        private final Handler handler = new Handler();
 
         private int initialInterval;
         private final int normalInterval;
         private final OnClickListener clickListener;
 
-        private Runnable handlerRunnable = new Runnable() {
+        private final Runnable handlerRunnable = new Runnable() {
             @Override
             public void run() {
                 handler.postDelayed(this, normalInterval);

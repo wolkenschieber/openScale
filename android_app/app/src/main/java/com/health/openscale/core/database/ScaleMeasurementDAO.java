@@ -21,6 +21,7 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
+import android.database.Cursor;
 
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 
@@ -47,6 +48,9 @@ public interface ScaleMeasurementDAO {
     @Query("SELECT * FROM scaleMeasurements WHERE datetime >= :startYear AND datetime < :endYear AND userId = :userId AND enabled = 1 ORDER BY datetime DESC")
     List<ScaleMeasurement> getAllInRange(Date startYear, Date endYear, int userId);
 
+    @Query("SELECT * FROM scaleMeasurements WHERE userId = :userId AND enabled = 1 ORDER BY datetime DESC LIMIT 1")
+    ScaleMeasurement getLatest(int userId);
+
     @Insert (onConflict = OnConflictStrategy.IGNORE)
     long insert(ScaleMeasurement measurement);
 
@@ -61,4 +65,8 @@ public interface ScaleMeasurementDAO {
 
     @Query("DELETE FROM scaleMeasurements WHERE userId = :userId")
     void deleteAll(int userId);
+
+    // selectAll() is equivalent to getAll(), but returns a Cursor, for exposing via a ContentProvider.
+    @Query("SELECT id as _ID, datetime, weight, fat, water, muscle FROM scaleMeasurements WHERE userId = :userId AND enabled = 1 ORDER BY datetime DESC")
+    Cursor selectAll(long userId);
 }

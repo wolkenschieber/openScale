@@ -19,12 +19,12 @@ package com.health.openscale.gui.views;
 import android.content.SharedPreferences;
 
 import com.health.openscale.core.bodymetric.EstimatedFatMetric;
-import com.health.openscale.core.bodymetric.EstimatedLBWMetric;
+import com.health.openscale.core.bodymetric.EstimatedLBMMetric;
 import com.health.openscale.core.bodymetric.EstimatedWaterMetric;
 
 public class MeasurementViewSettings {
-    private SharedPreferences preferences;
-    private String key;
+    private final SharedPreferences preferences;
+    private final String key;
 
     private static final String PREFERENCE_SUFFIX_ENABLE = "Enable";
     private static final String PREFERENCE_SUFFIX_IN_OVERVIEW_GRAPH = "InOverviewGraph";
@@ -52,10 +52,18 @@ public class MeasurementViewSettings {
             case WeightMeasurementView.KEY:
                 // Weight can't be disabled
                 return true;
-            case LBWMeasurementView.KEY:
+            case VisceralFatMeasurementView.KEY:
+            case LBMMeasurementView.KEY:
             case BoneMeasurementView.KEY:
             case WaistMeasurementView.KEY:
             case HipMeasurementView.KEY:
+            case ChestMeasurementView.KEY:
+            case BicepsMeasurementView.KEY:
+            case ThighMeasurementView.KEY:
+            case NeckMeasurementView.KEY:
+            case Caliper1MeasurementView.KEY:
+            case Caliper2MeasurementView.KEY:
+            case Caliper3MeasurementView.KEY:
                 defaultValue = false;
                 break;
             default:
@@ -76,6 +84,11 @@ public class MeasurementViewSettings {
 
     public boolean areDependenciesEnabled() {
         switch (key) {
+            case FatCaliperMeasurementView.KEY:
+                return isDependencyEnabled(Caliper1MeasurementView.KEY)
+                        && isDependencyEnabled(Caliper2MeasurementView.KEY)
+                        && isDependencyEnabled(Caliper3MeasurementView.KEY);
+
             case BMIMeasurementView.KEY:
             case BMRMeasurementView.KEY:
                 return isDependencyEnabled(WeightMeasurementView.KEY);
@@ -130,14 +143,23 @@ public class MeasurementViewSettings {
     }
 
     public boolean isPercentageEnabled() {
-        return preferences.getBoolean(getPercentageEnabledKey(), true);
+        boolean defaultValue;
+        switch (key) {
+            case BoneMeasurementView.KEY:
+                defaultValue = false;
+                break;
+            default:
+                defaultValue = true;
+                break;
+        }
+        return preferences.getBoolean(getPercentageEnabledKey(), defaultValue);
     }
 
     public String getEstimationEnabledKey() {
         switch (key) {
             case FatMeasurementView.KEY:
                 return "estimateFatEnable";
-            case LBWMeasurementView.KEY:
+            case LBMMeasurementView.KEY:
                 return "estimateLBWEnable";
             case WaterMeasurementView.KEY:
                 return "estimateWaterEnable";
@@ -153,7 +175,7 @@ public class MeasurementViewSettings {
         switch (key) {
             case FatMeasurementView.KEY:
                 return "estimateFatFormula";
-            case LBWMeasurementView.KEY:
+            case LBMMeasurementView.KEY:
                 return "estimateLBWFormula";
             case WaterMeasurementView.KEY:
                 return "estimateWaterFormula";
@@ -167,8 +189,8 @@ public class MeasurementViewSettings {
             case FatMeasurementView.KEY:
                 defaultValue = EstimatedFatMetric.FORMULA.BF_GALLAGHER.name();
                 break;
-            case LBWMeasurementView.KEY:
-                defaultValue = EstimatedLBWMetric.FORMULA.LBW_HUME.name();
+            case LBMMeasurementView.KEY:
+                defaultValue = EstimatedLBMMetric.FORMULA.LBW_HUME.name();
                 break;
             case WaterMeasurementView.KEY:
                 defaultValue = EstimatedWaterMetric.FORMULA.TBW_LEESONGKIM.name();

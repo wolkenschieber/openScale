@@ -17,7 +17,6 @@ package com.health.openscale.gui.views;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.DatePicker;
 
@@ -29,13 +28,15 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class DateMeasurementView extends MeasurementView {
+    // Don't change key value, it may be stored persistent in preferences
     public static final String KEY = "date";
 
-    private static DateFormat dateFormat = DateFormat.getDateInstance();
+    private final DateFormat dateFormat;
     private Date date;
 
     public DateMeasurementView(Context context) {
-        super(context, context.getResources().getString(R.string.label_date), ContextCompat.getDrawable(context, R.drawable.ic_lastmonth));
+        super(context, R.string.label_date, R.drawable.ic_lastmonth);
+        dateFormat = DateFormat.getDateInstance();
     }
 
     @Override
@@ -87,7 +88,7 @@ public class DateMeasurementView extends MeasurementView {
     }
 
     @Override
-    public String getValueAsString() {
+    public String getValueAsString(boolean withUnit) {
         return dateFormat.format(date);
     }
 

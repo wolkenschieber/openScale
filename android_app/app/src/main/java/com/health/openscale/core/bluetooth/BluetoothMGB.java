@@ -33,10 +33,10 @@ import java.util.UUID;
 
 public class BluetoothMGB extends BluetoothCommunication {
 
-    static final UUID uuid_service   =  UUID.fromString("0000ffb0-0000-1000-8000-00805f9b34fb");
-    static final UUID uuid_char_cfg  =  UUID.fromString("0000ffb1-0000-1000-8000-00805f9b34fb");
-    static final UUID uuid_char_ctrl =  UUID.fromString("0000ffb2-0000-1000-8000-00805f9b34fb");
-    static final UUID uuid_desc_ctrl =  UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private static final UUID uuid_service   =  UUID.fromString("0000ffb0-0000-1000-8000-00805f9b34fb");
+    private static final UUID uuid_char_cfg  =  UUID.fromString("0000ffb1-0000-1000-8000-00805f9b34fb");
+    private static final UUID uuid_char_ctrl =  UUID.fromString("0000ffb2-0000-1000-8000-00805f9b34fb");
+    private static final UUID uuid_desc_ctrl =  UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 
     private Calendar  now;
@@ -84,12 +84,12 @@ public class BluetoothMGB extends BluetoothCommunication {
     }
 
     @Override
-    boolean nextInitCmd(int stateNr) {
+    protected boolean nextInitCmd(int stateNr) {
         switch (stateNr) {
             case 0:
                 setNotificationOn(uuid_service, uuid_char_ctrl, uuid_desc_ctrl);
                 now  = Calendar.getInstance();
-                user = OpenScale.getInstance(context).getSelectedScaleUser();
+                user = OpenScale.getInstance().getSelectedScaleUser();
                 break;
 
             case 1:
@@ -101,7 +101,7 @@ public class BluetoothMGB extends BluetoothCommunication {
                 break;
 
             case 3:
-                writeCfg(0xFB, (user.getGender().isMale() ? 1 : 2), user.getAge(new Date()), user.getBodyHeight());
+                writeCfg(0xFB, (user.getGender().isMale() ? 1 : 2), user.getAge(), (int)user.getBodyHeight());
                 break;
 
             case 4:
@@ -113,7 +113,7 @@ public class BluetoothMGB extends BluetoothCommunication {
                 break;
 
             case 6:
-                writeCfg(0xFE, 6, 1, 0);
+                writeCfg(0xFE, 6, user.getScaleUnit().toInt(), 0);
                 break;
 
             default:
@@ -125,13 +125,13 @@ public class BluetoothMGB extends BluetoothCommunication {
 
 
     @Override
-    boolean nextBluetoothCmd(int stateNr) {
+    protected boolean nextBluetoothCmd(int stateNr) {
         return false;
     }
 
 
     @Override
-    boolean nextCleanUpCmd(int stateNr) {
+    protected boolean nextCleanUpCmd(int stateNr) {
         return false;
     }
 
@@ -201,7 +201,7 @@ public class BluetoothMGB extends BluetoothCommunication {
             addScaleData(measurement);
 
             //    Visceral fat?
-            //    Standart weight?
+            //    Standard weight?
             //    WeightControl?
             //    Body fat?
             //    Muscle weight?

@@ -51,9 +51,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MeasurementPreferences extends PreferenceFragment {
-    public static final String PREFERENCE_KEY_DELETE_ALL = "deleteAll";
-    public static final String PREFERENCE_KEY_RESET_ORDER = "resetOrder";
-    public static final String PREFERENCE_KEY_MEASUREMENTS = "measurements";
+    private static final String PREFERENCE_KEY_DELETE_ALL = "deleteAll";
+    private static final String PREFERENCE_KEY_RESET_ORDER = "resetOrder";
+    private static final String PREFERENCE_KEY_MEASUREMENTS = "measurements";
 
     private PreferenceCategory measurementCategory;
 
@@ -117,7 +117,7 @@ public class MeasurementPreferences extends PreferenceFragment {
 
             deleteAllDialog.setPositiveButton(getResources().getString(R.string.label_yes), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    OpenScale openScale = OpenScale.getInstance(getActivity().getApplicationContext());
+                    OpenScale openScale = OpenScale.getInstance();
                     int selectedUserId = openScale.getSelectedScaleUserId();
 
                     openScale.clearScaleData(selectedUserId);

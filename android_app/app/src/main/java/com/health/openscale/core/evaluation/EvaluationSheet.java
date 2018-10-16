@@ -47,6 +47,8 @@ public class EvaluationSheet {
     private List<sheetEntry> whrEvaluateSheet_Man;
     private List<sheetEntry> whrEvaluateSheet_Woman;
 
+    private List<sheetEntry> visceralFatEvaluateSheet;
+
     private class sheetEntry {
         public sheetEntry(int lowAge, int maxAge, float lowLimit, float highLimit)
         {
@@ -86,6 +88,8 @@ public class EvaluationSheet {
 
         whrEvaluateSheet_Man = new ArrayList<>();
         whrEvaluateSheet_Woman = new ArrayList<>();
+
+        visceralFatEvaluateSheet = new ArrayList<>();
 
         initEvaluationSheets();
     }
@@ -150,8 +154,8 @@ public class EvaluationSheet {
         bmiEvaluateSheet_Woman.add(new sheetEntry(55, 64, 23, 28));
         bmiEvaluateSheet_Woman.add(new sheetEntry(65, 90, 24, 29));
 
-        waistEvaluateSheet_Man.add(new sheetEntry(18, 90, -1, 94));
-        waistEvaluateSheet_Woman.add(new sheetEntry(18, 90, -1, 80));
+        waistEvaluateSheet_Man.add(new sheetEntry(18, 90, -1, Converters.fromCentimeter(94, evalUser.getMeasureUnit())));
+        waistEvaluateSheet_Woman.add(new sheetEntry(18, 90, -1, Converters.fromCentimeter(80, evalUser.getMeasureUnit())));
 
         whrtEvaluateSheet.add(new sheetEntry(15, 40, 0.4f, 0.5f));
         whrtEvaluateSheet.add(new sheetEntry(41, 42, 0.4f, 0.51f));
@@ -163,13 +167,15 @@ public class EvaluationSheet {
 
         whrEvaluateSheet_Man.add(new sheetEntry(18, 90, 0.8f, 0.9f));
         whrEvaluateSheet_Woman.add(new sheetEntry(18, 90, 0.7f, 0.8f));
+
+        visceralFatEvaluateSheet.add(new sheetEntry(18, 90, -1, 12));
     }
 
 
     public EvaluationResult evaluateWeight(float weight) {
         float body_height_squared = (evalUser.getBodyHeight() / 100.0f) * (evalUser.getBodyHeight() / 100.0f);
-        float lowLimit = 0.0f;
-        float highLimit = 0.0f;
+        float lowLimit;
+        float highLimit;
 
         if (evalUser.getGender().isMale()) {
             lowLimit = body_height_squared * 20.0f;
@@ -265,6 +271,10 @@ public class EvaluationSheet {
         }
 
         return evaluateSheet(whr, bodyEvaluateSheet);
+    }
+
+    public EvaluationResult evaluateVisceralFat(float visceralFat) {
+        return evaluateSheet(visceralFat, visceralFatEvaluateSheet);
     }
 
     private EvaluationResult evaluateSheet(float value, List<sheetEntry> sheet) {
