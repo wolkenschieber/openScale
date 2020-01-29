@@ -17,96 +17,67 @@
 package com.health.openscale.core.bluetooth;
 
 import android.Manifest;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Build;
+import android.location.LocationManager;
 import android.os.Handler;
-import android.os.SystemClock;
-import android.support.v4.content.ContextCompat;
+import android.os.Looper;
 
+import androidx.core.content.ContextCompat;
+
+import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
+import com.welie.blessed.BluetoothCentral;
+import com.welie.blessed.BluetoothCentralCallback;
+import com.welie.blessed.BluetoothPeripheral;
+import com.welie.blessed.BluetoothPeripheralCallback;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
 import java.util.UUID;
 
 import timber.log.Timber;
 
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+import static android.content.Context.LOCATION_SERVICE;
+import static com.welie.blessed.BluetoothPeripheral.GATT_SUCCESS;
+
 public abstract class BluetoothCommunication {
-    public enum BT_STATUS_CODE {BT_RETRIEVE_SCALE_DATA, BT_INIT_PROCESS, BT_CONNECTION_ESTABLISHED,
-        BT_CONNECTION_LOST, BT_NO_DEVICE_FOUND, BT_UNEXPECTED_ERROR, BT_SCALE_MESSAGE
+    public enum BT_STATUS {
+        RETRIEVE_SCALE_DATA,
+        INIT_PROCESS,
+        CONNECTION_RETRYING,
+        CONNECTION_ESTABLISHED,
+        CONNECTION_DISCONNECT,
+        CONNECTION_LOST,
+        NO_DEVICE_FOUND,
+        UNEXPECTED_ERROR,
+        SCALE_MESSAGE
     }
 
-    public enum BT_MACHINE_STATE {BT_INIT_STATE, BT_CMD_STATE, BT_CLEANUP_STATE}
-
-    private static final long LE_SCAN_TIMEOUT_MS = 10 * 1000;
+    private int stepNr;
+    private boolean stopped;
 
     protected Context context;
 
     private Handler callbackBtHandler;
-    private Handler handler;
-    private BluetoothGatt bluetoothGatt;
-    private boolean connectionEstablished;
-    private BluetoothGattCallback gattCallback;
-    private BluetoothAdapter.LeScanCallback leScanCallback;
-    protected BluetoothAdapter btAdapter;
+    private Handler disconnectHandler;
 
-    private int cmdStepNr;
-    private int initStepNr;
-    private int cleanupStepNr;
-    private BT_MACHINE_STATE btMachineState;
-
-    private class GattObjectValue <GattObject> {
-        public final GattObject gattObject;
-        public final byte[] value;
-
-        public GattObjectValue(GattObject gattObject, byte[] value) {
-            this.gattObject = gattObject;
-            this.value = value;
-        }
-    }
-
-    private Queue<GattObjectValue<BluetoothGattDescriptor>> descriptorRequestQueue;
-    private Queue<GattObjectValue<BluetoothGattCharacteristic>> characteristicRequestQueue;
-    private boolean openRequest;
-    private final Object lock = new Object();
+    private BluetoothCentral central;
+    private BluetoothPeripheral btPeripheral;
 
     public BluetoothCommunication(Context context)
     {
         this.context = context;
-        handler = new Handler();
-        btAdapter = BluetoothAdapter.getDefaultAdapter();
-        gattCallback = new GattCallback();
-        bluetoothGatt = null;
-        leScanCallback = null;
-        connectionEstablished = false;
-    }
-
-    protected List<BluetoothGattService> getBluetoothGattServices() {
-        if (bluetoothGatt == null) {
-            return new ArrayList<>();
-        }
-
-        return bluetoothGatt.getServices();
-    }
-
-    protected boolean hasBluetoothGattService(UUID service) {
-        return bluetoothGatt != null && bluetoothGatt.getService(service) != null;
+        this.disconnectHandler = new Handler();
+        this.stepNr = 0;
+        this.stopped = false;
+        this.central = new BluetoothCentral(context, bluetoothCentralCallback, new Handler(Looper.getMainLooper()));
     }
 
     /**
-     * Register a callback Bluetooth handler that notify any BT_STATUS_CODE changes for GUI/CORE.
+     * Register a callback Bluetooth handler that notify any BT_STATUS changes for GUI/CORE.
      *
      * @param cbBtHandler a handler that is registered
      */
@@ -117,10 +88,10 @@ public abstract class BluetoothCommunication {
     /**
      * Set for the openScale GUI/CORE the Bluetooth status code.
      *
-     * @param statusCode the status code that should be set
+     * @param status the status code that should be set
      */
-    protected void setBtStatus(BT_STATUS_CODE statusCode) {
-        setBtStatus(statusCode, "");
+    protected void setBluetoothStatus(BT_STATUS status) {
+        setBluetoothStatus(status, "");
     }
 
     /**
@@ -129,7 +100,7 @@ public abstract class BluetoothCommunication {
      * @param statusCode the status code that should be set
      * @param infoText the information text that is displayed to the status code.
      */
-    protected void setBtStatus(BT_STATUS_CODE statusCode, String infoText) {
+    protected void setBluetoothStatus(BT_STATUS statusCode, String infoText) {
         if (callbackBtHandler != null) {
             callbackBtHandler.obtainMessage(
                     statusCode.ordinal(), infoText).sendToTarget();
@@ -141,10 +112,10 @@ public abstract class BluetoothCommunication {
      *
      * @param scaleMeasurement the scale data that should be added to openScale
      */
-    protected void addScaleData(ScaleMeasurement scaleMeasurement) {
+    protected void addScaleMeasurement(ScaleMeasurement scaleMeasurement) {
         if (callbackBtHandler != null) {
             callbackBtHandler.obtainMessage(
-                    BT_STATUS_CODE.BT_RETRIEVE_SCALE_DATA.ordinal(), scaleMeasurement).sendToTarget();
+                    BT_STATUS.RETRIEVE_SCALE_DATA.ordinal(), scaleMeasurement).sendToTarget();
         }
     }
 
@@ -157,7 +128,7 @@ public abstract class BluetoothCommunication {
     protected void sendMessage(int msg, Object value) {
         if (callbackBtHandler != null) {
             callbackBtHandler.obtainMessage(
-                    BT_STATUS_CODE.BT_SCALE_MESSAGE.ordinal(), msg, 0, value).sendToTarget();
+                    BT_STATUS.SCALE_MESSAGE.ordinal(), msg, 0, value).sendToTarget();
         }
     }
 
@@ -171,196 +142,122 @@ public abstract class BluetoothCommunication {
     /**
      * State machine for the initialization process of the Bluetooth device.
      *
-     * @param stateNr the current step number
+     * @param stepNr the current step number
      * @return false if no next step is available otherwise true
      */
-    abstract protected boolean nextInitCmd(int stateNr);
-
-    /**
-     * State machine for the normal/command process of the Bluetooth device.
-     *
-     * This state machine is automatically triggered if initialization process is finished.
-     *
-     * @param stateNr the current step number
-     * @return false if no next step is available otherwise true
-     */
-    abstract protected boolean nextBluetoothCmd(int stateNr);
-
-    /**
-     * Set the next command number of the current state.
-     *
-     * @param nextCommand next command to select
-     */
-    protected void setNextCmd(int nextCommand) {
-        switch (btMachineState) {
-            case BT_INIT_STATE:
-                initStepNr = nextCommand - 1;
-                break;
-            case BT_CMD_STATE:
-                cmdStepNr = nextCommand - 1;
-                break;
-            case BT_CLEANUP_STATE:
-                cleanupStepNr = nextCommand - 1;
-                break;
-        }
-    }
-
-    /**
-     * State machine for the clean up process for the Bluetooth device.
-     *
-     * This state machine is *not* automatically triggered. You have to setBtMachineState(BT_MACHINE_STATE.BT_CLEANUP_STATE) to trigger this process if necessary.
-     *
-     * @param stateNr the current step number
-     * @return false if no next step is available otherwise true
-     */
-    abstract protected boolean nextCleanUpCmd(int stateNr);
-
-    /**
-     * Method is triggered if a Bluetooth data is read from a device.
-     *
-     * @param bluetoothGatt the Bluetooth Gatt
-     * @param gattCharacteristic the Bluetooth Gatt characteristic
-     * @param status the status code
-     */
-    protected void onBluetoothDataRead(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic, int status) {}
+    abstract protected boolean onNextStep(int stepNr);
 
     /**
      * Method is triggered if a Bluetooth data from a device is notified or indicated.
      *
-     * @param bluetoothGatt the Bluetooth Gatt
-     * @param gattCharacteristic the Bluetooth characteristic
+     * @param characteristic
+     * @param value the Bluetooth characteristic
      */
-    protected void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {}
+    protected void onBluetoothNotify(UUID characteristic, byte[] value) {}
 
     /**
-     * Set the Bluetooth machine state to a specific state.
+     * Method is triggered if a Bluetooth services from a device is discovered.
      *
-     * @note after setting a new state the next step is automatically triggered.
-     *
-     * @param btMachineState the machine state that should be set.
+     * @param peripheral
      */
-    protected void setBtMachineState(BT_MACHINE_STATE btMachineState) {
-        synchronized (lock) {
-            this.btMachineState = btMachineState;
-            handleRequests();
-        }
+    protected void onBluetoothDiscovery(BluetoothPeripheral peripheral) { }
+
+    protected synchronized void stopMachineState() {
+        Timber.d("Stop machine state");
+        stopped = true;
+    }
+
+    protected synchronized void resumeMachineState() {
+        Timber.d("Resume machine state");
+        stopped = false;
+        nextMachineStep();
+    }
+
+    protected synchronized void jumpNextToStepNr(int nr) {
+        Timber.d("Jump next to step nr " + nr);
+        stepNr = nr;
     }
 
     /**
      * Write a byte array to a Bluetooth device.
      *
-     * @param service the Bluetooth UUID device service
      * @param characteristic the Bluetooth UUID characteristic
-     * @param bytes the bytes that should be write
+     * @param bytes          the bytes that should be write
      */
     protected void writeBytes(UUID service, UUID characteristic, byte[] bytes) {
-        synchronized (lock) {
-             characteristicRequestQueue.add(
-                     new GattObjectValue<>(
-                             bluetoothGatt.getService(service).getCharacteristic(characteristic),
-                             bytes));
-             handleRequests();
-        }
+        writeBytes(service, characteristic, bytes, false);
+    }
+
+    /**
+     * Write a byte array to a Bluetooth device.
+     *
+     * @param characteristic the Bluetooth UUID characteristic
+     * @param bytes          the bytes that should be write
+     * @param noResponse     true if no response is required
+     */
+    protected void writeBytes(UUID service, UUID characteristic, byte[] bytes, boolean noResponse) {
+        Timber.d("Invoke write bytes [" + byteInHex(bytes) + "] on " + BluetoothGattUuid.prettyPrint(characteristic));
+        btPeripheral.writeCharacteristic(btPeripheral.getCharacteristic(service, characteristic), bytes,
+                noResponse ? WRITE_TYPE_NO_RESPONSE : WRITE_TYPE_DEFAULT);
     }
 
     /**
      * Read bytes from a Bluetooth device.
      *
-     * @note onBluetoothDataRead() will be triggered if read command was successful.
-     *
-     * @param service the Bluetooth UUID device service
-     * @param characteristic the Bluetooth UUID characteristic
+     * @note onBluetoothRead() will be triggered if read command was successful. nextMachineStep() needs to manually called!
+     *@param characteristic the Bluetooth UUID characteristic
      */
-    protected void readBytes(UUID service, UUID characteristic) {
-        BluetoothGattCharacteristic gattCharacteristic = bluetoothGatt.getService(service)
-                .getCharacteristic(characteristic);
+    void readBytes(UUID service, UUID characteristic) {
+        Timber.d("Invoke read bytes on " + BluetoothGattUuid.prettyPrint(characteristic));
 
-        Timber.d("Read characteristic %s", characteristic);
-        bluetoothGatt.readCharacteristic(gattCharacteristic);
-    }
-
-    protected void readBytes(UUID service, UUID characteristic, UUID descriptor) {
-        BluetoothGattDescriptor gattDescriptor = bluetoothGatt.getService(service)
-                .getCharacteristic(characteristic).getDescriptor(descriptor);
-
-        Timber.d("Read descriptor %s", descriptor);
-        bluetoothGatt.readDescriptor(gattDescriptor);
+        btPeripheral.readCharacteristic(btPeripheral.getCharacteristic(service, characteristic));
     }
 
     /**
      * Set indication flag on for the Bluetooth device.
      *
-     * @param service the Bluetooth UUID device service
      * @param characteristic the Bluetooth UUID characteristic
      */
-    protected void setIndicationOn(UUID service, UUID characteristic, UUID descriptor) {
-        Timber.d("Set indication on for %s", characteristic);
-
-        try {
-            BluetoothGattCharacteristic gattCharacteristic =
-                    bluetoothGatt.getService(service).getCharacteristic(characteristic);
-            bluetoothGatt.setCharacteristicNotification(gattCharacteristic, true);
-
-            synchronized (lock) {
-                descriptorRequestQueue.add(
-                        new GattObjectValue<>(
-                                gattCharacteristic.getDescriptor(descriptor),
-                                BluetoothGattDescriptor.ENABLE_INDICATION_VALUE));
-                handleRequests();
-            }
-        }
-        catch (Exception e) {
-            Timber.e(e);
+    protected void setIndicationOn(UUID service, UUID characteristic) {
+        Timber.d("Invoke set indication on " + BluetoothGattUuid.prettyPrint(characteristic));
+        if(btPeripheral.getService(service) != null) {
+            stopMachineState();
+            BluetoothGattCharacteristic currentTimeCharacteristic = btPeripheral.getCharacteristic(service, characteristic);
+            btPeripheral.setNotify(currentTimeCharacteristic, true);
         }
     }
 
     /**
      * Set notification flag on for the Bluetooth device.
      *
-     * @param service the Bluetooth UUID device service
      * @param characteristic the Bluetooth UUID characteristic
      */
-    protected void setNotificationOn(UUID service, UUID characteristic, UUID descriptor) {
-        Timber.d("Set notification on for %s", characteristic);
-
-        try {
-            BluetoothGattCharacteristic gattCharacteristic =
-                    bluetoothGatt.getService(service).getCharacteristic(characteristic);
-            bluetoothGatt.setCharacteristicNotification(gattCharacteristic, true);
-
-            synchronized (lock) {
-                descriptorRequestQueue.add(
-                        new GattObjectValue<>(
-                                gattCharacteristic.getDescriptor(descriptor),
-                                BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE));
-                handleRequests();
-            }
-        }
-        catch (Exception e) {
-            Timber.e(e);
+    protected void setNotificationOn(UUID service, UUID characteristic) {
+        Timber.d("Invoke set notification on " + BluetoothGattUuid.prettyPrint(characteristic));
+        if(btPeripheral.getService(service) != null) {
+            stopMachineState();
+            BluetoothGattCharacteristic currentTimeCharacteristic = btPeripheral.getCharacteristic(service, characteristic);
+            btPeripheral.setNotify(currentTimeCharacteristic, true);
         }
     }
 
     /**
-     * Set notification flag off for the Bluetooth device.
-     *
-     * @param service the Bluetooth UUID device service
-     * @param characteristic the Bluetooth UUID characteristic
+     * Disconnect from a Bluetooth device
      */
-    protected void setNotificationOff(UUID service, UUID characteristic, UUID descriptor) {
-        Timber.d("Set notification off for %s", characteristic);
-
-        BluetoothGattCharacteristic gattCharacteristic =
-                bluetoothGatt.getService(service).getCharacteristic(characteristic);
-        bluetoothGatt.setCharacteristicNotification(gattCharacteristic, false);
-
-        synchronized (lock) {
-            descriptorRequestQueue.add(
-                    new GattObjectValue<>(
-                            gattCharacteristic.getDescriptor(descriptor),
-                            BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE));
-            handleRequests();
+    public void disconnect() {
+        Timber.d("Bluetooth disconnect");
+        setBluetoothStatus(BT_STATUS.CONNECTION_DISCONNECT);
+        try {
+            central.stopScan();
+        } catch (Exception ex) {
+            Timber.e("Error on Bluetooth disconnecting " + ex.getMessage());
         }
+
+        if (btPeripheral != null) {
+            central.cancelConnection(btPeripheral);
+        }
+        callbackBtHandler = null;
+        disconnectHandler.removeCallbacksAndMessages(null);
     }
 
     /**
@@ -387,10 +284,28 @@ public abstract class BluetoothCommunication {
         return stringBuilder.substring(0, stringBuilder.length() - 1);
     }
 
+    protected float clamp(double value, double min, double max) {
+        if (value < min) {
+            return (float)min;
+        }
+        if (value > max) {
+            return (float)max;
+        }
+        return (float)value;
+    }
+
     protected byte xorChecksum(byte[] data, int offset, int length) {
         byte checksum = 0;
         for (int i = offset; i < offset + length; ++i) {
             checksum ^= data[i];
+        }
+        return checksum;
+    }
+
+    protected byte sumChecksum(byte[] data, int offset, int length) {
+        byte checksum = 0;
+        for (int i = offset; i < offset + length; ++i) {
+            checksum += data[i];
         }
         return checksum;
     }
@@ -406,372 +321,149 @@ public abstract class BluetoothCommunication {
         return (value & (1 << bit)) != 0;
     }
 
+    private final BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback() {
+        @Override
+        public void onServicesDiscovered(BluetoothPeripheral peripheral) {
+            Timber.d("Successful Bluetooth services discovered");
+            onBluetoothDiscovery(peripheral);
+            resumeMachineState();
+        }
+
+        @Override
+        public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothGattCharacteristic characteristic, int status) {
+            if( status == GATT_SUCCESS) {
+                if(peripheral.isNotifying(characteristic)) {
+                    Timber.d(String.format("SUCCESS: Notify set for %s", characteristic.getUuid()));
+                    resumeMachineState();
+                }
+            } else {
+                Timber.e(String.format("ERROR: Changing notification state failed for %s", characteristic.getUuid()));
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, int status) {
+            if( status == GATT_SUCCESS) {
+                Timber.d(String.format("SUCCESS: Writing <%s> to <%s>", byteInHex(value), characteristic.getUuid().toString()));
+                nextMachineStep();
+
+            } else {
+                Timber.e(String.format("ERROR: Failed writing <%s> to <%s>", byteInHex(value), characteristic.getUuid().toString()));
+            }
+        }
+
+        @Override
+        public void onCharacteristicUpdate(final BluetoothPeripheral peripheral, byte[] value, final BluetoothGattCharacteristic characteristic, final int status) {
+            resetDisconnectTimer();
+            onBluetoothNotify(characteristic.getUuid(), value);
+        }
+    };
+
+    // Callback for central
+    private final BluetoothCentralCallback bluetoothCentralCallback = new BluetoothCentralCallback() {
+
+        @Override
+        public void onConnectedPeripheral(BluetoothPeripheral peripheral) {
+            Timber.d(String.format("connected to '%s'", peripheral.getName()));
+            setBluetoothStatus(BT_STATUS.CONNECTION_ESTABLISHED);
+            btPeripheral = peripheral;
+            nextMachineStep();
+            resetDisconnectTimer();
+        }
+
+        @Override
+        public void onConnectionFailed(BluetoothPeripheral peripheral, final int status) {
+            Timber.e(String.format("connection '%s' failed with status %d", peripheral.getName(), status ));
+            setBluetoothStatus(BT_STATUS.CONNECTION_LOST);
+
+            if (status == 8) {
+                sendMessage(R.string.info_bluetooth_connection_error_scale_offline, 0);
+            }
+        }
+
+        @Override
+        public void onDisconnectedPeripheral(final BluetoothPeripheral peripheral, final int status) {
+            Timber.d(String.format("disconnected '%s' with status %d", peripheral.getName(), status));
+        }
+
+        @Override
+        public void onDiscoveredPeripheral(BluetoothPeripheral peripheral, ScanResult scanResult) {
+            Timber.d(String.format("Found peripheral '%s'", peripheral.getName()));
+            central.stopScan();
+            connectToDevice(peripheral);
+        }
+    };
+
     /**
      * Connect to a Bluetooth device.
      *
      * On successfully connection Bluetooth machine state is automatically triggered.
      * If the device is not found the process is automatically stopped.
      *
-     * @param hwAddress the Bluetooth address to connect to
+     * @param macAddress the Bluetooth address to connect to
      */
-    public void connect(String hwAddress) {
-        logBluetoothStatus();
-
-        // Some good tips to improve BLE connections:
-        // https://android.jlelse.eu/lessons-for-first-time-android-bluetooth-le-developers-i-learned-the-hard-way-fee07646624
-
-        btAdapter.cancelDiscovery();
-        stopLeScan();
-
-        // Don't do any cleanup if disconnected before fully connected
-        btMachineState = BT_MACHINE_STATE.BT_CLEANUP_STATE;
-
+    public void connect(String macAddress) {
         // Running an LE scan during connect improves connectivity on some phones
         // (e.g. Sony Xperia Z5 compact, Android 7.1.1). For some scales (e.g. Medisana BS444)
         // it seems to be a requirement that the scale is discovered before connecting to it.
         // Otherwise the connection almost never succeeds.
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            startLeScanForDevice(hwAddress);
+        LocationManager locationManager = (LocationManager)context.getSystemService(LOCATION_SERVICE);
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED && (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+        ) {
+            Timber.d("Do LE scan before connecting to device");
+            central.scanForPeripheralsWithAddresses(new String[]{macAddress});
+            stopMachineState();
         }
         else {
-            Timber.d("No coarse location permission, connecting without LE scan");
-            connectGatt(hwAddress);
+            Timber.d("No location permission, connecting without LE scan");
+            BluetoothPeripheral peripheral = central.getPeripheral(macAddress);
+            connectToDevice(peripheral);
         }
     }
 
-    private void logBluetoothStatus() {
-        Timber.d("BT is%s enabled, state=%d, scan mode=%d, is%s discovering",
-                btAdapter.isEnabled() ? "" : " not", btAdapter.getState(),
-                btAdapter.getScanMode(), btAdapter.isDiscovering() ? "" : " not");
+    private void connectToDevice(BluetoothPeripheral peripheral) {
 
-        BluetoothManager manager =
-                (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        for (BluetoothDevice device : manager.getConnectedDevices(BluetoothProfile.GATT)) {
-            Timber.d("Connected GATT device: %s [%s]",
-                    device.getName(), device.getAddress());
-        }
-        for (BluetoothDevice device : manager.getConnectedDevices(BluetoothProfile.GATT_SERVER)) {
-            Timber.d("Connected GATT_SERVER device: %s [%s]",
-                    device.getName(), device.getAddress());
-        }
-    }
-
-    private void connectGatt(BluetoothDevice device) {
-        Timber.i("Connecting to [%s] (driver: %s)", device.getAddress(), driverName());
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            bluetoothGatt = device.connectGatt(
-                    context, false, gattCallback, BluetoothDevice.TRANSPORT_LE);
-        }
-        else {
-            bluetoothGatt = device.connectGatt(context, false, gattCallback);
-        }
-    }
-
-    private void connectGatt(String hwAddress) {
-        connectGatt(btAdapter.getRemoteDevice(hwAddress));
-    }
-
-    private void startLeScanForDevice(final String hwAddress) {
-        leScanCallback = new BluetoothAdapter.LeScanCallback() {
-            @Override
-            public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-                Timber.d("Found LE device %s [%s]", device.getName(), device.getAddress());
-                if (!device.getAddress().equals(hwAddress)) {
-                    return;
-                }
-                synchronized (lock) {
-                    stopLeScan();
-                    connectGatt(device);
-                }
-            }
-        };
-
-        Timber.d("Starting LE scan for device [%s]", hwAddress);
-        btAdapter.startLeScan(leScanCallback);
-
-        handler.postAtTime(new Runnable() {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Timber.d("Device not found in LE scan, connecting directly");
-                synchronized (lock) {
-                    stopLeScan();
-                    connectGatt(hwAddress);
-                }
+                Timber.d("Try to connect to BLE device " + peripheral.getAddress());
+
+                stepNr = 0;
+
+                central.connectPeripheral(peripheral, peripheralCallback);
             }
-        }, leScanCallback, SystemClock.uptimeMillis() + LE_SCAN_TIMEOUT_MS);
+        }, 1000);
     }
 
-    private void stopLeScan() {
-        if (leScanCallback != null) {
-            Timber.d("Stopping LE scan");
-            btAdapter.stopLeScan(leScanCallback);
-            handler.removeCallbacksAndMessages(leScanCallback);
-            leScanCallback = null;
-        }
+    private void resetDisconnectTimer() {
+        disconnectHandler.removeCallbacksAndMessages(null);
+        disconnectWithDelay();
     }
 
-    /**
-     * Disconnect from a Bluetooth device
-     */
-    public void disconnect(boolean doCleanup) {
-        synchronized (lock) {
-            stopLeScan();
-
-            if (bluetoothGatt == null) {
-                return;
+    private void disconnectWithDelay() {
+        disconnectHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Timber.d("Timeout Bluetooth disconnect");
+                disconnect();
             }
-
-            Timber.i("Disconnecting%s", doCleanup ? " (with cleanup)" : "");
-
-            handler.removeCallbacksAndMessages(null);
-            callbackBtHandler = null;
-
-            if (doCleanup) {
-                if (btMachineState != BT_MACHINE_STATE.BT_CLEANUP_STATE) {
-                    setBtMachineState(BT_MACHINE_STATE.BT_CLEANUP_STATE);
-                    nextMachineStateStep();
-                }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        synchronized (lock) {
-                            if (openRequest) {
-                                handler.postDelayed(this, 10);
-                            } else {
-                                bluetoothGatt.close();
-                                bluetoothGatt = null;
-                            }
-                        }
-                    }
-                });
-            }
-            else {
-                bluetoothGatt.close();
-                bluetoothGatt = null;
-            }
-        }
+        }, 60000); // 60s timeout
     }
 
-    /**
-     * Invoke next step for internal Bluetooth state machine.
-     */
-    protected void nextMachineStateStep() {
-        switch (btMachineState) {
-            case BT_INIT_STATE:
-                Timber.d("INIT STATE: %d", initStepNr);
-                if (!nextInitCmd(initStepNr)) {
-                    btMachineState = BT_MACHINE_STATE.BT_CMD_STATE;
-                    nextMachineStateStep();
-                }
-                initStepNr++;
-                break;
-            case BT_CMD_STATE:
-                Timber.d("CMD STATE: %d", cmdStepNr);
-                nextBluetoothCmd(cmdStepNr);
-                cmdStepNr++;
-                break;
-            case BT_CLEANUP_STATE:
-                Timber.d("CLEANUP STATE: %d", cleanupStepNr);
-                nextCleanUpCmd(cleanupStepNr);
-                cleanupStepNr++;
-                break;
-        }
-    }
-
-    private void handleRequests() {
-        synchronized (lock) {
-            // check for pending request
-            if (openRequest) {
-                Timber.d("Request pending (queue %d %d)",
-                        descriptorRequestQueue.size(), characteristicRequestQueue.size());
-                return; // yes, do nothing
+    private synchronized void nextMachineStep() {
+        if (!stopped) {
+            Timber.d("Step Nr " + stepNr);
+            if (onNextStep(stepNr)) {
+                stepNr++;
+                nextMachineStep();
+            } else {
+                Timber.d("Invoke delayed disconnect in 60s");
+                disconnectWithDelay();
             }
-
-            // handle descriptor requests first
-            GattObjectValue<BluetoothGattDescriptor> descriptor = descriptorRequestQueue.poll();
-            if (descriptor != null) {
-                descriptor.gattObject.setValue(descriptor.value);
-
-                Timber.d("Write descriptor %s: %s (queue: %d %d)",
-                        descriptor.gattObject.getUuid(), byteInHex(descriptor.gattObject.getValue()),
-                        descriptorRequestQueue.size(), characteristicRequestQueue.size());
-                if (!bluetoothGatt.writeDescriptor(descriptor.gattObject)) {
-                    Timber.e("Failed to initiate write of descriptor %s",
-                            descriptor.gattObject.getUuid());
-                }
-                openRequest = true;
-                return;
-            }
-
-            // handle characteristics requests second
-            GattObjectValue<BluetoothGattCharacteristic> characteristic = characteristicRequestQueue.poll();
-            if (characteristic != null) {
-                characteristic.gattObject.setValue(characteristic.value);
-
-                Timber.d("Write characteristic %s: %s (queue: %d %d)",
-                        characteristic.gattObject.getUuid(), byteInHex(characteristic.gattObject.getValue()),
-                        descriptorRequestQueue.size(), characteristicRequestQueue.size());
-                if (!bluetoothGatt.writeCharacteristic(characteristic.gattObject)) {
-                    Timber.e("Failed to initiate write of characteristic %s",
-                            characteristic.gattObject.getUuid());
-                }
-                openRequest = true;
-                return;
-            }
-
-            // After every command was executed, continue with the next step
-            nextMachineStateStep();
-        }
-    }
-
-    /**
-     * Custom Gatt callback class to set up a Bluetooth state machine.
-     */
-    protected class GattCallback extends BluetoothGattCallback {
-        @Override
-        public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
-            Timber.d("onConnectionStateChange: status=%d, newState=%d", status, newState);
-
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                synchronized (lock) {
-                    stopLeScan();
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    gatt.readPhy();
-                }
-
-                connectionEstablished = true;
-                setBtStatus(BT_STATUS_CODE.BT_CONNECTION_ESTABLISHED);
-
-                try {
-                    Thread.sleep(1000);
-                }
-                catch (Exception e) {
-                    // Empty
-                }
-                if (!gatt.discoverServices()) {
-                    Timber.e("Could not start service discovery");
-                    setBtStatus(BT_STATUS_CODE.BT_CONNECTION_LOST);
-                    disconnect(false);
-                }
-            }
-            else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                setBtStatus(connectionEstablished
-                        ? BT_STATUS_CODE.BT_CONNECTION_LOST
-                        : BT_STATUS_CODE.BT_NO_DEVICE_FOUND);
-                disconnect(false);
-            }
-        }
-
-        @Override
-        public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
-            Timber.d("onServicesDiscovered: status=%d (%d services)",
-                    status, gatt.getServices().size());
-
-            if (gatt.getServices().isEmpty()) {
-                setBtStatus(BT_STATUS_CODE.BT_UNEXPECTED_ERROR, "No services found");
-                disconnect(false);
-                return;
-            }
-
-            synchronized (lock) {
-                cmdStepNr = 0;
-                initStepNr = 0;
-                cleanupStepNr = 0;
-
-                // Clear from possible previous setups
-                characteristicRequestQueue = new LinkedList<>();
-                descriptorRequestQueue = new LinkedList<>();
-                openRequest = false;
-            }
-
-            try {
-                // Sleeping a while after discovering services fixes connection problems.
-                // See https://github.com/NordicSemiconductor/Android-DFU-Library/issues/10
-                // for some technical background.
-                Thread.sleep(1000);
-            }
-            catch (Exception e) {
-                // Empty
-            }
-
-            // Start the state machine
-            setBtMachineState(BT_MACHINE_STATE.BT_INIT_STATE);
-        }
-
-        @Override
-        public void onPhyRead(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-            Timber.d("Current PHY read: TX=%d, RX=%d, status=%d", txPhy, rxPhy, status);
-        }
-
-        @Override
-        public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-            Timber.d("PHY update: TX=%d, RX=%d, status=%d", txPhy, rxPhy, status);
-        }
-
-        private void postDelayedHandleRequests() {
-            // Wait a short while before starting the next operation as suggested
-            // on the android.jlelse.eu link above.
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (lock) {
-                        openRequest = false;
-                        handleRequests();
-                    }
-                }
-            }, 60);
-        }
-
-        @Override
-        public void onDescriptorWrite(BluetoothGatt gatt,
-                                      BluetoothGattDescriptor descriptor,
-                                      int status) {
-            postDelayedHandleRequests();
-        }
-
-        @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt,
-                                          BluetoothGattCharacteristic characteristic,
-                                          int status) {
-            postDelayedHandleRequests();
-        }
-
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic,
-                                         int status) {
-            Timber.d("onCharacteristicRead %s (status=%d): %s",
-                    characteristic.getUuid(), status, byteInHex(characteristic.getValue()));
-
-            synchronized (lock) {
-                onBluetoothDataRead(gatt, characteristic, status);
-                postDelayedHandleRequests();
-            }
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            Timber.d("onCharacteristicChanged %s: %s",
-                    characteristic.getUuid(), byteInHex(characteristic.getValue()));
-
-            synchronized (lock) {
-                onBluetoothDataChange(gatt, characteristic);
-            }
-        }
-
-        @Override
-        public void onDescriptorRead(BluetoothGatt gatt,
-                                     BluetoothGattDescriptor descriptor,
-                                     int status) {
-            Timber.d("onDescriptorRead %s (status=%d): %s",
-                    descriptor.getUuid(), status, byteInHex(descriptor.getValue()));
-
-            postDelayedHandleRequests();
         }
     }
 }

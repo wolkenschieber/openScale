@@ -22,10 +22,14 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 
 import com.health.openscale.BuildConfig;
 import com.health.openscale.core.OpenScale;
+import com.health.openscale.core.datatypes.ScaleMeasurement;
+
+import java.util.Date;
+
+import timber.log.Timber;
 
 /**
  * Exposes the user and measurement data from openScale via
@@ -34,7 +38,7 @@ import com.health.openscale.core.OpenScale;
  * (e.g. syncing to third-party services like Google Fit, Fitbit API, etc) without openScale itself
  * needing to do so or request additional permissions. <br />
  *
- * This access is gated by the com.health.openscale.READ_DATA permission, which is defined in the
+ * This access is gated by the com.health.openscale.READ_WRITE_DATA permission, which is defined in the
  * manifest; it is not accessible to any other app without user confirmation.<br />
  *
  * The following URIs are supported:
@@ -80,6 +84,8 @@ public class ScaleDatabaseProvider extends android.content.ContentProvider {
 
     @Override
     public boolean onCreate() {
+        // need to create openScale instance for the provider if openScale app is closed
+        OpenScale.createInstance(getContext().getApplicationContext());
         return true;
     }
 
@@ -87,11 +93,6 @@ public class ScaleDatabaseProvider extends android.content.ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
         final Context context = getContext();
-
-        if (!PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean("dataProviderEnable", false)) {
-            throw new UnsupportedOperationException("Provider access not enabled");
-        }
 
         Cursor cursor;
 
@@ -125,12 +126,53 @@ public class ScaleDatabaseProvider extends android.content.ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        throw new UnsupportedOperationException("Not supported");
-    }
+        Date date = new Date(values.getAsLong("datetime"));
+        float weight = values.getAsFloat("weight");
+        int userId = values.getAsInteger("userId");
+
+        ScaleMeasurement scaleMeasurement = new ScaleMeasurement();
+
+        scaleMeasurement.setUserId(userId);
+        scaleMeasurement.setWeight(weight);
+        scaleMeasurement.setDateTime(date);
+
+        ScaleMeasurementDAO measurementDAO = OpenScale.getInstance().getScaleMeasurementDAO();
+
+        if (measurementDAO.insert(scaleMeasurement) == -1) {
+            update(uri, values, "", new String[]{});
+        }
+
+        return null;
+    };
 
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        throw new UnsupportedOperationException("Not supported");
+
+        Date date  = new Date(values.getAsLong("datetime"));
+        float weight = values.getAsFloat("weight");
+        int userId = values.getAsInteger("userId");
+
+        ScaleMeasurement scaleMeasurement = new ScaleMeasurement();
+
+        scaleMeasurement.setWeight(weight);
+        scaleMeasurement.setDateTime(date);
+
+        ScaleMeasurementDAO measurementDAO = OpenScale.getInstance().getScaleMeasurementDAO();
+
+        ScaleMeasurement databaseMeasurement = measurementDAO.get(date, userId);
+
+        if (databaseMeasurement != null) {
+            databaseMeasurement.merge(scaleMeasurement);
+            databaseMeasurement.setEnabled(true);
+
+            measurementDAO.update(databaseMeasurement);
+
+            return 1;
+        } else {
+            Timber.e("no measurement for an update found");
+        }
+
+        return 0;
     }
 }

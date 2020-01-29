@@ -72,7 +72,6 @@
     <string name="error_exporting">Lỗi khi xuất</string>
     <string name="error_importing">Lỗi khi nhập</string>
     <string name="error_user_name_required">Lỗi: Tên là bắt buộc</string>
-    <string name="error_user_name_too_short">Lỗi: Tên phải ít nhất 3 kí tự</string>
     <string name="error_height_required">Lỗi: Chiều cao là bắt buộc</string>
     <string name="error_initial_weight_required">Lỗi: Trọng lượng ban đầu là bắt buộc</string>
     <string name="error_goal_weight_required">Lỗi: Trọng lượng mục tiêu là bắt buộc</string>
@@ -164,7 +163,7 @@
     <string name="label_feedback_message_negative">Không, cảm ơn</string>
 
     <string name="error_max_scale_users">Đã đạt đến số người sử đụng cùng lúc tối đa</string>
-    <string name="info_step_on_scale">Vui lòng bước chân trần lên cân để lấy số đo tham chiếu</string>
+    <string name="info_step_on_scale_for_reference">Vui lòng bước chân trần lên cân để lấy số đo tham chiếu</string>
     <string name="info_measuring">Đang đo trọng lượng: %.2f</string>
     <string name="trisa_scale_not_paired">Cân này chưa được ghép đôi!
 \n
@@ -196,14 +195,13 @@
     <string name="permission_not_granted">Quyền không được cấp</string>
     <string name="permission_bluetooth_info">Cần quyền truy cập vị trí thô để tìm kiếm các thiết bị Bluetooth. Nó có thể được thu hồi sau khi thiết bị được tìm thấy.</string>
     <string name="permission_bluetooth_info_title">Thông tin</string>
-    <string name="permission_read_data_description">đọc dữ liệu của openScale, bao gồm thông tin người dùng và tất cả các số đo được lưu</string>
-    <string name="permission_read_data_label">Đọc dữ liệu openScale</string>
+    <string name="permission_read_write_data_description">đọc dữ liệu của openScale, bao gồm thông tin người dùng và tất cả các số đo được lưu</string>
+    <string name="permission_read_write_data_label">Đọc dữ liệu openScale</string>
     <string name="label_next">Tiếp</string>
     <string name="label_long_press_drag_reorder">Giữ lâu và kéo số đo để sắp xếp lại</string>
     <string name="label_click_measurement_configure">Ấn vào số đo để cấu hình</string>
     <string name="label_set_default_order">Đặt thứ tự mặc định</string>
     <string name="label_export_overwrite">Ghi đè lên bản xuất \"%s\"\?</string>
-    <string name="label_include_in_overview_graph">Bao gồm trong biểu đồ tổng quan</string>
     <string name="label_measurement_in_percent">Đo trong %</string>
     <string name="label_estimate_measurement">Số đo ước lượng</string>
     <string name="label_estimation_formula">Công thức ước lượng</string>
@@ -213,7 +211,6 @@
     <string name="theme_dark">Tối</string>
     <string name="label_contribute_translation">Đóng góp dịch thuật</string>
     <string name="label_add_or_fix_translation">Thêm mới hoặc sửa có sẵn</string>
-    <string name="label_overview_graph">Biểu đồ tổng quan</string>
     <string name="label_percent">Phần trăm</string>
     <string name="label_estimated">Ước lượng</string>
     <string name="label_estimate_measurement_summary">Dựa trên trọng lượng, chiều cao, tuổi tác, giới tính, v.v...</string>
@@ -250,5 +247,4 @@
     <string name="activity_level_moderate">Vận động trung bình</string>
     <string name="activity_level_heavy">Vận động nặng</string>
     <string name="activity_level_extreme">Vận động cực nặng</string>
-    <string name="label_data_provider_enable">Quyền truy cập ứng dụng bên thứ ba</string>
 </resources>

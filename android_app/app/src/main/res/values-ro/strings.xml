@@ -73,7 +73,6 @@
     <string name="error_exporting">Eroare la export</string>
     <string name="error_importing">Eroare la import</string>
     <string name="error_user_name_required">Eroare: Nume necesar</string>
-    <string name="error_user_name_too_short">Eroare: Numele trebuie să aibă cel puțin trei caractere</string>
     <string name="error_height_required">Eroare: Înălțime necesară</string>
     <string name="error_initial_weight_required">Eroare: Greutatea inițială trebuie indicată</string>
     <string name="error_goal_weight_required">Eroare: Greutatea dorită trebuie indicată</string>
@@ -155,7 +154,7 @@
     <string name="label_feedback_message_negative">Nu, mulțumesc</string>
 
     <string name="error_max_scale_users">Numărul maxim de utilizatori al unui același aparat depășit</string>
-    <string name="info_step_on_scale">Urcați vă rog pe cântar desculț pentru măsurătorile de referință</string>
+    <string name="info_step_on_scale_for_reference">Urcați vă rog pe cântar desculț pentru măsurătorile de referință</string>
     <string name="info_measuring">Măsurare a greutății în curs: %.2f</string>
 
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">O eroare a apărut.
@@ -193,7 +192,6 @@
     <string name="Tuesday">Marți</string>
     <string name="Wednesday">Miercuri</string>
     <string name="label_export_overwrite">Scriere peste exportul precedent \"%s\"?</string>
-    <string name="label_include_in_overview_graph">Includere în diagrama generală</string>
     <string name="label_measurement_in_percent">Măsurătoare în %</string>
     <string name="label_estimate_measurement">Estimare a măsurătorii</string>
     <string name="label_estimation_formula">Formulă pentru estimări</string>
@@ -203,7 +201,6 @@
     <string name="theme_dark">Întunecată</string>
     <string name="label_contribute_translation">Contribuiți la traducere</string>
     <string name="label_add_or_fix_translation">Adăugați sau modificați</string>
-    <string name="label_overview_graph">Diagrama generală</string>
     <string name="label_percent">Procent</string>
     <string name="label_estimated">Estimată</string>
     <string name="label_estimate_measurement_summary">Bazată pe greutate, înălțime, vârstă, sex, etc.</string>

@@ -16,10 +16,9 @@
 
 package com.health.openscale.core.bluetooth;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 
+import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
@@ -29,10 +28,9 @@ import java.util.Arrays;
 import java.util.UUID;
 
 public class BluetoothExcelvanCF36xBLE extends BluetoothCommunication {
-    private final UUID WEIGHT_MEASUREMENT_SERVICE = UUID.fromString("0000FFF0-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_MEASUREMENT_CHARACTERISTIC = UUID.fromString("0000FFF1-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_CUSTOM0_CHARACTERISTIC = UUID.fromString("0000FFF4-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_MEASUREMENT_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private final UUID WEIGHT_MEASUREMENT_SERVICE = BluetoothGattUuid.fromShortCode(0xfff0);
+    private final UUID WEIGHT_MEASUREMENT_CHARACTERISTIC = BluetoothGattUuid.fromShortCode(0xfff1);
+    private final UUID WEIGHT_CUSTOM0_CHARACTERISTIC = BluetoothGattUuid.fromShortCode(0xfff4);
 
     private byte[] receivedData = new byte[]{};
 
@@ -46,13 +44,8 @@ public class BluetoothExcelvanCF36xBLE extends BluetoothCommunication {
     }
 
     @Override
-    protected boolean nextInitCmd(int stateNr) {
-        return false;
-    }
-
-    @Override
-    protected boolean nextBluetoothCmd(int stateNr) {
-        switch (stateNr) {
+    protected boolean onNextStep(int stepNr) {
+        switch (stepNr) {
             case 0:
                 final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
 
@@ -96,23 +89,21 @@ public class BluetoothExcelvanCF36xBLE extends BluetoothCommunication {
                 writeBytes(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_CHARACTERISTIC, configBytes);
                 break;
             case 1:
-                setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_CUSTOM0_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
+                setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_CUSTOM0_CHARACTERISTIC);
+                break;
+            case 2:
+                sendMessage(R.string.info_step_on_scale, 0);
                 break;
             default:
                 return false;
         }
 
-        return false;
+        return true;
     }
 
     @Override
-    protected boolean nextCleanUpCmd(int stateNr) {
-        return false;
-    }
-
-    @Override
-    public void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {
-        final byte[] data = gattCharacteristic.getValue();
+    public void onBluetoothNotify(UUID characteristic, byte[] value) {
+        final byte[] data = value;
 
         if (data != null && data.length > 0) {
 
@@ -149,6 +140,6 @@ public class BluetoothExcelvanCF36xBLE extends BluetoothCommunication {
         scaleBtData.setBone(bone);
         scaleBtData.setVisceralFat(visceralFat);
 
-        addScaleData(scaleBtData);
+        addScaleMeasurement(scaleBtData);
     }
 }

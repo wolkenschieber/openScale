@@ -16,23 +16,15 @@
 
 package com.health.openscale.core.bluetooth;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.health.openscale.core.OpenScale;
-import com.health.openscale.core.bodymetric.EstimatedFatMetric;
-import com.health.openscale.core.bodymetric.EstimatedLBMMetric;
-import com.health.openscale.core.bodymetric.EstimatedWaterMetric;
+import com.health.openscale.core.bluetooth.lib.MiScaleLib;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.utils.Converters;
-import com.health.openscale.gui.views.FatMeasurementView;
-import com.health.openscale.gui.views.LBMMeasurementView;
-import com.health.openscale.gui.views.MeasurementViewSettings;
-import com.health.openscale.gui.views.WaterMeasurementView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,15 +36,10 @@ import java.util.UUID;
 
 import timber.log.Timber;
 
-import static com.health.openscale.core.bluetooth.BluetoothCommunication.BT_STATUS_CODE.BT_UNEXPECTED_ERROR;
+import static com.health.openscale.core.bluetooth.BluetoothCommunication.BT_STATUS.UNEXPECTED_ERROR;
 
 public class BluetoothMiScale2 extends BluetoothCommunication {
-    private final UUID WEIGHT_MEASUREMENT_SERVICE = UUID.fromString("0000181b-0000-1000-8000-00805f9b34fb");
     private final UUID WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC = UUID.fromString("00002a2f-0000-3512-2118-0009af100700");
-    private final UUID WEIGHT_MEASUREMENT_TIME_CHARACTERISTIC = UUID.fromString("00002a2b-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_MEASUREMENT_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_MEASUREMENT_BODY_COMPOSITION_FEATURE = UUID.fromString("00002a9b-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_MEASUREMENT_BODY_COMPOSITION_MEASUREMENT = UUID.fromString("00002a9c-0000-1000-8000-00805f9b34fb");
 
     private final UUID WEIGHT_CUSTOM_SERVICE = UUID.fromString("00001530-0000-3512-2118-0009af100700");
     private final UUID WEIGHT_CUSTOM_CONFIG = UUID.fromString("00001542-0000-3512-2118-0009af100700");
@@ -67,15 +54,24 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
     }
 
     @Override
-    public void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {
-        final byte[] data = gattCharacteristic.getValue();
+    public void onBluetoothNotify(UUID characteristic, byte[] value) {
+        final byte[] data = value;
 
         if (data != null && data.length > 0) {
             Timber.d("DataChange hex data: %s", byteInHex(data));
 
             // Stop command from mi scale received
             if (data[0] == 0x03) {
-                setBtMachineState(BT_MACHINE_STATE.BT_CLEANUP_STATE);
+                Timber.d("Scale stop byte received");
+                // send stop command to mi scale
+                writeBytes(BluetoothGattUuid.SERVICE_BODY_COMPOSITION, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, new byte[]{0x03});
+                // acknowledge that you received the last history data
+                int uniqueNumber = getUniqueNumber();
+
+                byte[] userIdentifier = new byte[]{(byte)0x04, (byte)0xFF, (byte)0xFF, (byte) ((uniqueNumber & 0xFF00) >> 8), (byte) ((uniqueNumber & 0xFF) >> 0)};
+                writeBytes(BluetoothGattUuid.SERVICE_BODY_COMPOSITION, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, userIdentifier);
+
+                resumeMachineState();
             }
 
             if (data.length == 26) {
@@ -94,8 +90,8 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
 
     @Override
-    protected boolean nextInitCmd(int stateNr) {
-        switch (stateNr) {
+    protected boolean onNextStep(int stepNr) {
+        switch (stepNr) {
             case 0:
                 // set scale units
                 final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
@@ -114,40 +110,23 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
                 byte[] dateTimeByte = {(byte)(year), (byte)(year >> 8), month, day, hour, min, sec, 0x03, 0x00, 0x00};
 
-                writeBytes(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_TIME_CHARACTERISTIC, dateTimeByte);
+                writeBytes(BluetoothGattUuid.SERVICE_BODY_COMPOSITION, BluetoothGattUuid.CHARACTERISTIC_CURRENT_TIME, dateTimeByte);
                 break;
             case 2:
                 // set notification on for weight measurement history
-                setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
+                setNotificationOn(BluetoothGattUuid.SERVICE_BODY_COMPOSITION, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC);
                 break;
-            default:
-                return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    protected boolean nextBluetoothCmd(int stateNr) {
-        switch (stateNr) {
-            case 0:
+            case 3:
                 // configure scale to get only last measurements
                 int uniqueNumber = getUniqueNumber();
 
                 byte[] userIdentifier = new byte[]{(byte)0x01, (byte)0xFF, (byte)0xFF, (byte) ((uniqueNumber & 0xFF00) >> 8), (byte) ((uniqueNumber & 0xFF) >> 0)};
-                writeBytes(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, userIdentifier);
+                writeBytes(BluetoothGattUuid.SERVICE_BODY_COMPOSITION, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, userIdentifier);
                 break;
-            case 1:
-                // set notification off for weight measurement history
-                setNotificationOff(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
-                break;
-            case 2:
-                // set notification on for weight measurement history
-                setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
-                break;
-            case 3:
+            case 4:
                 // invoke receiving history data
-                writeBytes(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, new byte[]{0x02});
+                writeBytes(BluetoothGattUuid.SERVICE_BODY_COMPOSITION, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, new byte[]{0x02});
+                stopMachineState();
                 break;
             default:
                 return false;
@@ -156,57 +135,39 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
         return true;
     }
 
-    @Override
-    protected boolean nextCleanUpCmd(int stateNr) {
-
-        switch (stateNr) {
-            case 0:
-                // send stop command to mi scale
-                writeBytes(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, new byte[]{0x03});
-                break;
-            case 1:
-                // acknowledge that you received the last history data
-                int uniqueNumber = getUniqueNumber();
-
-                byte[] userIdentifier = new byte[]{(byte)0x04, (byte)0xFF, (byte)0xFF, (byte) ((uniqueNumber & 0xFF00) >> 8), (byte) ((uniqueNumber & 0xFF) >> 0)};
-                writeBytes(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_HISTORY_CHARACTERISTIC, userIdentifier);
-                break;
-            case 2:
-                // set notification on for body composition measurement
-                setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_BODY_COMPOSITION_MEASUREMENT, WEIGHT_MEASUREMENT_CONFIG);
-                break;
-            default:
-                return false;
-        }
-
-        return true;
-    }
-
-    private void parseBytes(byte[] weightBytes) {
+    private void parseBytes(byte[] data) {
         try {
-            final byte ctrlByte0 = weightBytes[0];
-            final byte ctrlByte1 = weightBytes[1];
+            final byte ctrlByte0 = data[0];
+            final byte ctrlByte1 = data[1];
 
             final boolean isWeightRemoved = isBitSet(ctrlByte1, 7);
             final boolean isDateInvalid = isBitSet(ctrlByte1, 6);
             final boolean isStabilized = isBitSet(ctrlByte1, 5);
             final boolean isLBSUnit = isBitSet(ctrlByte0, 0);
             final boolean isCattyUnit = isBitSet(ctrlByte1, 6);
+            final boolean isImpedance = isBitSet(ctrlByte1, 1);
 
             if (isStabilized && !isWeightRemoved && !isDateInvalid) {
 
-                final int year = ((weightBytes[3] & 0xFF) << 8) | (weightBytes[2] & 0xFF);
-                final int month = (int) weightBytes[4];
-                final int day = (int) weightBytes[5];
-                final int hours = (int) weightBytes[6];
-                final int min = (int) weightBytes[7];
-                final int sec = (int) weightBytes[8];
+                final int year = ((data[3] & 0xFF) << 8) | (data[2] & 0xFF);
+                final int month = (int) data[4];
+                final int day = (int) data[5];
+                final int hours = (int) data[6];
+                final int min = (int) data[7];
+                final int sec = (int) data[8];
 
                 float weight;
+                float impedance = 0.0f;
+
                 if (isLBSUnit || isCattyUnit) {
-                    weight = (float) (((weightBytes[12] & 0xFF) << 8) | (weightBytes[11] & 0xFF)) / 100.0f;
+                    weight = (float) (((data[12] & 0xFF) << 8) | (data[11] & 0xFF)) / 100.0f;
                 } else {
-                    weight = (float) (((weightBytes[12] & 0xFF) << 8) | (weightBytes[11] & 0xFF)) / 200.0f;
+                    weight = (float) (((data[12] & 0xFF) << 8) | (data[11] & 0xFF)) / 200.0f;
+                }
+
+                if (isImpedance) {
+                    impedance = ((data[10] & 0xFF) << 8) | (data[9] & 0xFF);
+                    Timber.d("impedance value is " + impedance);
                 }
 
                 String date_string = year + "/" + month + "/" + day + "/" + hours + "/" + min;
@@ -214,37 +175,39 @@ public class BluetoothMiScale2 extends BluetoothCommunication {
 
                 // Is the year plausible? Check if the year is in the range of 20 years...
                 if (validateDate(date_time, 20)) {
-                    final ScaleUser selectedUser = OpenScale.getInstance().getSelectedScaleUser();
+                    final ScaleUser scaleUser = OpenScale.getInstance().getSelectedScaleUser();
                     ScaleMeasurement scaleBtData = new ScaleMeasurement();
 
-                    scaleBtData.setWeight(Converters.toKilogram(weight, selectedUser.getScaleUnit()));
+                    scaleBtData.setWeight(Converters.toKilogram(weight, scaleUser.getScaleUnit()));
                     scaleBtData.setDateTime(date_time);
 
-                    // estimate fat, water and LBM until library is reversed engineered
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    int sex;
 
-                    MeasurementViewSettings settings = new MeasurementViewSettings(prefs, WaterMeasurementView.KEY);
-                    EstimatedWaterMetric waterMetric = EstimatedWaterMetric.getEstimatedMetric(
-                            EstimatedWaterMetric.FORMULA.valueOf(settings.getEstimationFormula()));
-                    scaleBtData.setWater(waterMetric.getWater(selectedUser, scaleBtData));
+                    if (scaleUser.getGender() == Converters.Gender.MALE) {
+                        sex = 1;
+                    } else {
+                        sex = 0;
+                    }
 
-                    settings = new MeasurementViewSettings(prefs, FatMeasurementView.KEY);
-                    EstimatedFatMetric fatMetric = EstimatedFatMetric.getEstimatedMetric(
-                            EstimatedFatMetric.FORMULA.valueOf(settings.getEstimationFormula()));
-                    scaleBtData.setFat(fatMetric.getFat(selectedUser, scaleBtData));
+                    if (impedance != 0.0f) {
+                        MiScaleLib miScaleLib = new MiScaleLib(sex, scaleUser.getAge(), scaleUser.getBodyHeight());
 
-                    settings = new MeasurementViewSettings(prefs, LBMMeasurementView.KEY);
-                    EstimatedLBMMetric lbmMetric = EstimatedLBMMetric.getEstimatedMetric(
-                            EstimatedLBMMetric.FORMULA.valueOf(settings.getEstimationFormula()));
-                    scaleBtData.setLbm(lbmMetric.getLBM(selectedUser, scaleBtData));
+                        scaleBtData.setWater(miScaleLib.getWater(weight, impedance));
+                        scaleBtData.setVisceralFat(miScaleLib.getVisceralFat(weight));
+                        scaleBtData.setFat(miScaleLib.getBodyFat(weight, impedance));
+                        scaleBtData.setMuscle((100.0f / scaleBtData.getWeight()) * miScaleLib.getMuscle(weight, impedance)); // convert muscle in kg to percent
+                        scaleBtData.setBone(miScaleLib.getBoneMass(weight, impedance));
+                    } else {
+                        Timber.d("Impedance value is zero");
+                    }
 
-                    addScaleData(scaleBtData);
+                    addScaleMeasurement(scaleBtData);
                 } else {
                     Timber.e("Invalid Mi scale weight year %d", year);
                 }
             }
         } catch (ParseException e) {
-            setBtStatus(BT_UNEXPECTED_ERROR, "Error while decoding bluetooth date string (" + e.getMessage() + ")");
+            setBluetoothStatus(UNEXPECTED_ERROR, "Error while decoding bluetooth date string (" + e.getMessage() + ")");
         }
     }
 

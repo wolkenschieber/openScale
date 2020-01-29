@@ -15,8 +15,6 @@
 */
 package com.health.openscale.core.bluetooth;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 
 import com.health.openscale.core.datatypes.ScaleMeasurement;
@@ -30,9 +28,8 @@ import java.util.UUID;
 import timber.log.Timber;
 
 public class BluetoothCustomOpenScale extends BluetoothCommunication {
-    private final UUID WEIGHT_MEASUREMENT_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_MEASUREMENT_CHARACTERISTIC = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb"); // Bluetooth Modul HM-10
-    private final UUID WEIGHT_MEASUREMENT_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private final UUID WEIGHT_MEASUREMENT_SERVICE = BluetoothGattUuid.fromShortCode(0xffe0);
+    private final UUID WEIGHT_MEASUREMENT_CHARACTERISTIC = BluetoothGattUuid.fromShortCode(0xffe1); // Bluetooth Modul HM-10
 
     private String string_data = new String();
 
@@ -46,10 +43,10 @@ public class BluetoothCustomOpenScale extends BluetoothCommunication {
     }
 
     @Override
-    protected boolean nextInitCmd(int stateNr) {
-        switch (stateNr) {
+    protected boolean onNextStep(int stepNr) {
+        switch (stepNr) {
             case 0:
-                setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
+                setNotificationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_CHARACTERISTIC);
                 break;
             case 1:
                 Calendar cal = Calendar.getInstance();
@@ -71,16 +68,6 @@ public class BluetoothCustomOpenScale extends BluetoothCommunication {
         return true;
     }
 
-    @Override
-    protected boolean nextBluetoothCmd(int stateNr) {
-        return false;
-    }
-
-    @Override
-    protected boolean nextCleanUpCmd(int stateNr) {
-        return false;
-    }
-
     public void clearEEPROM()
     {
         byte[] cmd = {(byte)'9'};
@@ -88,8 +75,8 @@ public class BluetoothCustomOpenScale extends BluetoothCommunication {
     }
 
     @Override
-    public void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {
-        final byte[] data = gattCharacteristic.getValue();
+    public void onBluetoothNotify(UUID characteristic, byte[] value) {
+        final byte[] data = value;
 
         if (data != null) {
             for (byte character : data) {
@@ -107,7 +94,7 @@ public class BluetoothCustomOpenScale extends BluetoothCommunication {
         btString = btString.substring(0, btString.length() - 1); // delete newline '\n' of the string
 
         if (btString.charAt(0) != '$' && btString.charAt(2) != '$') {
-            setBtStatus(BT_STATUS_CODE.BT_UNEXPECTED_ERROR, "Parse error of bluetooth string. String has not a valid format: " + btString);
+            setBluetoothStatus(BT_STATUS.UNEXPECTED_ERROR, "Parse error of bluetooth string. String has not a valid format: " + btString);
         }
 
         String btMsg = btString.substring(3, btString.length()); // message string
@@ -125,7 +112,7 @@ public class BluetoothCustomOpenScale extends BluetoothCommunication {
             case 'F':
                 Timber.d("All data sent");
                 clearEEPROM();
-                disconnect(false);
+                disconnect();
                 break;
             case 'D':
                 String[] csvField = btMsg.split(",");
@@ -157,18 +144,18 @@ public class BluetoothCustomOpenScale extends BluetoothCommunication {
                         scaleBtData.setWater(Float.parseFloat(csvField[8]));
                         scaleBtData.setMuscle(Float.parseFloat(csvField[9]));
 
-                        addScaleData(scaleBtData);
+                        addScaleMeasurement(scaleBtData);
                     } else {
-                        setBtStatus(BT_STATUS_CODE.BT_UNEXPECTED_ERROR, "Error calculated checksum (" + checksum + ") and received checksum (" + btChecksum + ") is different");
+                        setBluetoothStatus(BT_STATUS.UNEXPECTED_ERROR, "Error calculated checksum (" + checksum + ") and received checksum (" + btChecksum + ") is different");
                     }
                 } catch (ParseException e) {
-                    setBtStatus(BT_STATUS_CODE.BT_UNEXPECTED_ERROR, "Error while decoding bluetooth date string (" + e.getMessage() + ")");
+                    setBluetoothStatus(BT_STATUS.UNEXPECTED_ERROR, "Error while decoding bluetooth date string (" + e.getMessage() + ")");
                 } catch (NumberFormatException e) {
-                    setBtStatus(BT_STATUS_CODE.BT_UNEXPECTED_ERROR, "Error while decoding a number of bluetooth string (" + e.getMessage() + ")");
+                    setBluetoothStatus(BT_STATUS.UNEXPECTED_ERROR, "Error while decoding a number of bluetooth string (" + e.getMessage() + ")");
                 }
                 break;
             default:
-                setBtStatus(BT_STATUS_CODE.BT_UNEXPECTED_ERROR, "Error unknown MCU command : " + btString);
+                setBluetoothStatus(BT_STATUS.UNEXPECTED_ERROR, "Error unknown MCU command : " + btString);
         }
         }
 }

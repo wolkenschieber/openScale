@@ -1,21 +1,18 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="title_overview">Vue d\'ensemble</string>
     <string name="title_graph">Diagramme</string>
     <string name="title_table">Tableau</string>
     <string name="title_users">Utilisateurs</string>
     <string name="title_measurements">Mesures</string>
-
     <string name="action_settings">Paramètres</string>
     <string name="action_bluetooth_status">État du Bluetooth</string>
-
     <string name="label_cancel">Annuler</string>
     <string name="label_ok">OK</string>
     <string name="label_yes">Oui</string>
     <string name="label_no">Non</string>
     <string name="label_delete">Supprimer</string>
     <string name="label_add_user">Ajouter un utilisateur</string>
-
     <string name="label_weight">Poids</string>
     <string name="label_bmi">IMC</string>
     <string name="label_fat">Graisse corporelle</string>
@@ -26,18 +23,16 @@
     <string name="label_comment">Commentaire</string>
     <string name="label_whtr">Rapport hauteur / taille</string>
     <string name="label_whr">Rapport taille-hanches</string>
-    <string name="label_smartUserAssign">Affectation intelligente de l\'Utilisateur</string>
-
+    <string name="label_smartUserAssign">Affectation intelligente de l\'utilisateur</string>
     <plurals name="label_days">
         <item quantity="one">%d jour</item>
         <item quantity="other">%d jours</item>
     </plurals>
-    <string name="label_last_week">Moyenne sur la dernière semaine</string>
-    <string name="label_last_month">Moyenne sur le mois dernier</string>
+    <string name="label_last_week">Moyenne de la dernière semaine</string>
+    <string name="label_last_month">Moyenne du mois dernier</string>
     <string name="label_weight_difference">Différence de poids</string>
     <string name="label_goal_date_is">La date de l\'objectif :</string>
     <string name="label_days_left">Jours restants</string>
-
     <string name="label_date">Date</string>
     <string name="label_time">Heure</string>
     <string name="label_birthday">Date de naissance</string>
@@ -49,24 +44,19 @@
     <string name="label_female">Femme</string>
     <string name="label_goal_weight">Objectif de poids</string>
     <string name="label_goal_date">Date de l\'objectif</string>
-
-
-    <string name="label_title_user">utilisateur</string>
-    <string name="label_title_last_measurement">dernière mesure</string>
+    <string name="label_title_user">Utilisateur</string>
+    <string name="label_title_last_measurement">Dernière mesure</string>
     <string name="label_title_goal">Objectif</string>
-
     <string name="label_import">Importer</string>
     <string name="label_export">Exporter</string>
     <string name="label_delete_all">Tout supprimer</string>
-
     <string name="error_value_required">Valeur requise</string>
     <string name="error_value_range">Valeur hors plage</string>
     <string name="error_exporting">Erreur durant l\'exportation</string>
     <string name="error_importing">Erreur durant l\'importation</string>
-    <string name="error_user_name_required">Erreur : Nom d\'utilisateur requis</string>
+    <string name="error_user_name_required">Erreur : nom d\'utilisateur requis</string>
     <string name="error_height_required">Erreur : hauteur requise</string>
-    <string name="error_goal_weight_required">Erreur : Objectif de poids requis</string>
-
+    <string name="error_goal_weight_required">Erreur : objectif de poids requis</string>
     <string name="info_data_deleted">L\'entrée a été supprimée</string>
     <string name="info_data_all_deleted">Toutes les entrées ont été supprimées</string>
     <string name="info_data_exported">Exporté vers</string>
@@ -77,38 +67,30 @@
     <string name="info_is_not_visible">n\'est pas visible</string>
     <string name="info_is_enable">activé</string>
     <string name="info_is_not_enable">désactivé</string>
-    <string name="info_is_not_available">pas disponible</string>
+    <string name="info_is_not_available">non disponible</string>
     <string name="info_bluetooth_try_connection">Tentative de connexion à :</string>
     <string name="info_bluetooth_connection_lost">La connexion Bluetooth a été perdue</string>
     <string name="info_bluetooth_no_device">Aucun appareil Bluetooth détecté</string>
     <string name="info_bluetooth_connection_successful">Connexion établie</string>
     <string name="info_bluetooth_init">Initialisation du périphérique Bluetooth</string>
     <string name="info_bluetooth_connection_error">Erreur Bluetooth</string>
-
     <string name="info_enter_user_name">Votre nom</string>
     <string name="info_no_selected_user">Aucun utilisateur existant. Veuillez en créer un dans les paramètres.</string>
     <string name="info_no_evaluation_available">Impossible d\'évaluer la valeur</string>
-
     <string name="question_really_delete">Supprimer cette entrée ?</string>
     <string name="question_really_delete_all">Voulez-vous supprimer toutes les mesures de tous les utilisateurs ?</string>
     <string name="question_really_delete_user">Supprimer cet utilisateur ?</string>
-
     <string name="label_bluetooth_title">Bluetooth</string>
     <string name="label_bluetooth_enable">Se connecter à une balance au lancement de l\'application</string>
-
     <string name="label_enable_labels">Étiquette sur les données</string>
     <string name="label_enable_points">Point de données</string>
-
     <string name="label_delete_confirmation">Supprimer la confirmation</string>
-
     <string name="label_reminder">Rappel</string>
     <string name="label_reminder_weekdays">Jours</string>
     <string name="label_reminder_time">Heure</string>
     <string name="label_reminder_notify_text">Intitulé de la notification</string>
     <string name="default_value_reminder_notify_text">C\'est l\'heure de se peser !</string>
-
     <string name="info_on_date">le</string>
-
     <string name="Monday">Lundi</string>
     <string name="Tuesday">Mardi</string>
     <string name="Wednesday">Mercredi</string>
@@ -120,20 +102,16 @@
     <string name="label_bone">Masse osseuse</string>
     <string name="label_bmr">Taux métabolique basal (BMR)</string>
     <string name="title_general">Général</string>
-
     <string name="info_bluetooth_no_device_set">Aucun appareil Bluetooth sélectionné</string>
     <string name="label_website">Site web</string>
     <string name="label_license">Licence</string>
-
     <string name="label_theme">Thème</string>
-
     <string name="label_bt_device_no_support">Appareil non pris en charge</string>
     <string name="label_initial_weight">Poids initial</string>
     <string name="label_feedback_message_yes">Oui</string>
     <string name="label_feedback_message_no">Pas vraiment</string>
     <string name="label_feedback_message_positive">OK</string>
     <string name="label_feedback_message_negative">Non merci</string>
-
     <string name="customactivityoncrash_error_activity_restart_app">Redémarrer l\'application</string>
     <string name="customactivityoncrash_error_activity_close_app">Fermer l\'application</string>
     <string name="customactivityoncrash_error_activity_error_details_close">Fermer</string>
@@ -141,25 +119,21 @@
     <string name="customactivityoncrash_error_activity_error_details_copied">Copié dans le presse-papiers</string>
     <string name="edit">Modifier</string>
     <string name="save">Sauvegarder</string>
-
     <string name="permission_not_granted">Permission non accordée</string>
     <string name="permission_bluetooth_info_title">Info</string>
     <string name="label_next">Suivant</string>
     <string name="title_about">À propos</string>
     <string name="label_share">Partager</string>
-    <string name="error_user_name_too_short">Erreur : Le nom doit contenir au moins 3 caractères</string>
-    <string name="error_initial_weight_required">Erreur : Poids initial requis</string>
+    <string name="error_initial_weight_required">Erreur : poids initial requis</string>
     <string name="label_exportBackup">Exporter la sauvegarde</string>
     <string name="label_importBackup">Importer la sauvegarde</string>
-    <string name="label_backup">La sauvegarde</string>
+    <string name="label_backup">Sauvegarde</string>
     <string name="label_help">Aide</string>
-
     <string name="label_feedback_message_issue">Pourriez-vous nous donner quelques retours ?</string>
     <string name="customactivityoncrash_error_activity_error_details">Détail de l\'erreur</string>
     <string name="customactivityoncrash_error_activity_error_details_title">Détail de l\'erreur</string>
     <string name="label_month_view">Vue mensuelle</string>
     <string name="label_weeks_view">Vue hebdomadaire</string>
-
     <string name="label_set_default_order">Définir l\'ordre par défaut</string>
     <string name="label_measurement_in_percent">Mesure en %</string>
     <string name="theme_light">Clair</string>
@@ -170,23 +144,18 @@
     <string name="label_estimate_measurement_summary">Basé sur le poids, la taille, l\'âge, le genre, etc.</string>
     <string name="open_drawer">ouvrir</string>
     <string name="close_drawer">fermer</string>
-
     <string name="label_share_subject">Exporter comme fichier CSV (%s)</string>
-
     <string name="label_lbm">Masse sans graisse</string>
-    <string name="info_new_data_added">%1$.2f%2$s [%3$s] to %4$s rajouté</string>
-    <string name="info_new_data_duplicated">une mesure à la même date et heure existe déjà</string>
-
+    <string name="info_new_data_added">%1$.2f%2$s [%3$s] ajouté pour %4$s</string>
+    <string name="info_new_data_duplicated">Une mesure à la même date et heure existe déjà</string>
     <string name="label_mergeWithLastMeasurement">Fusionner avec la dernière mesure</string>
     <string name="label_bluetooth_searching">Détection de votre pèse-personne Bluetooth en cours</string>
     <string name="label_bluetooth_searching_finished">Détection finalisé</string>
     <string name="label_category_measurement_database">Base de données de mesures</string>
-
     <string name="label_maintainer">Développeur</string>
     <string name="label_automatic">auto</string>
-
     <string name="label_export_dir">Dossier pour l\'exportation</string>
-    <string name="label_not_found">non trouvé</string>
+    <string name="label_not_found">Non trouvé</string>
     <string name="label_ignoreOutOfRange">Ignorer les valeurs hors de plage valide</string>
     <string name="label_regression_line">Ligne de régression</string>
     <string name="label_regression_line_degree">Degré du polynôme pour la ligne</string>
@@ -194,24 +163,21 @@
     <string name="label_feedback_message_enjoying">Êtes-vous satisfait d\'openScale ?</string>
     <string name="label_feedback_message_rate_app">Laisser une évaluation sur Google Play ou GitHub ?</string>
     <string name="error_max_scale_users">Le nombre maximum d\'utilisateurs de la balance atteint</string>
-    <string name="info_step_on_scale">Montez svp sur la balance, pieds nus, pour les mesures de référence</string>
+    <string name="info_step_on_scale_for_reference">Montez svp sur la balance, pieds nus, pour les mesures de référence</string>
     <string name="info_measuring">En train de mesurer le poids : %.2f</string>
-
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">Une erreur est apparue.
 \n
 \nUtilisez svp les détails de l\'erreur pour créer un commentaire sur 
 \nhttps://github.com/oliexdev/openScale/issues</string>
     <string name="customactivityoncrash_error_activity_error_details_clipboard_label">Informations sur l\'erreur</string>
     <string name="toggle_expand">Basculer en mode étendu</string>
-    <string name="permission_bluetooth_info">Des permissions d\'accès à la location sont nécessaires pour chercher des dispositifs Bluetooth. Ces permissions peuvent être enlevées par la suite.</string>
+    <string name="permission_bluetooth_info">La permission d\'accès à la location sont nécessaires pour chercher des dispositifs Bluetooth. Cette permissions peut être révoqué par la suite.</string>
     <string name="label_export_overwrite">Écraser les données exportés précédemment \"%s\" ?</string>
-    <string name="label_include_in_overview_graph">Inclure dans la diagramme générale</string>
     <string name="label_estimate_measurement">Mesure estimée</string>
     <string name="label_estimation_formula">Formule pour les mesures estimées</string>
     <string name="language_default">Langue du système</string>
     <string name="label_language">Langue</string>
     <string name="label_add_or_fix_translation">Ajouter nouvelle ou modifier existante</string>
-    <string name="label_overview_graph">Diagramme générale</string>
     <string name="label_auto_backup">Sauvegarde automatique</string>
     <string name="label_auto_backup_schedule">Programmation de sauvegardes</string>
     <string name="label_overwrite_backup">Écraser la sauvegarde précédente</string>
@@ -248,4 +214,26 @@
     <string name="activity_level_moderate">Modéré</string>
     <string name="activity_level_heavy">Important</string>
     <string name="activity_level_extreme">Extrême</string>
+    <string name="label_tdee">Dépense journalière totale d\'énergie</string>
+    <string name="trisa_scale_not_paired">Cette balance n\'a pas été jumelée !
+\nMaintenez le bouton situé au bas de la balance pour passer en mode de couplage, puis reconnectez-vous pour récupérer le mot de passe de l\'appareil.</string>
+    <string name="trisa_scale_pairing_succeeded">Le jumelage a réussi!
+\nReconnectez-vous pour récupérer les données de mesure.</string>
+    <string name="permission_read_write_data_description">lire ou écrire les données openScale, y compris les informations d\'utilisateur et toutes les mesures enregistrées</string>
+    <string name="permission_read_write_data_label">Lire ou écrire les données openScale</string>
+    <string name="label_calories">Calories</string>
+    <string name="info_bluetooth_no_device_retrying">Impossible d\'établir une connexion,
+\nréessayez…</string>
+    <string name="info_bluetooth_connection_disconnected">Connexion Bluetooth fermée</string>
+    <string name="info_step_on_scale">Veuillez marcher pieds nus sur la balance</string>
+    <string name="label_enable_legend">Légende du graphique</string>
+    <string name="label_enable_yaxis">Ordonnée</string>
+    <string name="label_day_view">Vue journalière</string>
+    <string name="label_year_view">Vue annuelle</string>
+    <string name="label_rolling_chart">Histogramme</string>
+    <string name="label_measurement_bar">Barre des mesures</string>
+    <string name="permission_location_service_info">Autoriser l\'accès à la location pour chercher des dispositifs Bluetooth. Cette permissions peut être révoqué par la suite.</string>
+    <string name="label_is_on_right_axis">Est sur le bon axe</string>
+    <string name="label_upgrade_to_openScale_pro">Veuillez mettre à niveau vers openScale pro pour la prise en charge du Bluetooth</string>
+    <string name="action_donation">Don</string>
 </resources>

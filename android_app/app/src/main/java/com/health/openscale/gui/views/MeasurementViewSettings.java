@@ -28,6 +28,7 @@ public class MeasurementViewSettings {
 
     private static final String PREFERENCE_SUFFIX_ENABLE = "Enable";
     private static final String PREFERENCE_SUFFIX_IN_OVERVIEW_GRAPH = "InOverviewGraph";
+    private static final String PREFERENCE_SUFFIX_ON_RIGHT_AXIS = "OnRightAxis";
     private static final String PREFERENCE_SUFFIX_IN_GRAPH = "InGraph";
     private static final String PREFERENCE_SUFFIX_PERCENTAGE_ENABLE = "PercentageEnable";
     private static final String PREFERENCE_SUFFIX_ESTIMATE_ENABLE = "EstimateEnable";
@@ -64,6 +65,8 @@ public class MeasurementViewSettings {
             case Caliper1MeasurementView.KEY:
             case Caliper2MeasurementView.KEY:
             case Caliper3MeasurementView.KEY:
+            case CaloriesMeasurementView.KEY:
+            case UserMeasurementView.KEY:
                 defaultValue = false;
                 break;
             default:
@@ -121,6 +124,9 @@ public class MeasurementViewSettings {
         boolean defaultValue;
         switch (key) {
             case WeightMeasurementView.KEY:
+            case WaterMeasurementView.KEY:
+            case MuscleMeasurementView.KEY:
+            case FatMeasurementView.KEY:
                 defaultValue = true;
                 break;
             default:
@@ -132,6 +138,27 @@ public class MeasurementViewSettings {
 
     public String getInGraphKey() {
         return getPreferenceKey(PREFERENCE_SUFFIX_IN_GRAPH);
+    }
+
+    public boolean isOnRightAxis() {
+        boolean defaultValue;
+        switch (key) {
+            case WeightMeasurementView.KEY:
+            case BMRMeasurementView.KEY:
+            case TDEEMeasurementView.KEY:
+            case CaloriesMeasurementView.KEY:
+                defaultValue = true;
+                break;
+            default:
+                defaultValue = false;
+                break;
+        }
+
+        return preferences.getBoolean(getOnRightAxisKey(), defaultValue);
+    }
+
+    public String getOnRightAxisKey() {
+        return getPreferenceKey(PREFERENCE_SUFFIX_ON_RIGHT_AXIS);
     }
 
     public boolean isInGraph() {

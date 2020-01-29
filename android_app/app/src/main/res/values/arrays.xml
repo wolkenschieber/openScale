@@ -4,6 +4,7 @@
         <item>@string/language_default</item>
         <!-- Keep the list below alphabetically sorted -->
         <!-- Native names from https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes -->
+        <item>Arabic (العربية)</item>
         <item>Catalan (català)</item>
         <item>Chinese (traditional; 中文 (繁體))</item>
         <item>Croatian (hrvatski jezik)</item>
@@ -16,8 +17,10 @@
         <item>German (Deutsch)</item>
         <item>Greek (ελληνικά)</item>
         <item>Hebrew (עברית)</item>
+        <item>Hungarian (magyar)</item>
         <item>Italian (Italiano)</item>
         <item>Japanese (日本語)</item>
+        <item>Korean (한국어)</item>
         <item>Norwegian Bokmål (Norsk)</item>
         <item>Polish (język polski)</item>
         <item>Portuguese (Brazil; Português)</item>
@@ -34,6 +37,7 @@
     <string-array name="language_values">
         <item>default</item>
         <!-- The order below should match the language order above -->
+        <item>ar</item>
         <item>ca</item>
         <item>zh-TW</item>
         <item>hr</item>
@@ -46,8 +50,10 @@
         <item>de</item>
         <item>el</item>
         <item>iw</item>
+        <item>hu</item>
         <item>it</item>
         <item>ja</item>
+        <item>ko</item>
         <item>nb</item>
         <item>pl</item>
         <item>pt-BR</item>
@@ -78,5 +84,4 @@
         <item>@string/activity_level_heavy</item>
         <item>@string/activity_level_extreme</item>
     </string-array>
-
 </resources>

@@ -69,7 +69,6 @@
     <string name="error_exporting">Erro ao exportar</string>
     <string name="error_importing">Erro ao importar</string>
     <string name="error_user_name_required">Erro: O nome é obrigatorio</string>
-    <string name="error_user_name_too_short">Erro: O nome debe ter 3 ou máis caracteres</string>
     <string name="error_height_required">Erro: A altura é obrigatoria</string>
     <string name="error_initial_weight_required">Erro: O peso inicial é obrigatorio</string>
     <string name="error_goal_weight_required">Erro: O peso obxectivo é obrigatorio</string>
@@ -161,7 +160,7 @@
     <string name="label_feedback_message_negative">Non, grazas</string>
 
     <string name="error_max_scale_users">Alcanzouse o número máximo de usuarios</string>
-    <string name="info_step_on_scale">Por favor, suba descalzo á báscula para tomar medidas de referencia</string>
+    <string name="info_step_on_scale_for_reference">Por favor, suba descalzo á báscula para tomar medidas de referencia</string>
     <string name="info_measuring">Medindo peso: %.2f</string>
 
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">Ocorreu un erro inesperado.
@@ -190,7 +189,6 @@
     <string name="label_click_measurement_configure">Prema na medida para configurar</string>
     <string name="label_set_default_order">Establecer a orde predeterminada</string>
     <string name="label_export_overwrite">Sobreescribir a exportación anterior %s?</string>
-    <string name="label_include_in_overview_graph">Incluir no gráfico xeral</string>
     <string name="label_measurement_in_percent">Medidas en %</string>
     <string name="label_estimate_measurement">Medida estimada</string>
     <string name="label_estimation_formula">Fórmula de estimación</string>
@@ -200,7 +198,6 @@
     <string name="theme_dark">Escuro</string>
     <string name="label_contribute_translation">Axuda coa tradución</string>
     <string name="label_add_or_fix_translation">Engade novo ou arranxar existente</string>
-    <string name="label_overview_graph">Gráfico xeral</string>
     <string name="label_percent">Porcentaxe</string>
     <string name="label_estimated">Estimado</string>
     <string name="label_estimate_measurement_summary">Baseado en peso, altura, idade, xénero, etc.</string>

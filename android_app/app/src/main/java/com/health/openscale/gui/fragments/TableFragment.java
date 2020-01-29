@@ -18,10 +18,6 @@ package com.health.openscale.gui.fragments;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.SpannableStringBuilder;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -32,11 +28,18 @@ import android.widget.LinearLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.gui.activities.DataEntryActivity;
+import com.health.openscale.gui.utils.ColorUtil;
 import com.health.openscale.gui.views.MeasurementView;
+import com.health.openscale.gui.views.UserMeasurementView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -104,11 +107,13 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
         ArrayList<MeasurementView> visibleMeasurements = new ArrayList<>();
 
         for (MeasurementView measurement : measurementViews) {
-            if (!measurement.isVisible()) {
+            if (!measurement.isVisible() || measurement instanceof UserMeasurementView) {
                 continue;
             }
+
             ImageView headerIcon = new ImageView(tableView.getContext());
             headerIcon.setImageDrawable(measurement.getIcon());
+            headerIcon.setColorFilter(ColorUtil.getTextColor(tableView.getContext()));
             headerIcon.setLayoutParams(new TableRow.LayoutParams(0, iconHeight, 1));
             headerIcon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 
@@ -252,6 +257,7 @@ public class TableFragment extends Fragment implements FragmentUpdateListener {
                 public void onClick(View v) {
                     Intent intent = new Intent(getContext(), DataEntryActivity.class);
                     intent.putExtra(DataEntryActivity.EXTRA_ID, measurement.getId());
+                    intent.putExtra(DataEntryActivity.EXTRA_MODE, DataEntryActivity.VIEW_MEASUREMENT_REQUEST);
                     startActivity(intent);
                 }
             });

@@ -23,8 +23,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.widget.Toolbar;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -302,12 +302,8 @@ public class UserSettingsActivity extends BaseAppCompatActivity {
     {
         boolean validate = true;
 
-        if (txtUserName.getText().toString().length() < 3) {
-            if (txtUserName.getText().toString().length() == 0) {
-                txtUserName.setError(getResources().getString(R.string.error_user_name_required));
-            } else {
-                txtUserName.setError(getResources().getString(R.string.error_user_name_too_short));
-            }
+        if (txtUserName.getText().toString().length() == 0) {
+            txtUserName.setError(getResources().getString(R.string.error_user_name_required));
             validate = false;
         }
 

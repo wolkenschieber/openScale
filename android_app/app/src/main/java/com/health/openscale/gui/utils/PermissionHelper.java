@@ -18,6 +18,7 @@ package com.health.openscale.gui.utils;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -25,19 +26,24 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
+import android.location.LocationManager;
+import android.provider.Settings;
 import android.widget.Toast;
 
 import com.health.openscale.R;
 
+import androidx.core.app.ActivityCompat;
+
+import static android.content.Context.LOCATION_SERVICE;
+
 public class PermissionHelper {
-    public final static int PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
+    public final static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     public final static int PERMISSIONS_REQUEST_ACCESS_READ_STORAGE = 2;
     public final static int PERMISSIONS_REQUEST_ACCESS_WRITE_STORAGE = 3;
 
     public final static int ENABLE_BLUETOOTH_REQUEST = 5;
 
-    public static boolean requestBluetoothPermission(final Activity activity, Fragment fragment) {
+    public static boolean requestBluetoothPermission(final Activity activity) {
         final BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter btAdapter = bluetoothManager.getAdapter();
 
@@ -46,7 +52,7 @@ public class PermissionHelper {
 
             if (btAdapter != null) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                fragment.startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST);
+                activity.startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST);
             }
             return false;
         }
@@ -57,7 +63,7 @@ public class PermissionHelper {
             return false;
          }
 
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 
             builder.setMessage(R.string.permission_bluetooth_info)
@@ -66,11 +72,38 @@ public class PermissionHelper {
                     .setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dialog.dismiss();
-                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
                         }
                     });
 
-            builder.show();
+            Dialog alertDialog = builder.create();
+            alertDialog.setCanceledOnTouchOutside(false);
+            alertDialog.show();
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean requestLocationServicePermission(final Activity activity) {
+        LocationManager locationManager = (LocationManager) activity.getSystemService(LOCATION_SERVICE);
+        if (!(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))) {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setTitle(R.string.permission_bluetooth_info_title);
+            builder.setIcon(R.drawable.ic_preferences_about);
+            builder.setMessage(R.string.permission_location_service_info);
+            builder.setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // Show location settings when the user acknowledges the alert dialog
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    activity.startActivity(intent);
+                }
+            });
+
+            Dialog alertDialog = builder.create();
+            alertDialog.setCanceledOnTouchOutside(false);
+            alertDialog.show();
             return false;
         }
 

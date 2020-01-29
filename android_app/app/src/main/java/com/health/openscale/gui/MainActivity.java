@@ -29,36 +29,41 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.FileProvider;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.Toolbar;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.FileProvider;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.health.openscale.BuildConfig;
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.bluetooth.BluetoothCommunication;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
+import com.health.openscale.gui.activities.AppIntroActivity;
 import com.health.openscale.gui.activities.BaseAppCompatActivity;
+import com.health.openscale.gui.activities.BluetoothSettingsActivity;
 import com.health.openscale.gui.activities.DataEntryActivity;
 import com.health.openscale.gui.activities.SettingsActivity;
-import com.health.openscale.gui.activities.UserSettingsActivity;
 import com.health.openscale.gui.fragments.GraphFragment;
 import com.health.openscale.gui.fragments.OverviewFragment;
 import com.health.openscale.gui.fragments.StatisticsFragment;
 import com.health.openscale.gui.fragments.TableFragment;
-import com.health.openscale.gui.preferences.BluetoothPreferences;
 
 import java.io.File;
 import java.util.List;
@@ -72,7 +77,7 @@ public class MainActivity extends BaseAppCompatActivity
     private static boolean firstAppStart = true;
     private static boolean valueOfCountModified = false;
     private static int bluetoothStatusIcon = R.drawable.ic_bluetooth_disabled;
-    private MenuItem bluetoothStatus;
+    private static MenuItem bluetoothStatus;
 
     private static final int IMPORT_DATA_REQUEST = 100;
     private static final int EXPORT_DATA_REQUEST = 101;
@@ -134,12 +139,27 @@ public class MainActivity extends BaseAppCompatActivity
 
         navBottomDrawer.setSelectedItemId(prefs.getInt("lastFragmentId", R.id.nav_overview));
 
+        if (BuildConfig.BUILD_TYPE == "light") {
+            ImageView launcherIcon = navDrawer.getHeaderView(0).findViewById(R.id.profileImageView);
+            launcherIcon.setImageResource(R.drawable.ic_launcher_openscale_light);
+            navDrawer.getMenu().findItem(R.id.nav_donation).setVisible(false);
+        } else if (BuildConfig.BUILD_TYPE == "pro") {
+            ImageView launcherIcon = navDrawer.getHeaderView(0).findViewById(R.id.profileImageView);
+            launcherIcon.setImageResource(R.drawable.ic_launcher_openscale_pro);
+            navDrawer.getMenu().findItem(R.id.nav_donation).setVisible(false);
+        }
+
         if (prefs.getBoolean("firstStart", true)) {
-            Intent intent = new Intent(this, UserSettingsActivity.class);
-            intent.putExtra(UserSettingsActivity.EXTRA_MODE, UserSettingsActivity.ADD_USER_REQUEST);
-            startActivity(intent);
+            Intent appIntroIntent = new Intent(this, AppIntroActivity.class);
+            startActivity(appIntroIntent);
 
             prefs.edit().putBoolean("firstStart", false).apply();
+        }
+
+        if (prefs.getBoolean("resetLaunchCountForVersion2.0", true)) {
+            prefs.edit().putInt("launchCount", 0).commit();
+
+            prefs.edit().putBoolean("resetLaunchCountForVersion2.0", false).apply();
         }
 
         if(!valueOfCountModified){
@@ -148,8 +168,8 @@ public class MainActivity extends BaseAppCompatActivity
             if(prefs.edit().putInt("launchCount", ++launchCount).commit()){
                 valueOfCountModified = true;
 
-                // ask the user once for feedback on the 30th app launch
-                if(launchCount == 30){
+                // ask the user once for feedback on the 15th app launch
+                if(launchCount == 15){
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
                     builder.setMessage(R.string.label_feedback_message_enjoying)
@@ -182,7 +202,6 @@ public class MainActivity extends BaseAppCompatActivity
     @Override
     public void onDestroy() {
         prefs.unregisterOnSharedPreferenceChangeListener(this);
-        OpenScale.getInstance().disconnectFromBluetoothDevice();
         super.onDestroy();
     }
 
@@ -289,6 +308,10 @@ public class MainActivity extends BaseAppCompatActivity
                 settingsActivityRunning = true;
                 startActivity(settingsIntent);
                 return;
+            case R.id.nav_donation:
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H5KSTQA6TKTE4&source=url")));
+                drawerLayout.closeDrawers();
+                return;
             case R.id.nav_help:
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/oliexdev/openScale/wiki")));
                 drawerLayout.closeDrawers();
@@ -367,6 +390,7 @@ public class MainActivity extends BaseAppCompatActivity
                 }
 
                 Intent intent = new Intent(getApplicationContext(), DataEntryActivity.class);
+                intent.putExtra(DataEntryActivity.EXTRA_MODE, DataEntryActivity.ADD_MEASUREMENT_REQUEST);
                 startActivity(intent);
                 return true;
             case R.id.action_bluetooth_status:
@@ -431,6 +455,21 @@ public class MainActivity extends BaseAppCompatActivity
     }
 
     private void invokeConnectToBluetoothDevice() {
+        if (BuildConfig.BUILD_TYPE == "light") {
+            AlertDialog infoDialog = new AlertDialog.Builder(this)
+                .setMessage(Html.fromHtml(getResources().getString(R.string.label_upgrade_to_openScale_pro) + "<br><br> <a href=\"https://play.google.com/store/apps/details?id=com.health.openscale.pro\">Install openScale pro version</a>"))
+                .setPositiveButton(getResources().getString(R.string.label_ok), null)
+                .setIcon(R.drawable.ic_launcher_openscale_light)
+                .setTitle("openScale " + BuildConfig.VERSION_NAME)
+                .create();
+
+            infoDialog.show();
+
+            ((TextView)infoDialog.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+
+            return;
+        }
+
         final OpenScale openScale = OpenScale.getInstance();
 
         if (openScale.getSelectedScaleUserId() == -1) {
@@ -439,9 +478,9 @@ public class MainActivity extends BaseAppCompatActivity
         }
 
         String deviceName = prefs.getString(
-                BluetoothPreferences.PREFERENCE_KEY_BLUETOOTH_DEVICE_NAME, "");
+                BluetoothSettingsActivity.PREFERENCE_KEY_BLUETOOTH_DEVICE_NAME, "");
         String hwAddress = prefs.getString(
-                BluetoothPreferences.PREFERENCE_KEY_BLUETOOTH_HW_ADDRESS, "");
+                BluetoothSettingsActivity.PREFERENCE_KEY_BLUETOOTH_HW_ADDRESS, "");
 
         if (!BluetoothAdapter.checkBluetoothAddress(hwAddress)) {
             setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
@@ -470,10 +509,10 @@ public class MainActivity extends BaseAppCompatActivity
         @Override
         public void handleMessage(Message msg) {
 
-            BluetoothCommunication.BT_STATUS_CODE btStatusCode = BluetoothCommunication.BT_STATUS_CODE.values()[msg.what];
+            BluetoothCommunication.BT_STATUS btStatus = BluetoothCommunication.BT_STATUS.values()[msg.what];
 
-            switch (btStatusCode) {
-                case BT_RETRIEVE_SCALE_DATA:
+            switch (btStatus) {
+                case RETRIEVE_SCALE_DATA:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_success);
                     ScaleMeasurement scaleBtData = (ScaleMeasurement) msg.obj;
 
@@ -490,32 +529,42 @@ public class MainActivity extends BaseAppCompatActivity
 
                     openScale.addScaleData(scaleBtData, true);
                     break;
-                case BT_INIT_PROCESS:
+                case INIT_PROCESS:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_success);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_init), Toast.LENGTH_SHORT).show();
                     Timber.d("Bluetooth initializing");
                     break;
-                case BT_CONNECTION_LOST:
+                case CONNECTION_LOST:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_connection_lost), Toast.LENGTH_SHORT).show();
                     Timber.d("Bluetooth connection lost");
                     break;
-                case BT_NO_DEVICE_FOUND:
+                case NO_DEVICE_FOUND:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_no_device), Toast.LENGTH_SHORT).show();
-                    Timber.d("No Bluetooth device found");
+                    Timber.e("No Bluetooth device found");
                     break;
-                case BT_CONNECTION_ESTABLISHED:
+                case CONNECTION_RETRYING:
+                    setBluetoothStatusIcon(R.drawable.ic_bluetooth_searching);
+                    Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_no_device_retrying), Toast.LENGTH_SHORT).show();
+                    Timber.e("No Bluetooth device found retrying");
+                    break;
+                case CONNECTION_ESTABLISHED:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_success);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_connection_successful), Toast.LENGTH_SHORT).show();
                     Timber.d("Bluetooth connection successful established");
                     break;
-                case BT_UNEXPECTED_ERROR:
+                case CONNECTION_DISCONNECT:
+                    setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
+                    Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_connection_disconnected), Toast.LENGTH_SHORT).show();
+                    Timber.d("Bluetooth connection successful disconnected");
+                    break;
+                case UNEXPECTED_ERROR:
                     setBluetoothStatusIcon(R.drawable.ic_bluetooth_connection_lost);
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.info_bluetooth_connection_error) + ": " + msg.obj, Toast.LENGTH_SHORT).show();
                     Timber.e("Bluetooth unexpected error: %s", msg.obj);
                     break;
-                case BT_SCALE_MESSAGE:
+                case SCALE_MESSAGE:
                     String toastMessage = String.format(getResources().getString(msg.arg1), msg.obj);
                     Toast.makeText(getApplicationContext(), toastMessage, Toast.LENGTH_LONG).show();
                     break;

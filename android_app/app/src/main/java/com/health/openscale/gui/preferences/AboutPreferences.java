@@ -79,9 +79,9 @@ public class AboutPreferences extends PreferenceFragment {
         }
 
         @Override
-        protected void log(int priority, String tag, String message, Throwable t) {
+        protected synchronized void log(int priority, String tag, String message, Throwable t) {
             final long id = Thread.currentThread().getId();
-            writer.printf("%s %s [%d] %s: %s\n",
+            writer.printf("%s %s [%d] %s: %s\r\n",
                     format.format(new Date()), priorityToString(priority), id, tag, message);
         }
     }
@@ -143,6 +143,7 @@ public class AboutPreferences extends PreferenceFragment {
                     getResources().getString(R.string.app_name),
                     BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE,
                     Build.VERSION.SDK_INT, Build.MANUFACTURER, Build.MODEL);
+            Timber.d("Selected user " + OpenScale.getInstance().getSelectedScaleUser());
         }
         catch (IOException ex) {
             Timber.e(ex, "Failed to open debug log %s", uri.toString());

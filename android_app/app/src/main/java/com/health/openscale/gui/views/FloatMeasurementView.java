@@ -61,7 +61,7 @@ public abstract class FloatMeasurementView extends MeasurementView {
 
     private static final float NO_VALUE = -1.0f;
     private static final float AUTO_VALUE = -2.0f;
-    private static final float INC_DEC_DELTA = 0.1f;
+    private static float INC_DEC_DELTA = 0.1f;
 
     private Date dateTime;
     private float value = NO_VALUE;
@@ -82,6 +82,8 @@ public abstract class FloatMeasurementView extends MeasurementView {
     }
 
     private void initView(Context context) {
+        setBackgroundIconColor(getColor());
+
         incButton = new Button(context);
         decButton = new Button(context);
 
@@ -443,6 +445,15 @@ public abstract class FloatMeasurementView extends MeasurementView {
             color = Color.GRAY;
         }
 
+        // change color depending on if you are going towards or away from your weight goal
+        if (this instanceof WeightMeasurementView) {
+            if (diff> 0.0f) {
+                color = (value > getScaleUser().getGoalWeight()) ? Color.RED : Color.GREEN;
+            } else if (diff < 0.0f) {
+                color = (value < getScaleUser().getGoalWeight()) ? Color.RED : Color.GREEN;
+            }
+        }
+
         if (newLine) {
             text.append('\n');
         }
@@ -455,8 +466,6 @@ public abstract class FloatMeasurementView extends MeasurementView {
 
         start = text.length();
         text.append(formatValue(diff));
-        text.setSpan(new ForegroundColorSpan(Color.GRAY), start, text.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         text.setSpan(new RelativeSizeSpan(0.8f), start, text.length(),
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
@@ -496,9 +505,6 @@ public abstract class FloatMeasurementView extends MeasurementView {
 
         final String separator = ", ";
         String summary = "";
-        if (settings.isInOverviewGraph()) {
-            summary += res.getString(R.string.label_overview_graph) + separator;
-        }
         if (supportsConversion() && settings.isPercentageEnabled()) {
             summary += res.getString(R.string.label_percent) + separator;
         }
@@ -540,12 +546,12 @@ public abstract class FloatMeasurementView extends MeasurementView {
     public void prepareExtraPreferencesScreen(PreferenceScreen screen) {
         MeasurementViewSettings settings = getSettings();
 
-        CheckBoxPreference overview = new CheckBoxPreference(screen.getContext());
-        overview.setKey(settings.getInOverviewGraphKey());
-        overview.setTitle(R.string.label_include_in_overview_graph);
-        overview.setPersistent(true);
-        overview.setDefaultValue(settings.isInOverviewGraph());
-        screen.addPreference(overview);
+        CheckBoxPreference rightAxis = new CheckBoxPreference(screen.getContext());
+        rightAxis.setKey(settings.getOnRightAxisKey());
+        rightAxis.setTitle(R.string.label_is_on_right_axis);
+        rightAxis.setPersistent(true);
+        rightAxis.setDefaultValue(settings.isOnRightAxis());
+        screen.addPreference(rightAxis);
 
         if (supportsConversion()) {
             SwitchPreference percentage = new SwitchPreference(screen.getContext());
@@ -633,6 +639,12 @@ public abstract class FloatMeasurementView extends MeasurementView {
 
         final TextView unit = view.findViewById(R.id.float_input_unit);
         unit.setText(getUnit());
+
+        if (getDecimalPlaces() == 0) {
+            INC_DEC_DELTA = 10.0f;
+        } else {
+            INC_DEC_DELTA = 0.1f;
+        }
 
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override

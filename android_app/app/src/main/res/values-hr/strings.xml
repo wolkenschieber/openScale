@@ -75,7 +75,6 @@
     <string name="error_exporting">Greška u izvozu</string>
     <string name="error_importing">Greška u uvozu</string>
     <string name="error_user_name_required">Greška: Unesite ime</string>
-    <string name="error_user_name_too_short">Greška: Ime mora imati barem 3 znaka</string>
     <string name="error_height_required">Greška: Unesite težinu</string>
     <string name="error_initial_weight_required">Greška: Unesite početnu težinu</string>
     <string name="error_goal_weight_required">Greška: Unesite ciljanu težinu</string>
@@ -167,7 +166,7 @@
     <string name="label_feedback_message_negative">Ne, hvala</string>
 
     <string name="error_max_scale_users">Dosegnut maksimalni broj korisnika</string>
-    <string name="info_step_on_scale">Stanite bosi na vagu radi referentnog mjerenja</string>
+    <string name="info_step_on_scale_for_reference">Stanite bosi na vagu radi referentnog mjerenja</string>
     <string name="info_measuring">Mjerenje težine: %.2f</string>
 
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">Došlo je do neočekivane pogreške
@@ -197,7 +196,6 @@
     <string name="label_click_measurement_configure">Odaberite mjerenje za uređivanje</string>
     <string name="label_set_default_order">Zadan redosljed</string>
     <string name="label_export_overwrite">Prebriši prijašnji izvoz \"%s\"?</string>
-    <string name="label_include_in_overview_graph">Prikaži na pregledu grafa</string>
     <string name="label_measurement_in_percent">Mjerenja u %</string>
     <string name="label_estimate_measurement">Procjenjeno mjerenje</string>
     <string name="label_estimation_formula">Formula za procjenu</string>
@@ -207,7 +205,6 @@
     <string name="theme_dark">Tamno</string>
     <string name="label_contribute_translation">Pomognite prevesti</string>
     <string name="label_add_or_fix_translation">Dodaj novi ili popravi postojeći</string>
-    <string name="label_overview_graph">Pregled grafikona</string>
     <string name="label_percent">Posto</string>
     <string name="label_estimated">Procjena</string>
     <string name="label_estimate_measurement_summary">Temeljeno na težini, visini, dobi, spolu, itd.</string>

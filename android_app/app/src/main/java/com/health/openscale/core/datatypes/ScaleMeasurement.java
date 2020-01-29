@@ -16,17 +16,18 @@
 
 package com.health.openscale.core.datatypes;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.ForeignKey;
-import android.arch.persistence.room.Index;
-import android.arch.persistence.room.PrimaryKey;
-
+import com.health.openscale.core.utils.CsvHelper;
 import com.j256.simplecsv.common.CsvColumn;
 
 import java.lang.reflect.Field;
 import java.util.Date;
 
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Ignore;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
 import timber.log.Timber;
 
 @Entity(tableName = "scaleMeasurements",
@@ -45,7 +46,7 @@ public class ScaleMeasurement implements Cloneable {
     private int userId;
     @ColumnInfo(name = "enabled")
     private boolean enabled;
-    @CsvColumn(format = "dd.MM.yyyy HH:mm", mustNotBeBlank = true)
+    @CsvColumn(converterClass = CsvHelper.DateTimeConverter.class, format ="yyyy-MM-dd HH:mm", mustNotBeBlank = true)
     @ColumnInfo(name = "datetime")
     private Date dateTime;
     @CsvColumn(mustNotBeBlank = true)
@@ -97,8 +98,13 @@ public class ScaleMeasurement implements Cloneable {
     @ColumnInfo(name = "caliper3")
     private float caliper3;
     @CsvColumn(mustBeSupplied = false)
+    @ColumnInfo(name = "calories")
+    private float calories;
+    @CsvColumn(mustBeSupplied = false)
     @ColumnInfo(name = "comment")
     private String comment;
+    @Ignore
+    private int count;
 
     public ScaleMeasurement()
     {
@@ -121,6 +127,7 @@ public class ScaleMeasurement implements Cloneable {
         caliper2 = 0.0f;
         caliper3 = 0.0f;
         comment = "";
+        count = 1;
     }
 
     @Override
@@ -149,6 +156,8 @@ public class ScaleMeasurement implements Cloneable {
                 }
                 field.setAccessible(false);
             }
+
+            count++;
         } catch (IllegalAccessException e) {
             Timber.e(e);
         }
@@ -189,6 +198,10 @@ public class ScaleMeasurement implements Cloneable {
             Timber.e(e);
         }
     }
+
+    public int count() { return count; }
+
+    public boolean isAverageValue() { return (count > 1); }
 
     public int getId() {
         return id;
@@ -346,6 +359,10 @@ public class ScaleMeasurement implements Cloneable {
         this.caliper3 = caliper3;
     }
 
+    public float getCalories() { return calories; }
+
+    public void setCalories(float calories) { this.calories = calories; }
+
     public String getComment() {
         return comment;
     }
@@ -365,6 +382,18 @@ public class ScaleMeasurement implements Cloneable {
 
     public float getBMR(ScaleUser scaleUser) {
         float bmr;
+
+        // BMR Harris-Benedict equation
+        if (scaleUser.getGender().isMale()) {
+            bmr = 66.4730f + (13.7516f * weight) + (5.0033f * scaleUser.getBodyHeight()) - (6.7550f * scaleUser.getAge(dateTime));
+        } else {
+            bmr = 655.0955f + (9.5634f * weight) + (1.8496f * scaleUser.getBodyHeight()) - (4.6756f * scaleUser.getAge(dateTime));
+        }
+
+        return bmr; // kCal / day
+    }
+
+    public float getTDEE(ScaleUser scaleUser) {
         float factor = 1.0f;
 
         switch (scaleUser.getActivityLevel()) {
@@ -372,27 +401,20 @@ public class ScaleMeasurement implements Cloneable {
                 factor = 1.2f;
                 break;
             case MILD:
-                factor = 1.3f;
+                factor = 1.375f;
                 break;
             case MODERATE:
-                factor = 1.5f;
+                factor = 1.55f;
                 break;
             case HEAVY:
-                factor = 1.7f;
+                factor = 1.725f;
                 break;
             case EXTREME:
                 factor = 1.9f;
                 break;
         }
 
-        // BMR formula by Mifflin, St Jeor et al: A new predictive equation for resting energy expenditure in healthy individuals
-        if (scaleUser.getGender().isMale()) {
-            bmr = 10.0f * weight + 6.25f * scaleUser.getBodyHeight() - 5.0f * scaleUser.getAge(dateTime) + 5.0f;
-        } else {
-            bmr = 10.0f * weight + 6.25f * scaleUser.getBodyHeight() - 5.0f * scaleUser.getAge(dateTime) - 161.0f;
-        }
-
-        return bmr * factor; // kCal / day
+        return factor * getBMR(scaleUser);
     }
 
     public float getWHtR(float body_height) {

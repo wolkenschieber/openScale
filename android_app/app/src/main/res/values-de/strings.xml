@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="action_settings">Einstellungen</string>
     <string name="error_height_required">Fehler: Körpergröße ist erforderlich</string>
@@ -39,8 +39,8 @@
     <string name="label_goal_date_is">Zieldatum:</string>
     <string name="label_goal_weight">Zielgewicht</string>
     <string name="label_import">Importieren</string>
-    <string name="label_last_month">Durchschnitt letzter Monat</string>
-    <string name="label_last_week">Durchschnitt letzter Woche</string>
+    <string name="label_last_month">Monatsdurchschnitt</string>
+    <string name="label_last_week">Wochendurchschnitt</string>
     <string name="label_male">Männlich</string>
     <string name="label_muscle">Muskelmasse</string>
     <string name="label_no">Nein</string>
@@ -110,7 +110,7 @@
     <string name="error_initial_weight_required">Fehler: Anfangsgewicht ist erforderlich</string>
     <string name="label_bt_device_no_support">Gerät wird nicht unterstützt</string>
     <string name="label_goal_line">Ziellinie</string>
-    <string name="label_regression_line">Gewichtsregressionsgerade</string>
+    <string name="label_regression_line">Regressionsgerade</string>
     <string name="label_regression_line_degree">Polynomischer Regressions-Grad</string>
     <string name="label_bluetooth_searching">Suche nach Ihrer Bluetooth Waagen</string>
     <string name="label_bone">Knochenmasse</string>
@@ -118,7 +118,7 @@
     <string name="info_measuring">Messe Gewicht: %.2f</string>
     <string name="info_new_data_added">%1$.2f%2$s [%3$s] zu %4$s hinzugefügt</string>
     <string name="error_max_scale_users">Maximale Anzahl gleichzeitiger Benutzer erreicht</string>
-    <string name="info_step_on_scale">Bitte steigen Sie barfuß auf die Waage zur Referenzmessung</string>
+    <string name="info_step_on_scale_for_reference">Bitte steigen Sie barfuß auf die Waage zur Referenzmessung</string>
     <string name="label_automatic">auto</string>
     <string name="label_category_measurement_database">Messwertedatenbank</string>
     <string name="label_lbm">Fettfreie Körpermasse</string>
@@ -137,8 +137,7 @@
     <string name="label_feedback_message_positive">Ja klar</string>
     <string name="label_feedback_message_negative">Nein danke</string>
     <string name="label_feedback_message_issue">Würdest Du uns etwas Feedback geben?</string>
-    <string name="error_user_name_too_short">Fehler: Benutzername muss aus mind. 3 Zeichen bestehen</string>
-    <string name="customactivityoncrash_error_activity_error_occurred_explanation">Ein unerwarteter Fehler ist aufgetreten. 
+    <string name="customactivityoncrash_error_activity_error_occurred_explanation">Ein unerwarteter Fehler ist aufgetreten.
 \n 
 \n Bitte erstellen Sie ein neues Issue mit detailliertem Fehlerbericht auf 
 \nhttps://github.com/oliexdev/openScale/issues</string>
@@ -161,17 +160,15 @@
     <string name="label_month_view">Monatsansicht</string>
     <string name="label_weeks_view">Wochenansicht</string>
     <string name="permission_not_granted">Zugriff verweigert</string>
-    <string name="permission_bluetooth_info">Erlaubnis erforderlich um auf den ungefähren Standort zuzugreifen, um nach Bluetooth-Geräten zu suchen. Sobald das Gerät gefunden wurde kann diese widerrufen werden.</string>
+    <string name="permission_bluetooth_info">Erlaubnis erforderlich um auf den Standort zuzugreifen, um nach Bluetooth-Geräten zu suchen. Sobald das Gerät gefunden wurde kann diese widerrufen werden.</string>
     <string name="permission_bluetooth_info_title">Information</string>
     <string name="label_next">Weiter</string>
     <string name="label_set_default_order">Default Reihenfolge wiederherstellen</string>
     <string name="label_share_subject">CSV Datenexport (%s)</string>
     <string name="label_mergeWithLastMeasurement">Zusammenführen mit der letzten Messung</string>
     <string name="label_export_overwrite">Vorherigen Export überschreiben %s?</string>
-
-    <string name="label_include_in_overview_graph">In Übersichtsgrafik aufnehmen</string>
     <string name="label_measurement_in_percent">Messwert in %</string>
-    <string name="label_estimate_measurement">Schätzmessung</string>
+    <string name="label_estimate_measurement">Geschätzte Messung</string>
     <string name="label_estimation_formula">Schätzformel</string>
     <string name="language_default">Systemstandard</string>
     <string name="label_language">Sprache</string>
@@ -179,7 +176,6 @@
     <string name="theme_dark">Dunkel</string>
     <string name="label_contribute_translation">Übersetzung beitragen</string>
     <string name="label_add_or_fix_translation">Neue hinzufügen oder bestehende korrigieren</string>
-    <string name="label_overview_graph">Übersichtsgrafik</string>
     <string name="label_percent">Prozent</string>
     <string name="label_estimated">Geschätzt</string>
     <string name="label_estimate_measurement_summary">Basierend auf Gewicht, Größe, Alter, Geschlecht, etc.</string>
@@ -191,7 +187,7 @@
     <string name="label_daily">täglich</string>
     <string name="label_weekly">wöchentlich</string>
     <string name="label_monthly">monatlich</string>
-    <string name="label_long_press_drag_reorder">Zum Neuordnen der Messwerte langes drücken und halten</string>
+    <string name="label_long_press_drag_reorder">Zum Neuordnen der Messwerte lange drücken und halten</string>
     <string name="label_click_measurement_configure">Zum Konfigurieren auf Messwert klicken</string>
     <string name="label_development">Entwicklung</string>
     <string name="label_select_measurement">Messwert auswählen</string>
@@ -218,7 +214,68 @@
     <string name="activity_level_moderate">Moderate Tätigkeit</string>
     <string name="activity_level_heavy">Schwere Tätigkeit</string>
     <string name="activity_level_extreme">Extreme Tätigkeit</string>
-<string name="permission_read_data_description">Auslesen der openScale Daten, inkl. Benutzerinformationen und aller gespeicherten Messungen</string>
-    <string name="permission_read_data_label">Auslesen der openScale Daten</string>
-    <string name="label_data_provider_enable">3rd Party App Zugriff</string>
+    <string name="permission_read_write_data_description">Auslesen der openScale Daten, inkl. Benutzerinformationen und aller gespeicherten Messungen</string>
+    <string name="permission_read_write_data_label">Auslesen der openScale Daten</string>
+    <string name="trisa_scale_not_paired">Diese Waage ist nicht gekoppelt!
+\n
+\nHalten Sie die Taste an der Unterseite der Waage gedrückt, um sie in den Kopplungsmodus zu versetzen und verbinden Sie sie dann erneut, um das Gerätepasswort abzurufen.</string>
+    <string name="trisa_scale_pairing_succeeded">Die Kopplung ist erfolgreich!
+\n
+\nWieder verbinden, um Messdaten abzurufen.</string>
+    <string name="info_bluetooth_no_device_retrying">Kann keine Verbindnung herstellen, versuche erneut…</string>
+    <string name="label_tdee">Gesamtenergieumsatz (TDEE)</string>
+    <string name="label_calories">Kalorien</string>
+    <string name="info_bluetooth_connection_disconnected">Bluetooth Verbindung getrennt</string>
+    <string name="info_step_on_scale">Bitte Barfuß auf die Wage stellen</string>
+    <string name="label_enable_legend">Diagrammlegende</string>
+    <string name="label_enable_yaxis">Y-Achse</string>
+    <string name="label_day_view">Tagesansicht</string>
+    <string name="label_year_view">Jahresansicht</string>
+    <string name="label_rolling_chart">Rollendes Diagramm</string>
+    <string name="label_measurement_bar">Messwerteanzeige</string>
+    <string name="permission_location_service_info">Gewährleisten Sie den Standortzugriff in den Android-Einstellungen, um nach Bluetooth-Geräten zu suchen. Sie können es anschließend wieder widerrufen.</string>
+    <string name="label_is_on_right_axis">Auf der rechten Achse</string>
+    <string name="label_upgrade_to_openScale_pro">Bitte upgraden Sie auf openScale pro für Bluetooth-Unterstützung</string>
+    <string name="action_donation">Spende</string>
+    <string name="info_scale_low_battery">Geringer Batterielevel (%d%), bitte tauschen Sie die Batterien Ihrer Waage aus</string>
+    <string name="info_bluetooth_connection_error_scale_offline">Keine Verbindung zur Waage, bitte stellen Sie sicher das Ihre Waage eingeschaltet ist</string>
+    <string name="label_empty">leer</string>
+    <string name="label_age">Alter</string>
+    <string name="label_slide_welcome_top_text">Willkommen zu
+\nopenScale</string>
+    <string name="label_slide_welcome_main_text">Open-Source Tracker für Gewichts- und Körpermetriken, mit Unterstützung für Bluetooth-Waagen.</string>
+    <string name="label_slide_privacy_top_text">Schützt Ihre persönlichen Gesundheitsdaten.</string>
+    <string name="label_slide_privacy_main_text">openScale sendet keine Daten an eine Cloud und die fehlende Zugriffsberechtigung auf das Internet ist eine starke Garantie dafür.
+\n
+\nWenn Sie Ihr Gewicht wirklich mit GoogleFit oder mit MQTT synchronisieren wollen, können Sie <a href="https://play.google.com/store/apps/details?id=com.health.openscale.sync">openScale sync</a> installieren.</string>
+    <string name="label_slide_user_top_text">Es werden mehrere Benutzer unterstützt.</string>
+    <string name="label_slide_user_main_text">openScale verlangt nicht, dass Sie ein Online-Konto erstellen.
+\n
+\nWir benötigen nur ein paar Benutzerdaten von Ihnen, um einige Körpermetriken berechnen zu können.</string>
+    <string name="label_slide_opensource_top_text">Es handelt sich um Open-Source Software mit einem hohen Maß an Transparenz.</string>
+    <string name="label_slide_opensource_main_text">openScale ist lizenziert unter der <a href="https://github.com/oliexdev/openScale/blob/master/LICENSE">GPLv3</a>.
+\n
+\nAlle Körperberechnungen sind transparent und es werden keine versteckten Datenübertragungsfunktionen oder Benutzeridentifikationen durchgeführt.
+\n
+\nDen vollständigen Quellcode finden Sie unter <a href="https://github.com/oliexdev/openScale">GitHub</a>. Überzeugen Sie sich selbst von openScale, indem Sie sich das Projekt anschauen.</string>
+    <string name="label_slide_bluetooth_top_text">Es werden unterschiedliche Bluetooth Waagen verschiedener Hersteller unterstützt.</string>
+    <string name="label_slide_bluetooth_main_text">openScale hat eine integrierte Unterstützung für eine Reihe von Bluetooth Waagen verschiedener Hersteller.
+\n
+\nWir verbessern und erweitern ständig den Umfang der unterstützten Waagen. Die vollständige Liste und den Grad der Unterstützung für jede Waage finden Sie auf <a href="https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale">GitHub</a>.</string>
+    <string name="label_slide_metrics_top_text">Verfolgen und analysieren Sie Ihre Körpermetriken.</string>
+    <string name="label_slide_metrics_main_text">openScale unterstützt über 22 Körpermetriken.
+\n
+\nEs kann individuell konfiguriert werden, um nur die Körpermetriken anzuzeigen, die Ihnen wichtig sind.
+\n
+\nWenn Ihre Waage Körperfett, Körperwasser und fettfreie Körpermasse nicht unterstützt, können Sie diese Messungen sogar auf der Grundlage von <a href="https://github.com/oliexdev/openScale/wiki/Body-metric-estimations">wissenschaftlichen Publikationen</a> schätzen lassen.</string>
+    <string name="label_slide_support_top_text">Helfen Sie uns, openScale zu verbessern.</string>
+    <string name="label_slide_support_main_text">openScale braucht dich! Wenn du einen Fehler gefunden hast, eine Idee oder eine Frage hast oder helfen möchtest, deine Bluetooth Waage zu unterstützen, erstelle bitte ein <a href="https://github.com/oliexdev/openScale/issues">neues Ticket</a> auf GitHub.
+\n
+\nWenn Sie den Entwickler dieses Projekts in der Weiterentwicklung und der kontinuierlichen Pflege motivieren möchten, geben Sie openScale gerne eine positive Bewertung auf <a href="http://play.google.com/store/apps/details?id=com.health.openscale.pro">GooglePlay</a> oder einen Stern auf <a href="https://github.com/oliexdev/openScale">GitHub</a>.
+\n
+\nIhre Unterstützung und Ihr positives Feedback sind herzlichst willkommen. Ich danke Ihnen!</string>
+    <string name="app_intro_skip_button">ÜBERSPRINGEN</string>
+    <string name="app_intro_next_button">NÄCHSTE</string>
+    <string name="app_intro_back_button">ZURÜCK</string>
+    <string name="app_intro_done_button">FERTIG</string>
 </resources>

@@ -21,8 +21,9 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import com.welie.blessed.BluetoothPeripheral;
+
 import java.util.HashMap;
-import java.util.UUID;
 
 import timber.log.Timber;
 
@@ -50,19 +51,34 @@ public class BluetoothDebug extends BluetoothCommunication {
 
     private boolean isBlacklisted(BluetoothGattService service, BluetoothGattCharacteristic characteristic) {
         // Reading this triggers a pairing request on Beurer BF710
-        if (service.getUuid().equals(UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb"))
-            && characteristic.getUuid().equals(UUID.fromString("0000ffe5-0000-1000-8000-00805f9b34fb"))) {
+        if (service.getUuid().equals(BluetoothGattUuid.fromShortCode(0xffe0))
+                && characteristic.getUuid().equals(BluetoothGattUuid.fromShortCode(0xffe5))) {
             return true;
         }
 
         return false;
     }
 
-    private String propertiesToString(int properties) {
+    private boolean isWriteType(int property, int writeType) {
+        switch (property) {
+            case BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE:
+                return writeType == BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+            case BluetoothGattCharacteristic.PROPERTY_WRITE:
+                return writeType == BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+            case BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE:
+                return writeType == BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
+        }
+        return false;
+    }
+
+    private String propertiesToString(int properties, int writeType) {
         StringBuilder names = new StringBuilder();
         for (int property : propertyString.keySet()) {
             if ((properties & property) != 0) {
                 names.append(propertyString.get(property));
+                if (isWriteType(property, writeType)) {
+                    names.append('*');
+                }
                 names.append(", ");
             }
         }
@@ -74,26 +90,40 @@ public class BluetoothDebug extends BluetoothCommunication {
         return names.substring(0, names.length() - 2);
     }
 
+    private String permissionsToString(int permissions) {
+        if (permissions == 0) {
+            return "";
+        }
+        return String.format(" (permissions=0x%x)", permissions);
+    }
+
+    private String byteToString(byte[] value) {
+        return new String(value).replaceAll("\\p{Cntrl}", "?");
+    }
+
     private void logService(BluetoothGattService service, boolean included) {
-        Timber.d("Service %s%s", service.getUuid(), included ? " (included)" : "");
+        Timber.d("Service %s%s", BluetoothGattUuid.prettyPrint(service.getUuid()),
+                included ? " (included)" : "");
 
         for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
-            Timber.d("|- characteristic %s (instance %d): %s (permissions=0x%x)",
-                    characteristic.getUuid(), characteristic.getInstanceId(),
-                    propertiesToString(characteristic.getProperties()), characteristic.getPermissions());
+            Timber.d("|- characteristic %s (#%d): %s%s",
+                    BluetoothGattUuid.prettyPrint(characteristic.getUuid()),
+                    characteristic.getInstanceId(),
+                    propertiesToString(characteristic.getProperties(), characteristic.getWriteType()),
+                    permissionsToString(characteristic.getPermissions()));
             byte[] value = characteristic.getValue();
             if (value != null && value.length > 0) {
-                Timber.d("|--> value: %s (%s)", byteInHex(value),
-                        characteristic.getStringValue(0).replaceAll("\\p{Cntrl}", "?"));
+                Timber.d("|--> value: %s (%s)", byteInHex(value), byteToString(value));
             }
 
             for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()) {
-                Timber.d("|--- descriptor %s (permissions=0x%x)",
-                        descriptor.getUuid(), descriptor.getPermissions());
+                Timber.d("|--- descriptor %s%s",
+                        BluetoothGattUuid.prettyPrint(descriptor.getUuid()),
+                        permissionsToString(descriptor.getPermissions()));
 
                 value = descriptor.getValue();
                 if (value != null && value.length > 0) {
-                    Timber.d("|-----> value: %s", byteInHex(value));
+                    Timber.d("|-----> value: %s (%s)", byteInHex(value), byteToString(value));
                 }
             }
         }
@@ -106,7 +136,7 @@ public class BluetoothDebug extends BluetoothCommunication {
     private int readServiceCharacteristics(BluetoothGattService service, int offset) {
         for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
             if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0
-                && !isBlacklisted(service, characteristic)) {
+                    && !isBlacklisted(service, characteristic)) {
 
                 if (offset == 0) {
                     readBytes(service.getUuid(), characteristic.getUuid());
@@ -118,7 +148,7 @@ public class BluetoothDebug extends BluetoothCommunication {
 
             for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()) {
                 if (offset == 0) {
-                    readBytes(service.getUuid(), characteristic.getUuid(), descriptor.getUuid());
+                    readBytes(service.getUuid(), characteristic.getUuid());
                     return -1;
                 }
 
@@ -137,32 +167,25 @@ public class BluetoothDebug extends BluetoothCommunication {
     }
 
     @Override
-    protected boolean nextInitCmd(int stateNr) {
-        int offset = stateNr;
+    protected void onBluetoothDiscovery(BluetoothPeripheral peripheral) {
+        int offset = 0;
 
-        for (BluetoothGattService service : getBluetoothGattServices()) {
+        for (BluetoothGattService service : peripheral.getServices()) {
             offset = readServiceCharacteristics(service, offset);
-            if (offset == -1) {
-                return true;
-            }
         }
 
-        return false;
-    }
-
-    @Override
-    protected boolean nextBluetoothCmd(int stateNr) {
-        for (BluetoothGattService service : getBluetoothGattServices()) {
+        for (BluetoothGattService service : peripheral.getServices()) {
             logService(service, false);
         }
 
-        setBtStatus(BT_STATUS_CODE.BT_CONNECTION_LOST);
-        disconnect(false);
+        setBluetoothStatus(BT_STATUS.CONNECTION_LOST);
+        disconnect();
+    }
+
+
+    @Override
+    protected boolean onNextStep(int stateNr) {
         return false;
     }
 
-    @Override
-    protected boolean nextCleanUpCmd(int stateNr) {
-        return false;
-    }
 }

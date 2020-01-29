@@ -15,10 +15,9 @@
 */
 package com.health.openscale.core.bluetooth;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 
+import com.health.openscale.R;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.utils.Converters;
 
@@ -26,22 +25,24 @@ import java.util.Date;
 import java.util.UUID;
 
 public class BluetoothMedisanaBS44x extends BluetoothCommunication {
-    private final UUID WEIGHT_MEASUREMENT_SERVICE = UUID.fromString("000078b2-0000-1000-8000-00805f9b34fb");
-    private final UUID WEIGHT_MEASUREMENT_CHARACTERISTIC = UUID.fromString("00008a21-0000-1000-8000-00805f9b34fb"); // indication, read-only
-    private final UUID FEATURE_MEASUREMENT_CHARACTERISTIC = UUID.fromString("00008a22-0000-1000-8000-00805f9b34fb"); // indication, read-only
-    private final UUID CUSTOM3_MEASUREMENT_CHARACTERISTIC = UUID.fromString("00008a20-0000-1000-8000-00805f9b34fb"); // read-only
-    private final UUID CMD_MEASUREMENT_CHARACTERISTIC = UUID.fromString("00008a81-0000-1000-8000-00805f9b34fb"); // write-only
-    private final UUID CUSTOM5_MEASUREMENT_CHARACTERISTIC = UUID.fromString("00008a82-0000-1000-8000-00805f9b34fb"); // indication, read-only
-    private final UUID WEIGHT_MEASUREMENT_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private final UUID WEIGHT_MEASUREMENT_SERVICE = BluetoothGattUuid.fromShortCode(0x78b2);
+    private final UUID WEIGHT_MEASUREMENT_CHARACTERISTIC = BluetoothGattUuid.fromShortCode(0x8a21); // indication, read-only
+    private final UUID FEATURE_MEASUREMENT_CHARACTERISTIC = BluetoothGattUuid.fromShortCode(0x8a22); // indication, read-only
+    private final UUID CMD_MEASUREMENT_CHARACTERISTIC = BluetoothGattUuid.fromShortCode(0x8a81); // write-only
+    private final UUID CUSTOM5_MEASUREMENT_CHARACTERISTIC = BluetoothGattUuid.fromShortCode(0x8a82); // indication, read-only
 
     private ScaleMeasurement btScaleMeasurement;
+
+    private boolean applyOffset;
 
     // Scale time is in seconds since 2010-01-01
     private static final long SCALE_UNIX_TIMESTAMP_OFFSET = 1262304000;
 
-    public BluetoothMedisanaBS44x(Context context) {
+
+    public BluetoothMedisanaBS44x(Context context, boolean applyOffset) {
         super(context);
         btScaleMeasurement = new ScaleMeasurement();
+        this.applyOffset = applyOffset;
     }
 
     @Override
@@ -50,34 +51,34 @@ public class BluetoothMedisanaBS44x extends BluetoothCommunication {
     }
 
     @Override
-    protected boolean nextInitCmd(int stateNr) {
-        return false;
-    }
-
-    @Override
-    protected boolean nextBluetoothCmd(int stateNr) {
-        switch (stateNr) {
+    protected boolean onNextStep(int stepNr) {
+        switch (stepNr) {
             case 0:
                 // set indication on for feature characteristic
-                setIndicationOn(WEIGHT_MEASUREMENT_SERVICE, FEATURE_MEASUREMENT_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
+                setIndicationOn(WEIGHT_MEASUREMENT_SERVICE, FEATURE_MEASUREMENT_CHARACTERISTIC);
                 break;
             case 1:
                 // set indication on for weight measurement
-                setIndicationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
+                setIndicationOn(WEIGHT_MEASUREMENT_SERVICE, WEIGHT_MEASUREMENT_CHARACTERISTIC);
                 break;
             case 2:
                 // set indication on for custom5 measurement
-                setIndicationOn(WEIGHT_MEASUREMENT_SERVICE, CUSTOM5_MEASUREMENT_CHARACTERISTIC, WEIGHT_MEASUREMENT_CONFIG);
+                setIndicationOn(WEIGHT_MEASUREMENT_SERVICE, CUSTOM5_MEASUREMENT_CHARACTERISTIC);
                 break;
             case 3:
                 // send magic number to receive weight data
                 long timestamp = new Date().getTime() / 1000;
-                timestamp -= SCALE_UNIX_TIMESTAMP_OFFSET;
+                if(applyOffset){
+                    timestamp -= SCALE_UNIX_TIMESTAMP_OFFSET;
+                }
                 byte[] date = Converters.toInt32Le(timestamp);
 
                 byte[] magicBytes = new byte[] {(byte)0x02, date[0], date[1], date[2], date[3]};
 
                 writeBytes(WEIGHT_MEASUREMENT_SERVICE, CMD_MEASUREMENT_CHARACTERISTIC, magicBytes);
+                break;
+            case 4:
+                sendMessage(R.string.info_step_on_scale, 0);
                 break;
             default:
                 return false;
@@ -87,30 +88,26 @@ public class BluetoothMedisanaBS44x extends BluetoothCommunication {
     }
 
     @Override
-    protected boolean nextCleanUpCmd(int stateNr) {
-        return false;
-    }
+    public void onBluetoothNotify(UUID characteristic, byte[] value) {
+        final byte[] data = value;
 
-
-    @Override
-    public void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {
-        final byte[] data = gattCharacteristic.getValue();
-
-        if (gattCharacteristic.getUuid().equals(WEIGHT_MEASUREMENT_CHARACTERISTIC)) {
+        if (characteristic.equals(WEIGHT_MEASUREMENT_CHARACTERISTIC)) {
             parseWeightData(data);
         }
 
-        if (gattCharacteristic.getUuid().equals(FEATURE_MEASUREMENT_CHARACTERISTIC)) {
+        if (characteristic.equals(FEATURE_MEASUREMENT_CHARACTERISTIC)) {
             parseFeatureData(data);
 
-            addScaleData(btScaleMeasurement);
+            addScaleMeasurement(btScaleMeasurement);
         }
     }
 
     private void parseWeightData(byte[] weightData) {
         float weight = Converters.fromUnsignedInt16Le(weightData, 1) / 100.0f;
         long timestamp = Converters.fromUnsignedInt32Le(weightData, 5);
-        timestamp += SCALE_UNIX_TIMESTAMP_OFFSET;
+        if (applyOffset) {
+            timestamp += SCALE_UNIX_TIMESTAMP_OFFSET;
+        }
 
         btScaleMeasurement.setDateTime(new Date(timestamp * 1000));
         btScaleMeasurement.setWeight(weight);

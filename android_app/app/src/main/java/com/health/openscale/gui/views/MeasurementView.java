@@ -22,10 +22,10 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.support.v4.content.ContextCompat;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -41,16 +41,17 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+
 import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
 import com.health.openscale.core.evaluation.EvaluationResult;
+import com.health.openscale.gui.utils.ColorUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import lecho.lib.hellocharts.util.ChartUtils;
 
 import static com.health.openscale.gui.views.MeasurementView.MeasurementViewMode.ADD;
 import static com.health.openscale.gui.views.MeasurementView.MeasurementViewMode.EDIT;
@@ -66,6 +67,7 @@ public abstract class MeasurementView extends TableLayout {
 
     private TableRow measurementRow;
     private ImageView iconView;
+    private GradientDrawable iconViewBackground;
     private int iconId;
     private TextView nameView;
     private TextView valueView;
@@ -83,11 +85,11 @@ public abstract class MeasurementView extends TableLayout {
 
     public MeasurementView(Context context, int textId, int iconId) {
         super(context);
+        this.iconId = iconId;
+
         initView(context);
 
         nameView.setText(textId);
-        this.iconId = iconId;
-        iconView.setImageResource(iconId);
     }
 
     public enum DateTimeOrder { FIRST, LAST, NONE }
@@ -126,7 +128,10 @@ public abstract class MeasurementView extends TableLayout {
             unsorted.add(new Caliper2MeasurementView(context));
             unsorted.add(new Caliper3MeasurementView(context));
             unsorted.add(new BMRMeasurementView(context));
+            unsorted.add(new TDEEMeasurementView(context));
+            unsorted.add(new CaloriesMeasurementView(context));
             unsorted.add(new CommentMeasurementView(context));
+            unsorted.add(new UserMeasurementView(context));
 
             // Get sort order
             final String[] sortOrder = TextUtils.split(
@@ -173,6 +178,7 @@ public abstract class MeasurementView extends TableLayout {
         measurementRow = new TableRow(context);
 
         iconView = new ImageView(context);
+        iconViewBackground = new GradientDrawable();
         nameView = new TextView(context);
         valueView = new TextView(context);
         editModeView = new ImageView(context);
@@ -195,9 +201,20 @@ public abstract class MeasurementView extends TableLayout {
         addView(measurementRow);
         addView(evaluatorRow);
 
+        iconViewBackground.setColor(ColorUtil.COLOR_GRAY);
+        iconViewBackground.setShape(GradientDrawable.OVAL);
+        iconViewBackground.setGradientRadius(iconView.getWidth());
+
+        iconView.setImageResource(iconId);
         iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        iconView.setPadding(20,0,20,0);
-        iconView.setColorFilter(getForegroundColor());
+        iconView.setPadding(25,25,25,25);
+
+        iconView.setColorFilter(ColorUtil.COLOR_BLACK);
+        iconView.setBackground(iconViewBackground);
+
+        TableRow.LayoutParams iconLayout = new TableRow.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        iconLayout.setMargins(10, 5, 10, 5);
+        iconView.setLayoutParams(iconLayout);
 
         nameView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         nameView.setLines(2);
@@ -271,6 +288,9 @@ public abstract class MeasurementView extends TableLayout {
     public void appendDiffValue(SpannableStringBuilder builder, boolean newLine) { }
     public Drawable getIcon() { return iconView.getDrawable(); }
     public int getIconResource() { return iconId; }
+    public void setBackgroundIconColor(int color) {
+        iconViewBackground.setColor(color);
+    }
 
     protected boolean isEditable() {
         return true;
@@ -329,7 +349,7 @@ public abstract class MeasurementView extends TableLayout {
     }
 
     public int getForegroundColor() {
-        return valueView.getCurrentTextColor();
+        return ColorUtil.getTextColor(getContext());
     }
 
     public int getIndicatorColor() {
@@ -382,13 +402,13 @@ public abstract class MeasurementView extends TableLayout {
 
         switch (evalResult.eval_state) {
             case LOW:
-                indicatorView.setBackgroundColor(ChartUtils.COLOR_BLUE);
+                indicatorView.setBackgroundColor(ColorUtil.COLOR_BLUE);
                 break;
             case NORMAL:
-                indicatorView.setBackgroundColor(ChartUtils.COLOR_GREEN);
+                indicatorView.setBackgroundColor(ColorUtil.COLOR_GREEN);
                 break;
             case HIGH:
-                indicatorView.setBackgroundColor(ChartUtils.COLOR_RED);
+                indicatorView.setBackgroundColor(ColorUtil.COLOR_RED);
                 break;
             case UNDEFINED:
                 indicatorView.setBackgroundColor(Color.GRAY);

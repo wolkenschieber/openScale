@@ -75,7 +75,6 @@
     <string name="error_exporting">Napaka pri izvozu</string>
     <string name="error_importing">Napaka pri uvozu</string>
     <string name="error_user_name_required">Napaka: zahtevno ime</string>
-    <string name="error_user_name_too_short">Napaka: Ime mora imeti vsaj 3 znake</string>
     <string name="error_height_required">Napaka: Višina zahtevana</string>
     <string name="error_initial_weight_required">Napaka: Začetna teža zahtevana</string>
     <string name="error_goal_weight_required">Napaka: Ciljna teža zahtevana</string>
@@ -167,7 +166,7 @@
     <string name="label_feedback_message_negative">Ne, hvala</string>
 
     <string name="error_max_scale_users">Doseženo je bilo maksimalno število sočasnih uporabnikov tehtnice</string>
-    <string name="info_step_on_scale">Prosim, stopite bosi na tehtnico za referenčno meritev</string>
+    <string name="info_step_on_scale_for_reference">Prosim, stopite bosi na tehtnico za referenčno meritev</string>
     <string name="info_measuring">Izmerjena teža: %.2f</string>
 
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">Zgodila se je nepričakovana napaka.
@@ -197,7 +196,6 @@
     <string name="label_click_measurement_configure">Kliknite meritve za rekonfiguracijo</string>
     <string name="label_set_default_order">Nastavi privzet vrstni red</string>
     <string name="label_export_overwrite">Zamenjaj prejšnji izvoz \"%s\"?</string>
-    <string name="label_include_in_overview_graph">Vključi v pregledni graf</string>
     <string name="label_measurement_in_percent">Meritev v %</string>
     <string name="label_estimate_measurement">Ocena meritve</string>
     <string name="label_estimation_formula">Ocenjevalna formula</string>
@@ -207,7 +205,6 @@
     <string name="theme_dark">Temno</string>
     <string name="label_contribute_translation">Prispevaj prevod</string>
     <string name="label_add_or_fix_translation">Dodaj ali popravi obstoječega</string>
-    <string name="label_overview_graph">Pregledni graf</string>
     <string name="label_percent">Procent</string>
     <string name="label_estimated">Ocenjeno</string>
     <string name="label_estimate_measurement_summary">Bazirano na teži, višini, starosti, spolu, ...</string>

@@ -17,10 +17,9 @@
 
 package com.health.openscale.core.bluetooth;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 
+import com.health.openscale.R;
 import com.health.openscale.core.OpenScale;
 import com.health.openscale.core.datatypes.ScaleMeasurement;
 import com.health.openscale.core.datatypes.ScaleUser;
@@ -33,10 +32,9 @@ import java.util.UUID;
 
 public class BluetoothMGB extends BluetoothCommunication {
 
-    private static final UUID uuid_service   =  UUID.fromString("0000ffb0-0000-1000-8000-00805f9b34fb");
-    private static final UUID uuid_char_cfg  =  UUID.fromString("0000ffb1-0000-1000-8000-00805f9b34fb");
-    private static final UUID uuid_char_ctrl =  UUID.fromString("0000ffb2-0000-1000-8000-00805f9b34fb");
-    private static final UUID uuid_desc_ctrl =  UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private static final UUID uuid_service   = BluetoothGattUuid.fromShortCode(0xffb0);
+    private static final UUID uuid_char_cfg  = BluetoothGattUuid.fromShortCode(0xffb1);
+    private static final UUID uuid_char_ctrl = BluetoothGattUuid.fromShortCode(0xffb2);
 
 
     private Calendar  now;
@@ -70,7 +68,7 @@ public class BluetoothMGB extends BluetoothCommunication {
         buf[6] = (byte)0xCC;
         buf[7] = (byte)((buf[2] + buf[3] + buf[4] + buf[5] + buf[6]) & 0xFF);
 
-        writeBytes(uuid_service, uuid_char_cfg, buf);
+        writeBytes(uuid_service, uuid_char_cfg, buf, true);
     }
 
 
@@ -84,10 +82,10 @@ public class BluetoothMGB extends BluetoothCommunication {
     }
 
     @Override
-    protected boolean nextInitCmd(int stateNr) {
-        switch (stateNr) {
+    protected boolean onNextStep(int stepNr) {
+        switch (stepNr) {
             case 0:
-                setNotificationOn(uuid_service, uuid_char_ctrl, uuid_desc_ctrl);
+                setNotificationOn(uuid_service, uuid_char_ctrl);
                 now  = Calendar.getInstance();
                 user = OpenScale.getInstance().getSelectedScaleUser();
                 break;
@@ -116,6 +114,10 @@ public class BluetoothMGB extends BluetoothCommunication {
                 writeCfg(0xFE, 6, user.getScaleUnit().toInt(), 0);
                 break;
 
+            case 7:
+                sendMessage(R.string.info_step_on_scale, 0);
+                break;
+
             default:
                 return false;
         }
@@ -123,22 +125,9 @@ public class BluetoothMGB extends BluetoothCommunication {
         return true;
     }
 
-
     @Override
-    protected boolean nextBluetoothCmd(int stateNr) {
-        return false;
-    }
-
-
-    @Override
-    protected boolean nextCleanUpCmd(int stateNr) {
-        return false;
-    }
-
-
-    @Override
-    public void onBluetoothDataChange(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic gattCharacteristic) {
-        packet_buf = gattCharacteristic.getValue();
+    public void onBluetoothNotify(UUID characteristic, byte[] value) {
+        packet_buf = value;
         packet_pos = 0;
 
         if (packet_buf == null || packet_buf.length <= 0) {
@@ -153,7 +142,7 @@ public class BluetoothMGB extends BluetoothCommunication {
         int hdr_2 = popInt();
         int hdr_3 = popInt();
 
-        if (hdr_1 == 0xAC && hdr_2 == 0x02 && hdr_3 == 0xFF) {
+        if (hdr_1 == 0xAC && (hdr_2 == 0x02 || hdr_2 == 0x03) && hdr_3 == 0xFF) {
             measurement = new ScaleMeasurement();
 
             popInt(); //unknown =00
@@ -178,7 +167,8 @@ public class BluetoothMGB extends BluetoothCommunication {
             popInt(); //unknown =00
             popInt(); //unknown =00
 
-        } else if (hdr_1 == 0x01 && hdr_2 == 0x00) {
+        }
+        else if (measurement != null && hdr_1 == 0x01 && hdr_2 == 0x00) {
             measurement.setMuscle(popFloat());
 
             popFloat(); //BMR
@@ -198,7 +188,7 @@ public class BluetoothMGB extends BluetoothCommunication {
             popInt(); // unknown =02
             popInt(); // unknown =47;48;4e;4b;42
 
-            addScaleData(measurement);
+            addScaleMeasurement(measurement);
 
             //    Visceral fat?
             //    Standard weight?

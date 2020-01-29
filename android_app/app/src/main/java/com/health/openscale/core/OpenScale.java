@@ -17,9 +17,6 @@
 package com.health.openscale.core;
 
 import android.appwidget.AppWidgetManager;
-import android.arch.persistence.db.SupportSQLiteDatabase;
-import android.arch.persistence.room.Room;
-import android.arch.persistence.room.RoomDatabase;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -28,11 +25,17 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.OpenableColumns;
-import android.support.v4.app.Fragment;
 import android.text.format.DateFormat;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.health.openscale.R;
 import com.health.openscale.core.alarm.AlarmHandler;
@@ -99,14 +102,14 @@ public class OpenScale {
         btDeviceDriver = null;
         fragmentList = new ArrayList<>();
 
-        reopenDatabase();
+        reopenDatabase(false);
 
         updateScaleData();
     }
 
     public static void createInstance(Context context) {
         if (instance != null) {
-            throw new RuntimeException("OpenScale instance already created");
+            return;
         }
 
         instance = new OpenScale(context);
@@ -120,13 +123,14 @@ public class OpenScale {
         return instance;
     }
 
-    public void reopenDatabase() throws SQLiteDatabaseCorruptException {
+    public void reopenDatabase(boolean truncate) throws SQLiteDatabaseCorruptException {
         if (appDB != null) {
             appDB.close();
         }
 
         appDB = Room.databaseBuilder(context, AppDatabase.class, DATABASE_NAME)
                 .allowMainThreadQueries()
+                .setJournalMode(truncate == true ? RoomDatabase.JournalMode.TRUNCATE : RoomDatabase.JournalMode.AUTOMATIC) // in truncate mode no sql cache files (-shm, -wal) are generated
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
                     public void onOpen(SupportSQLiteDatabase db) {
@@ -134,7 +138,7 @@ public class OpenScale {
                         db.setForeignKeyConstraintsEnabled(true);
                     }
                 })
-                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
                 .build();
         measurementDAO = appDB.measurementDAO();
         userDAO = appDB.userDAO();
@@ -156,7 +160,6 @@ public class OpenScale {
     }
 
     public void selectScaleUser(int userId) {
-        Timber.d("Select user %d", userId);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.edit().putInt("selectedUserId", userId).apply();
 
@@ -195,18 +198,19 @@ public class OpenScale {
                     selectScaleUser(-1);
                     throw new Exception("could not find the selected user");
                 }
+
                 return selectedScaleUser;
             }
         } catch (Exception e) {
             Timber.e(e);
-            Toast.makeText(context, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            runUiToastMsg("Error: " + e.getMessage());
         }
 
         return new ScaleUser();
     }
 
     public void deleteScaleUser(int id) {
-        Timber.d("Delete user %d", id);
+        Timber.d("Delete user " + getScaleUser(id));
         userDAO.delete(userDAO.get(id));
         selectedScaleUser = null;
 
@@ -274,6 +278,7 @@ public class OpenScale {
 
             // don't add scale data if no user is selected
             if (scaleMeasurement.getUserId() == -1) {
+                Timber.e("to be added measurement are thrown away because no user is selected");
                 return -1;
             }
         }
@@ -315,14 +320,17 @@ public class OpenScale {
                         Converters.fromKilogram(scaleMeasurement.getWeight(), unit), unit.toString(),
                         dateFormat.format(dateTime) + " " + timeFormat.format(dateTime),
                         scaleUser.getUserName());
-                Toast.makeText(context, infoText, Toast.LENGTH_LONG).show();
+                runUiToastMsg(infoText);
             }
+
+            syncInsertMeasurement(scaleMeasurement);
             alarmHandler.entryChanged(context, scaleMeasurement);
             updateScaleData();
             triggerWidgetUpdate();
         } else {
+            Timber.d("to be added measurement is thrown away because measurement with the same date and time already exist");
             if (!silent) {
-                Toast.makeText(context, context.getString(R.string.info_new_data_duplicated), Toast.LENGTH_LONG).show();
+                runUiToastMsg(context.getString(R.string.info_new_data_duplicated));
             }
         }
 
@@ -351,17 +359,21 @@ public class OpenScale {
 
         if (inRangeWeights.size() > 0) {
             // return the user id which is nearest to the weight (first element of the tree map)
-            return inRangeWeights.entrySet().iterator().next().getValue();
+            int userId = inRangeWeights.entrySet().iterator().next().getValue();
+            Timber.d("assign measurement to the nearest measurement with the user " + getScaleUser(userId).getUserName() + " (smartUserAssignment=on)");
+            return userId;
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         // if ignore out of range preference is true don't add this data
         if (prefs.getBoolean("ignoreOutOfRange", false)) {
+            Timber.d("to be added measurement is thrown away because measurement is out of range (smartUserAssignment=on;ignoreOutOfRange=on)");
             return -1;
         }
 
         // return selected scale user id if not out of range preference is checked and weight is out of range of any user
+        Timber.d("assign measurement to the selected user (smartUserAssignment=on;ignoreOutOfRange=off)");
         return getSelectedScaleUser().getId();
     }
 
@@ -369,6 +381,7 @@ public class OpenScale {
         Timber.d("Update measurement: %s", scaleMeasurement);
         measurementDAO.update(scaleMeasurement);
         alarmHandler.entryChanged(context, scaleMeasurement);
+        syncUpdateMeasurement(scaleMeasurement);
 
         updateScaleData();
         triggerWidgetUpdate();
@@ -376,6 +389,7 @@ public class OpenScale {
 
     public void deleteScaleData(int id)
     {
+        syncDeleteMeasurement(measurementDAO.get(id).getDateTime());
         measurementDAO.delete(id);
 
         updateScaleData();
@@ -420,7 +434,7 @@ public class OpenScale {
             copyFile(Uri.fromFile(exportFile), Uri.fromFile(tmpExportFile));
             copyFile(importFile, Uri.fromFile(exportFile));
 
-            reopenDatabase();
+            reopenDatabase(false);
 
             if (!getScaleUserList().isEmpty()) {
                 selectScaleUser(getScaleUserList().get(0).getId());
@@ -436,6 +450,7 @@ public class OpenScale {
 
     public void exportDatabase(Uri exportFile) throws IOException {
         File dbFile = context.getApplicationContext().getDatabasePath("openScale.db");
+        reopenDatabase(true); // re-open database without caching sql -shm, -wal files
 
         copyFile(Uri.fromFile(dbFile), exportFile);
     }
@@ -477,9 +492,9 @@ public class OpenScale {
 
             measurementDAO.insertAll(csvScaleMeasurementList);
             updateScaleData();
-            Toast.makeText(context, context.getString(R.string.info_data_imported) + " " + filename, Toast.LENGTH_SHORT).show();
+            runUiToastMsg(context.getString(R.string.info_data_imported) + " " + filename);
         } catch (IOException | ParseException e) {
-            Toast.makeText(context, context.getString(R.string.error_importing) + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            runUiToastMsg(context.getString(R.string.error_importing) + ": " + e.getMessage());
         }
     }
 
@@ -489,7 +504,7 @@ public class OpenScale {
             CsvHelper.exportTo(new OutputStreamWriter(output), scaleMeasurementList);
             return true;
         } catch (IOException e) {
-            Toast.makeText(context, context.getResources().getString(R.string.error_exporting) + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            runUiToastMsg(context.getResources().getString(R.string.error_exporting) + " " + e.getMessage());
         }
 
         return false;
@@ -498,6 +513,7 @@ public class OpenScale {
     public void clearScaleData(int userId) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.edit().putInt("uniqueNumber", 0x00).apply();
+        syncClearMeasurements();
         measurementDAO.deleteAll(userId);
 
         updateScaleData();
@@ -520,6 +536,30 @@ public class OpenScale {
         }
 
         return numOfMonth;
+    }
+
+    public List<ScaleMeasurement> getScaleDataOfStartDate(int year, int month, int day) {
+        int selectedUserId = getSelectedScaleUserId();
+
+        Calendar startCalender = Calendar.getInstance();
+        Calendar endCalender = Calendar.getInstance();
+
+        startCalender.set(year, month, day, 0, 0, 0);
+
+        return measurementDAO.getAllInRange(startCalender.getTime(), endCalender.getTime(), selectedUserId);
+    }
+
+    public List<ScaleMeasurement> getScaleDataOfDay(int year, int month, int day) {
+        int selectedUserId = getSelectedScaleUserId();
+
+        Calendar startCalender = Calendar.getInstance();
+        Calendar endCalender = Calendar.getInstance();
+
+        startCalender.set(year, month, day, 0, 0, 0);
+        endCalender.set(year, month, day, 0, 0, 0);
+        endCalender.add(Calendar.DAY_OF_MONTH, 1);
+
+        return measurementDAO.getAllInRange(startCalender.getTime(), endCalender.getTime(), selectedUserId);
     }
 
     public List<ScaleMeasurement> getScaleDataOfMonth(int year, int month) {
@@ -579,7 +619,7 @@ public class OpenScale {
         }
 
         Timber.d("Disconnecting from bluetooth device");
-        btDeviceDriver.disconnect(true);
+        btDeviceDriver.disconnect();
         btDeviceDriver = null;
 
         return true;
@@ -621,5 +661,58 @@ public class OpenScale {
     // As getScaleMeasurementList(), but as a Cursor for export via a Content Provider.
     public Cursor getScaleMeasurementListCursor(long userId) {
         return measurementDAO.selectAll(userId);
+    }
+
+    private void runUiToastMsg(String text) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void syncInsertMeasurement(ScaleMeasurement scaleMeasurement) {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.health.openscale.sync", "com.health.openscale.sync.core.service.SyncService"));
+        intent.putExtra("mode", "insert");
+        intent.putExtra("userId", scaleMeasurement.getUserId());
+        intent.putExtra("weight", scaleMeasurement.getWeight());
+        intent.putExtra("date", scaleMeasurement.getDateTime().getTime());
+        ContextCompat.startForegroundService(context, intent);
+    }
+
+    private void syncUpdateMeasurement(ScaleMeasurement scaleMeasurement) {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.health.openscale.sync", "com.health.openscale.sync.core.service.SyncService"));
+        intent.putExtra("mode", "update");
+        intent.putExtra("userId", scaleMeasurement.getUserId());
+        intent.putExtra("weight", scaleMeasurement.getWeight());
+        intent.putExtra("date", scaleMeasurement.getDateTime().getTime());
+        ContextCompat.startForegroundService(context, intent);
+    }
+
+    private void syncDeleteMeasurement(Date date) {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.health.openscale.sync", "com.health.openscale.sync.core.service.SyncService"));
+        intent.putExtra("mode", "delete");
+        intent.putExtra("date", date.getTime());
+        ContextCompat.startForegroundService(context, intent);
+    }
+
+    private void syncClearMeasurements() {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.health.openscale.sync", "com.health.openscale.sync.core.service.SyncService"));
+        intent.putExtra("mode", "clear");
+        ContextCompat.startForegroundService(context, intent);
+    }
+
+    public ScaleMeasurementDAO getScaleMeasurementDAO() {
+        return measurementDAO;
+    }
+
+    public ScaleUserDAO getScaleUserDAO() {
+        return userDAO;
     }
 }
