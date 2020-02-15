@@ -4,7 +4,7 @@ jdk: oraclejdk8
 env:
   global:
     - OWNER=${TRAVIS_REPO_SLUG%/*}
-    - DEV=${OWNER/oliexdev/dev}
+    - DEV=${OWNER/wolkenschieber/dev}
     - BRANCH=${TRAVIS_BRANCH/master/}
     - TAG=${DEV}${BRANCH:+_}${BRANCH}
 
