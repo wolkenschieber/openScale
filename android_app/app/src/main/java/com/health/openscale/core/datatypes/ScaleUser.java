@@ -16,16 +16,16 @@
 
 package com.health.openscale.core.datatypes;
 
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import com.health.openscale.core.utils.Converters;
 import com.health.openscale.core.utils.DateTimeHelpers;
 
 import java.util.Calendar;
 import java.util.Date;
-
-import androidx.annotation.NonNull;
-import androidx.room.ColumnInfo;
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
 
 @Entity(tableName = "scaleUsers")
 public class ScaleUser {
@@ -38,7 +38,6 @@ public class ScaleUser {
     @NonNull
     @ColumnInfo(name = "birthday")
     private Date birthday;
-    @NonNull
     @ColumnInfo(name = "bodyHeight")
     private float bodyHeight;
     @ColumnInfo(name = "scaleUnit")
@@ -59,6 +58,14 @@ public class ScaleUser {
     @NonNull
     @ColumnInfo(name = "activityLevel")
     private Converters.ActivityLevel activityLevel;
+    @ColumnInfo(name = "assistedWeighing")
+    private boolean assistedWeighing;
+    @NonNull
+    @ColumnInfo(name = "leftAmputationLevel")
+    private Converters.AmputationLevel leftAmputationLevel;
+    @NonNull
+    @ColumnInfo(name = "rightAmputationLevel")
+    private Converters.AmputationLevel rightAmputationLevel;
 
     public ScaleUser() {
         userName = "";
@@ -71,6 +78,9 @@ public class ScaleUser {
         goalDate = new Date();
         measureUnit = Converters.MeasureUnit.CM;
         activityLevel = Converters.ActivityLevel.SEDENTARY;
+        assistedWeighing = false;
+        leftAmputationLevel = Converters.AmputationLevel.NONE;
+        rightAmputationLevel = Converters.AmputationLevel.NONE;
     }
 
     public int getId() {
@@ -177,6 +187,84 @@ public class ScaleUser {
         return activityLevel;
     }
 
+    public boolean isAssistedWeighing() {
+        return assistedWeighing;
+    }
+
+    public void setAssistedWeighing(boolean assistedWeighing) {
+        this.assistedWeighing = assistedWeighing;
+    }
+
+    @NonNull
+    public Converters.AmputationLevel getLeftAmputationLevel() {
+        return leftAmputationLevel;
+    }
+
+    public void setLeftAmputationLevel(@NonNull Converters.AmputationLevel leftAmputationLevel) {
+        this.leftAmputationLevel = leftAmputationLevel;
+    }
+
+    @NonNull
+    public Converters.AmputationLevel getRightAmputationLevel() {
+        return rightAmputationLevel;
+    }
+
+    public void setRightAmputationLevel(@NonNull Converters.AmputationLevel rightAmputationLevel) {
+        this.rightAmputationLevel = rightAmputationLevel;
+    }
+
+    public float getAmputationCorrectionFactor() {
+        float correctionFactor = 100.0f;
+
+        switch (rightAmputationLevel) {
+            case NONE:
+                break;
+            case HAND:
+                correctionFactor -= 0.8f;
+                break;
+            case FOREARM_HAND:
+                correctionFactor -= 3.0f;
+                break;
+            case ARM:
+                correctionFactor -= 11.5f;
+                break;
+            case FOOT:
+                correctionFactor -= 1.8f;
+                break;
+            case LOWER_LEG_FOOT:
+                correctionFactor -= 7.1f;
+                break;
+            case LEG:
+                correctionFactor -= 18.7f;
+                break;
+        }
+
+        switch (leftAmputationLevel) {
+            case NONE:
+                break;
+            case HAND:
+                correctionFactor -= 0.8f;
+                break;
+            case FOREARM_HAND:
+                correctionFactor -= 3.0f;
+                break;
+            case ARM:
+                correctionFactor -= 11.5f;
+                break;
+            case FOOT:
+                correctionFactor -= 1.8f;
+                break;
+            case LOWER_LEG_FOOT:
+                correctionFactor -= 7.1f;
+                break;
+            case LEG:
+                correctionFactor -= 18.7f;
+                break;
+        }
+
+        return correctionFactor;
+    }
+
     public static String getPreferenceKey(int userId, String key) {
         return String.format("user.%d.%s", userId, key);
     }
@@ -191,9 +279,9 @@ public class ScaleUser {
         return String.format(
                 "id(%d) name(%s) birthday(%s) age(%d) body height(%.2f) scale unit(%s) " +
                 "gender(%s) initial weight(%.2f) goal weight(%.2f) goal date(%s) " +
-                "measure unt(%s) activity level(%d)",
+                "measure unt(%s) activity level(%d) assisted weighing(%b)",
                 id, userName, birthday.toString(), getAge(), bodyHeight, scaleUnit.toString(),
                 gender.toString().toLowerCase(), initialWeight, goalWeight, goalDate.toString(),
-                measureUnit.toString(), activityLevel.toInt());
+                measureUnit.toString(), activityLevel.toInt(), assistedWeighing);
     }
 }

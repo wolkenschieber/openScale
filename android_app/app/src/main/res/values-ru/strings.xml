@@ -51,7 +51,7 @@
     <string name="label_female">Женский</string>
     <string name="label_goal_weight">Цель по весу</string>
     <string name="label_goal_date">Целевая дата</string>
-    <string name="label_title_user">пользователь</string>
+    <string name="label_title_user">Пользователь</string>
     <string name="label_title_last_measurement">последнее измерение</string>
     <string name="label_title_goal">Цель</string>
     <string name="label_import">Импорт</string>
@@ -59,12 +59,12 @@
     <string name="label_delete_all">Удалить все</string>
     <string name="error_value_required">Необходимо значение</string>
     <string name="error_value_range">Значение вне диапазона</string>
-    <string name="error_exporting">Ошибка при экспортировании</string>
-    <string name="error_importing">Ошибка при импортировании</string>
-    <string name="error_user_name_required">Ошибка: необходимо Имя</string>
-    <string name="error_height_required">Ошибка: требуется указать Рост</string>
-    <string name="error_initial_weight_required">Ошибка: необходимо указать начальный вес</string>
-    <string name="error_goal_weight_required">Ошибка: необходимо указать цель по весу</string>
+    <string name="error_exporting">Не удалось экспортировать</string>
+    <string name="error_importing">Не удалось импортировать</string>
+    <string name="error_user_name_required">Необходимо указать Имя</string>
+    <string name="error_height_required">Необходимо указать Рост</string>
+    <string name="error_initial_weight_required">Необходимо указать начальный вес</string>
+    <string name="error_goal_weight_required">Необходимо указать целевой вес</string>
     <string name="info_data_deleted">Запись удалена</string>
     <string name="info_data_all_deleted">Все записи удалены</string>
     <string name="info_data_exported">Экспортировано в</string>
@@ -73,14 +73,14 @@
     <string name="info_enter_comment">Опциональный комментарий</string>
     <string name="info_is_visible">отображается</string>
     <string name="info_is_not_visible">не отображается</string>
-    <string name="info_is_enable">включена</string>
-    <string name="info_is_not_enable">выключена</string>
+    <string name="info_is_enable">включено</string>
+    <string name="info_is_not_enable">выключено</string>
     <string name="info_is_not_available">не доступна</string>
     <string name="info_bluetooth_try_connection">Соединение с:</string>
-    <string name="info_bluetooth_connection_lost">Соединение Bluetooth потеряно</string>
+    <string name="info_bluetooth_connection_lost">Bluetooth соединение потеряно</string>
     <string name="info_bluetooth_no_device">Устройство Bluetooth не найдено</string>
-    <string name="info_bluetooth_no_device_set">Устройство Bluetooth не выбрано</string>
-    <string name="info_bluetooth_connection_successful">Соединение установлено</string>
+    <string name="info_bluetooth_no_device_set">Выберите Bluetooth устройство</string>
+    <string name="info_bluetooth_connection_successful">Подключено</string>
     <string name="info_bluetooth_init">Инициализировать Bluetooth устройство</string>
     <string name="info_bluetooth_connection_error">Неожиданная ошибка Bluetooth</string>
     <string name="info_new_data_duplicated">измерение с такой датой и временем уже существует</string>
@@ -96,7 +96,7 @@
     <string name="label_bluetooth_searching">Поиск Ваших Bluetooth весов</string>
     <string name="label_bluetooth_searching_finished">Поиск завершен</string>
     <string name="label_enable_points">Точка измерения</string>
-    <string name="label_delete_confirmation">Удалить подтверждение</string>
+    <string name="label_delete_confirmation">Подтверждение удаления</string>
     <string name="label_category_measurement_database">База измерений</string>
     <string name="label_maintainer">Сопровождающий</string>
     <string name="label_website">Веб-сайт</string>
@@ -172,8 +172,6 @@
     <string name="label_enable_labels">Метка данных</string>
     <string name="default_value_reminder_notify_text">Пора взвеситься</string>
     <string name="info_on_date">в день</string>
-    <string name="label_regression_line">График снижения веса</string>
-    <string name="label_regression_line_degree">Степень полиномиальной регрессии</string>
     <string name="label_feedback_message_rate_app">Поставить оценку на Google Play или GitHub\?</string>
     <string name="trisa_scale_not_paired">Эти весы не были подключены!
 \n
@@ -193,7 +191,6 @@
     <string name="permission_read_write_data_description">Чтение данных openScale, включая информацию о пользователе и все сохраненные измерения</string>
     <string name="permission_read_write_data_label">Чтение данных openScale</string>
     <string name="label_long_press_drag_reorder">Нажмите, удерживайте и перетащите измерения, чтобы изменить порядок отображения</string>
-    <string name="label_click_measurement_configure">Нажмите, чтобы настроить измерения</string>
     <string name="label_export_overwrite">Сохранить поверх предыдущего \"%s\"\?</string>
     <string name="label_estimate_measurement">Оценочное измерение</string>
     <string name="label_estimation_formula">Формула для оценочных измерений</string>
@@ -226,16 +223,74 @@
     <string name="label_tdee">Общий ежедневный расход энергии (TDEE)</string>
     <string name="label_calories">Калории</string>
     <string name="info_step_on_scale">Пожалуйста, встаньте голыми ступнями на весы</string>
-    <string name="info_bluetooth_no_device_retrying">Невозможно установить соединение, переподключение…</string>
+    <string name="info_bluetooth_no_device_retrying">Не удается подключиться, пробуем снова…</string>
     <string name="info_bluetooth_connection_disconnected">Bluetooth соединение закрыто</string>
     <string name="permission_location_service_info">Предоставьте доступ к местоположению в настройках Android для нахождения устройств Bluetooth. После соединения доступ может быть отозван.</string>
     <string name="label_enable_legend">Легенда графика</string>
     <string name="label_enable_yaxis">ось Y</string>
     <string name="label_day_view">За день</string>
     <string name="label_year_view">За год</string>
-    <string name="label_rolling_chart">Относительный масштаб</string>
     <string name="label_measurement_bar">Отображение измерений</string>
     <string name="label_is_on_right_axis">на правой оси</string>
     <string name="label_upgrade_to_openScale_pro">Пожалуйста, обновите до openScale Pro для подддержки Bluetooth</string>
     <string name="action_donation">Пожертвование</string>
+    <string name="app_intro_done_button">Готово</string>
+    <string name="app_intro_back_button">Назад</string>
+    <string name="app_intro_next_button">Далее</string>
+    <string name="app_intro_skip_button">Пропустить</string>
+    <string name="label_slide_user_main_text">openScale не требует создание аккаунта в облаке. 
+\n 
+\nПоказатели тела считаются из измерений.</string>
+    <string name="label_slide_user_top_text">Есть поддержка нескольких пользователей.</string>
+    <string name="label_slide_privacy_main_text">openScale не отправляет никакие данные в облако, что подтверждается отсутствием разрешений для доступа в интернет.
+\n
+\nЕсли вы хотите синхронизировать свой вес с Google Fit или MQTT, вы можете установить <a href="https://play.google.com/store/apps/details?id=com.health.openscale.sync">openScale sync</a>.</string>
+    <string name="label_slide_privacy_top_text">Защитите ваши данные о здоровье.</string>
+    <string name="label_slide_welcome_main_text">Приложение с открытым исходным кодом для отслеживания веса и прочих показателей, с поддержкой Bluetooth весов.</string>
+    <string name="label_slide_welcome_top_text">Добро пожаловать в
+\nopenScale</string>
+    <string name="info_bluetooth_connection_error_scale_offline">Не удалось подключиться к весам, проверьте, что они включены.</string>
+    <string name="info_scale_low_battery">Низкий заряд батарей (%d%%), пожалуйста, замените или зарядите батареи в весах</string>
+    <string name="label_age">Возраст</string>
+    <string name="label_empty">Пусто</string>
+    <string name="amputation_level_none">Нет ампутаций</string>
+    <string name="label_amputation_right">Ампутации справа</string>
+    <string name="label_amputation_left">Ампутации слева</string>
+    <string name="label_amputation">Ампутации</string>
+    <string name="label_slide_support_main_text">Вы нужны openScale. Создайте <a href="https://github.com/oliexdev/openScale/issues">новый запрос</a>, если вы обнаружили ошибку, у вас есть идея, вопрос или вы хотите помочь в поддержке ваших Bluetooth весов.
+\n 
+\nМотивируйте создателя этого проекта на дальнейшее развитие и постоянную поддержку, поставив openScale положительную оценку на <a href="http://play.google.com/store/apps/details?id=com.health.openscale.pro">GooglePlay</a> или отметив его звездой на <a href="https://github.com/oliexdev/openScale">GitHub</a>.
+\n 
+\nМы высоко ценим вашу поддержку и положительные отзывы. Спасибо.</string>
+    <string name="label_slide_support_top_text">Помогите улучшить openScale.</string>
+    <string name="label_slide_metrics_main_text">openScale поддерживает более 22 показателей тела.
+\n 
+\nНастройте его так, чтобы отображались те, которые вам небезразличны.
+\n 
+\n Отсутствие жировых отложений, воды в организме и безжировой массы тела можно оценить на основании <a href="https://github.com/oliexdev/openScale/wiki/Body-metric-estimations">научных публикаций</a>.</string>
+    <string name="label_slide_metrics_top_text">Отслеживайте и анализируйте показатели своего тела.</string>
+    <string name="label_slide_bluetooth_main_text">openScale имеет встроенную поддержку ряда Bluetooth весов от разных производителей.
+\n
+\nМы постоянно улучшаем и расширяем набор поддерживаемых весов. Вы можете найти полный список и уровень поддержки для каждых весов на <a href="https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale">GitHub</a>.</string>
+    <string name="label_slide_bluetooth_top_text">Поддерживаются различные Bluetooth весы от разных производителей.</string>
+    <string name="label_slide_opensource_main_text">openScale распространяется под лицензией <a href="https://github.com/oliexdev/openScale/blob/master/LICENSE">GPLv3</a>.
+\n 
+\nВсе вычисления тела прозрачны и не используются скрытые функции передачи данных или идентификация пользователя.
+\n 
+\nВы можете найти полный исходный код на <a href="https://github.com/oliexdev/openScale">GitHub</a>. Убедите себя в openScale, просмотрев его.</string>
+    <string name="label_slide_opensource_top_text">Это программное обеспечение с открытым исходным кодом и высокой степенью прозрачности.</string>
+    <string name="amputation_level_hand">Кисть</string>
+    <string name="amputation_level_foot">Ступня</string>
+    <string name="amputation_level_leg">Нога</string>
+    <string name="amputation_level_lower_leg_foot">Голень и ступня</string>
+    <string name="amputation_level_arm">Рука</string>
+    <string name="amputation_level_forearm_hand">Предплечье и нога</string>
+    <string name="info_assisted_weighing_choose_reference_user">Выберите справочного пользователя, у которого вычитается вес</string>
+    <string name="info_assisted_weighing_no_reference_user">Нет справочного пользователя, пожалуйста, создайте его</string>
+    <string name="info_assisted_weighing_old_reference_measurement">Предупреждение: последнее контрольное измерение старше суток</string>
+    <string name="info_assisted_weighing_no_reference_measurements">Контрольный пользователь не имеет измерений</string>
+    <string name="label_assisted_weighing">Вспомогательное взвешивание</string>
+    <string name="label_trend_line">Линия тренда</string>
+    <string name="label_trend">Тренд</string>
+    <string name="label_prediction">Прогноз</string>
 </resources>

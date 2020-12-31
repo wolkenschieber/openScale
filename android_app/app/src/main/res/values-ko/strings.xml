@@ -128,8 +128,6 @@
     <string name="label_not_found">발견되지 않음</string>
     <string name="label_ignoreOutOfRange">범위를 벗어난 데이터 무시</string>
     <string name="label_initial_weight">초기 무게</string>
-    <string name="label_regression_line">회귀 무게 선</string>
-    <string name="label_regression_line_degree">회귀 다항식 차수</string>
     <string name="label_goal_line">목표선</string>
     <string name="label_help">도움말</string>
     <string name="label_feedback_message_enjoying">openScale을 잘 사용하고 계신가요\?</string>
@@ -171,7 +169,6 @@
     <string name="permission_read_write_data_label">openScale 데이터 읽기</string>
     <string name="label_next">다음</string>
     <string name="label_long_press_drag_reorder">측정치를 길게 누르고 드래그 하여 순서를 바꿀 수 있습니다</string>
-    <string name="label_click_measurement_configure">측정치를 눌러 설정</string>
     <string name="label_set_default_order">기본 순서를 설정</string>
     <string name="label_export_overwrite">기존 내보내기 한 \"%s\" 를 덮어쓸까요\?</string>
     <string name="label_measurement_in_percent">측정치를 퍼센트로</string>

@@ -128,8 +128,6 @@
     <string name="label_not_found">尋找不到</string>
     <string name="label_ignoreOutOfRange">忽略超出範圍的資料</string>
     <string name="label_initial_weight">初始體重</string>
-    <string name="label_regression_line">體重回歸線</string>
-    <string name="label_regression_line_degree">回歸線曲度</string>
     <string name="label_goal_line">目標線</string>
     <string name="label_help">協助</string>
     <string name="label_feedback_message_enjoying">openScale 使用愉快嗎?</string>
@@ -207,7 +205,6 @@
     <string name="permission_read_write_data_description">讀/寫 openScale 的資料，包括使用者的信息及所有已經儲存的測量資料</string>
     <string name="permission_read_write_data_label">讀/寫 openScale 的資料</string>
     <string name="label_long_press_drag_reorder">可以長按及移動測量的資料以重新排列</string>
-    <string name="label_click_measurement_configure">選擇測量的資料以修改</string>
     <string name="label_is_on_right_axis">在右軸上</string>
     <string name="label_your_bluetooth_scale">您的藍牙體重計</string>
     <string name="label_select_measurement">選擇單位</string>
@@ -220,4 +217,6 @@
     <string name="label_neck">頸圍</string>
     <string name="label_calories">卡路里</string>
     <string name="label_fat_caliper">體脂夾</string>
+    <string name="action_donation">捐赠</string>
+    <string name="label_empty">空</string>
 </resources>

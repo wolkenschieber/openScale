@@ -18,6 +18,7 @@ package com.health.openscale.gui.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
 
@@ -32,10 +33,12 @@ public class ColorUtil {
     public static final int COLOR_BLACK = Color.parseColor("#000000");
     public static final int[] COLORS = new int[]{COLOR_BLUE, COLOR_VIOLET, COLOR_GREEN, COLOR_ORANGE, COLOR_RED};
 
-    public static int getTextColor(Context context) {
+    public static int getTintColor(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        if (prefs.getString("app_theme", "").equals("Dark")) {
+        int nightModeFlags = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+        if (prefs.getString("app_theme", "Light").equals("Dark") || nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
             return Color.parseColor("#b3ffffff");
         }
 

@@ -152,8 +152,6 @@
     <string name="label_not_found">nič ni bilo najdeno</string>
     <string name="label_ignoreOutOfRange">Ignoriraj vrednosti zunaj meje</string>
     <string name="label_initial_weight">Začetna teža</string>
-    <string name="label_regression_line">Regresijska krivulja teže</string>
-    <string name="label_regression_line_degree">Regresija polinomske stopnje</string>
     <string name="label_goal_line">Ciljna krivulja</string>
     <string name="label_help">Pomoč</string>
 
@@ -193,7 +191,6 @@
     <string name="permission_bluetooth_info_title">Informacije</string>
     <string name="label_next">Naprej</string>
     <string name="label_long_press_drag_reorder">Dolgo držite in potegnite meritve za prerazporejanja</string>
-    <string name="label_click_measurement_configure">Kliknite meritve za rekonfiguracijo</string>
     <string name="label_set_default_order">Nastavi privzet vrstni red</string>
     <string name="label_export_overwrite">Zamenjaj prejšnji izvoz \"%s\"?</string>
     <string name="label_measurement_in_percent">Meritev v %</string>

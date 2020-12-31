@@ -119,8 +119,6 @@
     <string name="label_not_found">no s\'ha trobat</string>
     <string name="label_ignoreOutOfRange">Ignora les dades fora del rang</string>
     <string name="label_initial_weight">Pes inicial</string>
-    <string name="label_regression_line">Línia de regressió</string>
-    <string name="label_regression_line_degree">Grau del polinomi de regressió</string>
     <string name="label_goal_line">Línia de l\'objectiu</string>
     <string name="error_max_scale_users">S\'ha assolit el nombre màxim d\'usuaris simultanis de la bàscula</string>
     <string name="info_step_on_scale_for_reference">Pugeu a la bàscula amb els peus nus per a obtenir les mesures de referència</string>
@@ -180,12 +178,10 @@
 \nCreeu una nova incidència incloent-hi els detalls de l\'error a
 \nhttps://github.com/oliexdev/openScale/issues</string>
     <string name="toggle_expand">Expandeix o contrau</string>
-    <string name="label_rolling_chart">Gràfica dinàmica</string>
     <string name="permission_read_write_data_description">llegir/escriure dades de l\'openScale, incloent-hi informació dels usuaris i totes les mesures desades</string>
     <string name="permission_read_write_data_label">Llegir/escriure dades de l\'openScale</string>
     <string name="label_next">Endavant</string>
     <string name="label_long_press_drag_reorder">Mantingueu premut i arrossegueu la mesura per a reordenar-la</string>
-    <string name="label_click_measurement_configure">Premeu la mesura per a configurar-la</string>
     <string name="label_set_default_order">Estableix l\'ordre per defecte</string>
     <string name="label_export_overwrite">Voleu sobreescriure l\'exportació anterior \"%s\"\?</string>
     <string name="label_is_on_right_axis">A l\'eix de la dreta</string>
@@ -237,7 +233,7 @@
     <string name="activity_level_extreme">Extrem</string>
     <string name="label_upgrade_to_openScale_pro">Actualitzeu a openScale pro per a obtenir suport de Bluetooth</string>
     <string name="action_donation">Donació</string>
-    <string name="info_scale_low_battery">Nivell de bateria baix (%d\\%%), carregueu la bateria o canvieu les piles de la bàscula</string>
+    <string name="info_scale_low_battery">Nivell de bateria baix (%d%%), carregueu la bateria o canvieu les piles de la bàscula</string>
     <string name="info_bluetooth_connection_error_scale_offline">No s\'ha pogut connectar amb la bàscula, assegureu-vos que està engegada.</string>
     <string name="label_empty">buit</string>
     <string name="label_age">Edat</string>
@@ -278,4 +274,22 @@
     <string name="app_intro_next_button">Següent</string>
     <string name="app_intro_back_button">Endarrere</string>
     <string name="app_intro_done_button">Fet</string>
+    <string name="amputation_level_leg">Cama</string>
+    <string name="amputation_level_lower_leg_foot">Part inferior de la cama i peu</string>
+    <string name="amputation_level_foot">Peu</string>
+    <string name="amputation_level_arm">Braç</string>
+    <string name="amputation_level_forearm_hand">Avantbraç i cama</string>
+    <string name="amputation_level_hand">Mà</string>
+    <string name="amputation_level_none">Sense amputació</string>
+    <string name="info_assisted_weighing_choose_reference_user">Trieu l\'usuari de referència del qual es restarà el pes</string>
+    <string name="info_assisted_weighing_no_reference_user">No hi ha cap usuari de referència disponible, creeu-ne un</string>
+    <string name="info_assisted_weighing_old_reference_measurement">Atenció: la darrera mesura de referència és de fa més d\'un dia</string>
+    <string name="info_assisted_weighing_no_reference_measurements">L\'usuari de referència no té cap mesura</string>
+    <string name="label_amputation_right">Amputació dreta</string>
+    <string name="label_amputation_left">Amputació esquerra</string>
+    <string name="label_amputation">Amputació</string>
+    <string name="label_assisted_weighing">Pesatge assistit</string>
+    <string name="label_trend">Tendència</string>
+    <string name="label_prediction">Predicció</string>
+    <string name="label_trend_line">Línia de tendència</string>
 </resources>

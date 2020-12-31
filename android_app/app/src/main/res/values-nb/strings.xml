@@ -19,9 +19,9 @@
     <string name="label_delete">Slett</string>
     <string name="label_add_user">Legg til bruker</string>
     <string name="label_share">Del</string>
-    <string name="label_share_subject">CVS-dataeksport (%s)</string>
+    <string name="label_share_subject">Eksporter data som CSV (%s)</string>
     <string name="label_weight">Vekt</string>
-    <string name="label_bmi">Kroppsmasseindeks (BMI)</string>
+    <string name="label_bmi">Kroppsmasseindeks (KMI)</string>
     <string name="label_bmr">Hvilestoffskifte (BMR)</string>
     <string name="label_fat">Kroppsfett</string>
     <string name="label_water">Kroppsvann</string>
@@ -36,8 +36,8 @@
     <string name="label_whr">Midje-til-hofte -forhold</string>
     <string name="label_smartUserAssign">Smart brukertildeling</string>
     <plurals name="label_days">
-        <item quantity="one">dag %d</item>
-        <item quantity="other">dager %d</item>
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dager</item>
     </plurals>
     <string name="label_last_week">Gjennomsnitt siste uke</string>
     <string name="label_last_month">Gjennomsnitt den siste måneden</string>
@@ -63,12 +63,12 @@
     <string name="label_delete_all">Slett alle</string>
     <string name="error_value_required">Verdi kreves</string>
     <string name="error_value_range">Verdien utenfor tillatt rekkevidde</string>
-    <string name="error_exporting">Feil ved eksport</string>
+    <string name="error_exporting">Eksport mislyktes</string>
     <string name="error_importing">Feil ved import</string>
-    <string name="error_user_name_required">Feil: Brukernavn kreves</string>
-    <string name="error_height_required">Feil: Høyde kreves</string>
-    <string name="error_initial_weight_required">Feil: Startvekt kreves</string>
-    <string name="error_goal_weight_required">Feil: Målvekt kreves</string>
+    <string name="error_user_name_required">Krever brukernavn</string>
+    <string name="error_height_required">Krever høyde</string>
+    <string name="error_initial_weight_required">Krever startvekt</string>
+    <string name="error_goal_weight_required">Krever målvekt</string>
     <string name="info_data_deleted">Oppføring slettet</string>
     <string name="info_data_all_deleted">Alle oppføringer slettet</string>
     <string name="info_data_exported">Eksportert til</string>
@@ -81,10 +81,10 @@
     <string name="info_is_not_enable">avskrudd</string>
     <string name="info_is_not_available">ikke tilgjengelig</string>
     <string name="info_bluetooth_try_connection">Kobler til:</string>
-    <string name="info_bluetooth_connection_lost">Mistet Blåtanns-tilkobling</string>
+    <string name="info_bluetooth_connection_lost">Mistet Blåtann-forbindelse</string>
     <string name="info_bluetooth_no_device">Fant ingen Blåtannsenheter</string>
-    <string name="info_bluetooth_no_device_set">Ingen Blåtannsenhet valgt</string>
-    <string name="info_bluetooth_connection_successful">Tilkobling etablert</string>
+    <string name="info_bluetooth_no_device_set">Vel en blåtannsenhet</string>
+    <string name="info_bluetooth_connection_successful">Tilkoblet</string>
     <string name="info_bluetooth_init">Igangsett Blåtannsenhet</string>
     <string name="info_bluetooth_connection_error">Uventet Blåtannsfeil</string>
     <string name="info_new_data_added">%1$.2f%2$s [%3$s] til %4$s lagt til</string>
@@ -130,8 +130,6 @@
     <string name="label_not_found">ikke funnet</string>
     <string name="label_ignoreOutOfRange">Ignorer data utenfor rekkevidde</string>
     <string name="label_initial_weight">Startvekt</string>
-    <string name="label_regression_line">Regresjonslinje</string>
-    <string name="label_regression_line_degree">Regresjonspolynom-grunntall</string>
     <string name="label_goal_line">Mållinje</string>
     <string name="label_help">Hjelp</string>
     <string name="label_feedback_message_enjoying">Setter du pris på openScale?</string>
@@ -190,7 +188,6 @@
     <string name="label_debug_log">Lagre feilrettingslogg til fil</string>
     <string name="label_your_bluetooth_scale">Din Blåtannsvekt</string>
     <string name="label_long_press_drag_reorder">Trykk lenge og dra måling for å omstokkere</string>
-    <string name="label_click_measurement_configure">Klikk måling for å sette opp</string>
     <string name="label_select_measurement">Velg måling</string>
     <string name="label_select_user">Velg bruker</string>
     <string name="label_configure_widget">Sett opp miniprogram</string>
@@ -224,7 +221,7 @@
 \nKoble til igjen for å hente målingsdata.</string>
     <string name="label_tdee">Totalt daglig energibehov (TDEE)</string>
     <string name="label_calories">Kalorier</string>
-    <string name="info_bluetooth_no_device_retrying">Kan ikke etablere forbindelse, prøver igjen…</string>
+    <string name="info_bluetooth_no_device_retrying">Klarte ikke å etablere forbindelse, prøver igjen…</string>
     <string name="info_bluetooth_connection_disconnected">Blåtannstilkobling lukket</string>
     <string name="info_step_on_scale">Tre opp på vekta barfot</string>
     <string name="permission_location_service_info">Innvilg posisjonstilgang for å søke etter Blåtannsenheter. Du kan skru den av etterpå.</string>
@@ -232,7 +229,6 @@
     <string name="label_enable_yaxis">Y-akse</string>
     <string name="label_day_view">Dagsvisning</string>
     <string name="label_year_view">Årsvisning</string>
-    <string name="label_rolling_chart">Rullende diagram</string>
     <string name="label_measurement_bar">Målestav</string>
     <string name="label_is_on_right_axis">Er på høyre akse</string>
     <string name="label_upgrade_to_openScale_pro">Oppgrader til openScare pro for Blåtannsstøtte</string>
@@ -242,41 +238,58 @@
     <string name="label_slide_welcome_top_text">Velkommen til
 \nopenScale</string>
     <string name="label_slide_privacy_top_text">Beskytt din personlige helsedata.</string>
-    <string name="label_slide_support_top_text">Hjelp til å forbedre openScale.</string>
-    <string name="app_intro_skip_button">HOPP OVER</string>
-    <string name="app_intro_next_button">NESTE</string>
-    <string name="app_intro_back_button">TILBAKE</string>
-    <string name="app_intro_done_button">FERDIG</string>
-    <string name="info_scale_low_battery">Lavt batterinivå (%d%), bytt vektbatteriene</string>
-    <string name="info_bluetooth_connection_error_scale_offline">Kan ikke koble til vekt, forsikre deg om at den er påskrudd.</string>
-    <string name="label_slide_user_top_text">Flerbrukerstøtte.</string>
+    <string name="label_slide_support_top_text">Hjelp til å gjøre openScale bedre.</string>
+    <string name="app_intro_skip_button">Hopp over</string>
+    <string name="app_intro_next_button">Neste</string>
+    <string name="app_intro_back_button">Tilbake</string>
+    <string name="app_intro_done_button">Ferdig</string>
+    <string name="info_scale_low_battery">Lavt batterinivå (%d%%), lad eller bytt vektbatteriene</string>
+    <string name="info_bluetooth_connection_error_scale_offline">Klarte ikke koble til vekt, sjekk at den er påskrudd.</string>
+    <string name="label_slide_user_top_text">Støtter flere brukere.</string>
     <string name="label_slide_user_main_text">openScale krever ingen nettbasert konto.
 \n
-\nKun din brukerinfo kreves for å regne ut noen mål.</string>
+\nKroppsmålinger regnes ut fra målinger.</string>
     <string name="label_slide_bluetooth_top_text">Forskjellige Blåtannsvekter fra forskjellige produsenter støttes.</string>
-    <string name="label_slide_bluetooth_main_text">Innebgyd støtte for mange Blåtannsvekter av forskjellige fabrikat.
+    <string name="label_slide_bluetooth_main_text">openScale kommer med støtte for mange Blåtannsvekter fra ulike produsenter.
 \n
-\nStøtten forbedres statig. Fullstendig liste for hver av dem er å finne på <a href="https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale">GitHub</a>
-    </string>
+\nStøtten forbedres statig. Fullstendig liste for hver av dem er å finne på <a href="https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale">GitHub</a>.</string>
     <string name="label_slide_metrics_top_text">Spor og analyser dine kroppsmål.</string>
-    <string name="label_slide_metrics_main_text">openScale støtter over 22 kroppsmål.
+    <string name="label_slide_metrics_main_text">openScale støtter over 22 kroppsmålinger.
 \n
-\nDu kan vise kun de målene du bryr deg om.
+\nDu kan sette den opp til å vise de målene du bryr deg om.
 \n
 \nHvis vekten din ikke støtter kroppsfett, kroppsvann og fettfri kroppsvekt, kan du anslå disse målene basert på <a href="https://github.com/oliexdev/openScale/wiki/Body-metric-estimations">publisert forskning</a>.</string>
-    <string name="label_slide_support_main_text">openScale trenger deg. Hvis du har funnet en feil, har en idé eller spørsmål og ønske rå støtte din Blåtannsvekt, opprett en ny <a href="https://github.com/oliexdev/openScale/issues">problempost</a>.
+    <string name="label_slide_support_main_text">openScale trenger deg. Hvis du har funnet en feil, har en idé eller spørsmål og ønsker å støtte din Blåtannsvekt, opprett en ny <a href="https://github.com/oliexdev/openScale/issues">mangelmelding</a>.
 \n
 \nHvis du ønsker å motivere skaperen av prosjektet i videre utvikling og vedvarende vedlikehold kan du gi openScale en god vurdering på <a href="http://play.google.com/store/apps/details?id=com.health.openscale.pro">GooglePlay</a> eller stjernemerke det på <a href="https://github.com/oliexdev/openScale">GitHub</a>.
 \n
-\nDin støtte og positive tilbakemelding tas varmt imot. Takk.</string>
-    <string name="label_slide_privacy_main_text">openScale doesn\'t send any data to a cloud and not having permission to access the internet is a strong guarantee of that.
+\nDin støtte og positive tilbakemelding tas varmt imot. Tusen takk.</string>
+    <string name="label_slide_privacy_main_text">openScale sender ingen data til skyen og det å ikke ha tilgang til å koble seg til Internett er en sterk garanti for at dette stemmer.
 \n
-\nIf you really want to synchronise your weight to GoogleFit or with MQTT, you can install <a href="https://play.google.com/store/apps/details?id=com.health.openscale.sync">openScale sync</a>.</string>
-    <string name="label_slide_opensource_top_text">Transparent copylefted libre software.</string>
-    <string name="label_slide_opensource_main_text">Lisensiert <a href="https://github.com/oliexdev/openScale/blob/master/LICENSE">GPLv3+</a>.
+\nHvis du virkelig ønsker å synkronisere vekten din til GoogleFit eller med MQTT, så kan du installere <a href="https://play.google.com/store/apps/details?id=com.health.openscale.sync">openScale sync</a>.</string>
+    <string name="label_slide_opensource_top_text">Transparent gemen fri programvare.</string>
+    <string name="label_slide_opensource_main_text">Bruksvilkårene for openScale er <a href="https://github.com/oliexdev/openScale/blob/master/LICENSE">GPLv3+</a>.
 \n
 \nAlle kroppsutregninger er gjennomsiktig anlagt, og ingen skjulte dataoverføringer eller brukeridentifikasjon finner sted.
 \n
-\nDu kan finne hele kildekoden på <a href="https://github.com/oliexdev/openScale">GitHub</a>. Overbevis deg selv ved å gjennomse den.</string>
-    <string name="label_slide_welcome_main_text">Fri programvare for vekt- og kroppsmålingssporing, med Blåtannsvektstøtte.</string>
+\nDu kan finne hele kildekoden på <a href="https://github.com/oliexdev/openScale">GitHub</a>. Gjør deg trygg på openScale ved å gå igjennom koden.</string>
+    <string name="label_slide_welcome_main_text">Fri programvare for vekt- og kroppsmålingssporing, med støtte for Blåtannsvekter.</string>
+    <string name="amputation_level_lower_leg_foot">Legg og fotblad</string>
+    <string name="info_assisted_weighing_old_reference_measurement">Advarsel: Siste referansemåling er over én dag gammel</string>
+    <string name="amputation_level_leg">Legg</string>
+    <string name="amputation_level_foot">Fot</string>
+    <string name="amputation_level_arm">Arm</string>
+    <string name="amputation_level_forearm_hand">Albue og fot</string>
+    <string name="amputation_level_hand">Hånd</string>
+    <string name="amputation_level_none">Ingen amputasjon</string>
+    <string name="info_assisted_weighing_choose_reference_user">Velg referansebrukeren vekten trekkes fra</string>
+    <string name="info_assisted_weighing_no_reference_user">Opprett en referansebruker</string>
+    <string name="info_assisted_weighing_no_reference_measurements">Referansebruker har ingen målinger</string>
+    <string name="label_amputation_right">Amputasjon høyre</string>
+    <string name="label_amputation_left">Amputasjon venstre</string>
+    <string name="label_amputation">Amputasjon</string>
+    <string name="label_assisted_weighing">Assistert veiing</string>
+    <string name="label_trend_line">Tendenslinje</string>
+    <string name="label_trend">Tendens</string>
+    <string name="label_prediction">Prognose</string>
 </resources>

@@ -20,7 +20,7 @@
     <string name="label_add_user">Додати користувача</string>
     <string name="label_add_measurement">Додати вимір</string>
     <string name="label_share">Поділитися</string>
-    <string name="label_share_subject">Експорт CSV даних (%s)</string>
+    <string name="label_share_subject">Експорт даних до CSV (%s)</string>
     <string name="label_weight">Вага</string>
     <string name="label_bmi">Індекс маси тіла (BMI)</string>
     <string name="label_bmr">Основний обмін (BMR)</string>
@@ -67,9 +67,9 @@
     <string name="error_value_range">Значення поза межами</string>
     <string name="error_exporting">Помилка експорту</string>
     <string name="error_importing">Помилка імпорту</string>
-    <string name="error_user_name_required">Помилка: Ім\'я обов\'язкове</string>
-    <string name="error_height_required">Помилка: Зріст обов\'язковий</string>
-    <string name="error_initial_weight_required">Помилка: Початкова вага обов\'язкова</string>
+    <string name="error_user_name_required">Ім\'я обов\'язкове</string>
+    <string name="error_height_required">Зріст обов\'язковий</string>
+    <string name="error_initial_weight_required">Початкова вага обов\'язкова</string>
     <string name="error_goal_weight_required">Цільова вага обов\'язкова</string>
     <string name="info_data_deleted">Запис видалено</string>
     <string name="info_data_all_deleted">Всі записи видалено</string>
@@ -135,8 +135,6 @@
     <string name="label_not_found">не знайдено</string>
     <string name="label_ignoreOutOfRange">Ігнорувати дані за межами діапазону</string>
     <string name="label_initial_weight">Початкова вага</string>
-    <string name="label_regression_line">Графік зниження</string>
-    <string name="label_regression_line_degree">Ступінь поліномінальної регресії</string>
     <string name="label_goal_line">Лінія мети</string>
     <string name="label_help">Допомога</string>
     <string name="label_feedback_message_enjoying">До вподоби openScale\?</string>
@@ -176,14 +174,13 @@
     <string name="label_weeks_view">За тиждень</string>
     <string name="label_year_view">За рік</string>
     <string name="permission_not_granted">Дозволу не отримано</string>
-    <string name="permission_bluetooth_info">Доступ до позиціювання необхідний для пошуку Bluetooth пристроїв. Дозвіл можна буде відхилити після того як пристрій буде знайдено.</string>
+    <string name="permission_bluetooth_info">Доступ до позиціювання необхідний для пошуку Bluetooth пристроїв. Дозвіл можна буде відмінити після того як пристрій буде знайдено.</string>
     <string name="permission_location_service_info">Надайте доступ до позиціювання в налаштуваннях Android для пошуку Bluetooth пристроїв. Надалі цей дозвіл можна відхилити.</string>
     <string name="permission_bluetooth_info_title">Інформація</string>
     <string name="permission_read_write_data_description">Обробка openScale даних, з інформацією про користувача та всі збережені виміри</string>
     <string name="permission_read_write_data_label">Обробка openScale даних</string>
     <string name="label_next">Наступний</string>
     <string name="label_long_press_drag_reorder">Натисніть, та утримуючи перемістіть вимір для зміни порядку</string>
-    <string name="label_click_measurement_configure">Натисніть, для налаштування виміру</string>
     <string name="label_set_default_order">Встановити типовий порядок</string>
     <string name="label_export_overwrite">Перезаписати попередній експорт \"%s\"\?</string>
     <string name="label_measurement_in_percent">Виміри у %</string>
@@ -237,12 +234,13 @@
     <string name="info_on_date">на</string>
     <string name="label_measurement_bar">Шкала вимірювань</string>
     <string name="label_is_on_right_axis">На вісі праворуч</string>
-    <string name="info_scale_low_battery">Низький заряд батареї вагів (%d\\%%), будь-ласка зарядіть або замініть батареї</string>
+    <string name="info_scale_low_battery">Низький заряд батареї вагів (%d%%), будь-ласка зарядіть або замініть батареї</string>
     <string name="info_bluetooth_connection_error_scale_offline">Не можу під\'єднатись до вагів, переконайтеся що вони увімкнені.</string>
     <string name="label_empty">брак даних</string>
     <string name="label_age">Вік</string>
-    <string name="label_slide_welcome_top_text">Вітаємо в openScale</string>
-    <string name="label_slide_welcome_main_text">Програма з відкритим кодом для відстеження ваги та інших показників тіла, за допомогою ваг з підтримкою Bluetooth.</string>
+    <string name="label_slide_welcome_top_text">Вітаємо в
+\nopenScale</string>
+    <string name="label_slide_welcome_main_text">Програма з відкритим кодом для відстеження ваги та інших показників тіла за допомогою Bluetooth вагів.</string>
     <string name="label_slide_privacy_top_text">Захистіть свої персональні дані.</string>
     <string name="label_slide_user_top_text">Підтримується декілька користувачів.</string>
     <string name="label_slide_privacy_main_text">OpenScale не надсилає жодних даних до хмарного сховища та не має доступу до мережі.
@@ -253,7 +251,6 @@
     <string name="app_intro_next_button">Далі</string>
     <string name="app_intro_back_button">Назад</string>
     <string name="app_intro_done_button">Готово</string>
-    <string name="label_rolling_chart">Біжучий графік</string>
     <string name="label_slide_user_main_text">openScale не вимагає від вас створення онлайн облікового запису.
 \n
 \nПоказники тіла розраховані з вимірювань.</string>
@@ -278,4 +275,22 @@
 \nПідтримайте авторів цього проекту у подальшій розробці і постійному обслуговуванню, поставивши openScale позитивну оцінку у <a href="http://play.google.com/store/apps/details?id=com.health.openscale.pro">GooglePlay</a> або поставте зірочку у <a href="https://github.com/oliexdev/openScale">GitHub</a>.
 \n
 \nМи високо цінимо ваші відгуки і підтримку. Дякуємо.</string>
+    <string name="info_assisted_weighing_old_reference_measurement">Увага: попереднє зважування-орієнтир старіше за добу</string>
+    <string name="amputation_level_foot">Стопа</string>
+    <string name="amputation_level_lower_leg_foot">Гомілка та стопа</string>
+    <string name="info_assisted_weighing_choose_reference_user">Виберіть користувача-орієнтира, чия вага буде відніматись</string>
+    <string name="info_assisted_weighing_no_reference_user">Відсутній користувач-орієнтир, будь ласка, створіть його</string>
+    <string name="info_assisted_weighing_no_reference_measurements">Користувач-орієнтир немає зважувань</string>
+    <string name="label_assisted_weighing">Зважування з порадами</string>
+    <string name="amputation_level_leg">Нога</string>
+    <string name="amputation_level_arm">Рука</string>
+    <string name="amputation_level_forearm_hand">Передпліччя та нога</string>
+    <string name="amputation_level_hand">Кисть</string>
+    <string name="amputation_level_none">Без ампутацій</string>
+    <string name="label_amputation_left">Ампутації ліворуч</string>
+    <string name="label_amputation_right">Ампутації праворуч</string>
+    <string name="label_amputation">Ампутації</string>
+    <string name="label_trend">Тренд</string>
+    <string name="label_prediction">Прогноз</string>
+    <string name="label_trend_line">Лінія тренду</string>
 </resources>
